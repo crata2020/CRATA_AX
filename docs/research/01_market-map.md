@@ -30,7 +30,7 @@
   - [Teams recap](https://support.microsoft.com/en-us/teams/meetings/recap-in-microsoft-teams), [Read AI](https://www.read.ai/post/korean-polish-catalan-and-ukrainian-now-added-to-read-ai), [통의청오 API](https://help.aliyun.com/zh/tingwu/chapter-quick-view), [Feishu 妙记](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/minutes-v1/minute/artifacts)
 - 회의 한 건 전체를 자동으로 분류하는 기능도 있습니다.
   - [Circleback](https://circleback.ai/docs/support/meetings/automatic-meeting-tagging): 미리 만든 태그 안에서만 고름
-  - [Plaud Events](https://www.plaud.ai/blogs/news/plaud-knowledge-base): 2026년 10월 배포
+  - [Plaud Events](https://www.plaud.ai/blogs/news/plaud-knowledge-base): 2026년 10월 배포 예정
   - [콜라보 AI 레이블](https://callabo.ai/pricing)
 - 하지만 구간 단위로 나눠 각각 다른 곳에 보내는 기능을 완제품으로 제공하는 사례는 확인되지 않았습니다. Feishu Open API나 n8n·Zapier 같은 자동화 도구로 부품을 조립해 만드는 수준입니다([02 문서](./02_meeting-auto-classification.md) 3장).
 - 따라서 CRATA의 차별점은 네 가지가 됩니다: 구간 분할, 사업부·프로젝트 라우팅, 한국어 도메인 용어, 한국 규제 대응.
@@ -141,7 +141,7 @@
 |---|---|---|---|---|---|
 | [Plaud Note / NotePin / Plaud One + 앱](https://www.plaud.ai/pages/plaud-ai-plan-pricing) | 미국(Plaud Inc.) | 112개 언어 전사, 템플릿 1만 개 이상, AutoFlow 자동 처리. Starter 무료(월 300분), Pro $17.99/월, Unlimited $29.99/월, Team 1인당 월 $20(연간 결제, 2026-11-30까지 가입 시 첫해 론칭가, 이후 $25) | 현재 입력원. 'CRATA 분류용' 커스텀 템플릿(사업부 후보, 주제 전환 시점, 언급된 기관명)을 만들 것. AutoFlow는 동기화 즉시 Plaud 클라우드·미국 LLM으로 요약하므로 학맞통 기관 협의 녹음을 AutoFlow 대상에서 빼는 방법(별도 계정·기기, 수동 동기화)은 TODO | 직접사용 | 미검증(요금은 확인) |
 | [Plaud MCP·CLI](https://docs.plaud.ai/plaud-mcp-cli/mcp) | 미국 | 읽기 전용 도구 7개(list_files, get_file, get_note, get_transcript 등). 폴더·태그 필터, 쓰기, 웹훅 없음. 활성 계정 무료. 오디오는 24시간 유효 URL | GOAL A 1개월 차(경로 B)의 핵심 부품. '처리 완료 ID 로그'로 주기적으로 확인(폴링)하는 구조. 로그인한 계정의 녹음만 보이므로 여러 사람 계정 처리는 TODO | 부품통합 | 정정: 문서상 GA는 2026-05-12이지만 npm 최신판은 `@plaud-ai/mcp@0.3.13`, `@plaud-ai/cli@0.3.14`. 이 버전으로 정확히 고정하고, 올릴 때 골든셋 회귀 테스트 |
-| [Plaud Intelligence(Events·Skills·Routines·Artifacts·Connectors)](https://www.plaud.ai/blogs/news/introducing-plaud-intelligence) | 미국 | 2026-09-22 발표, 10월 배포('Oct 12'). Agent가 녹음을 맥락에 맞는 Event에 배정. 외부로 보내기 전 확인 요청 | 사업부별 Event를 만들어 시험(L0~L1 회의만. 학맞통·고객 진단 녹음 제외, [04 문서](./04_data-governance.md) 6.4절). 회의 단위 배정만 되고 구간 분할은 없음 | 직접사용 | 미검증(배포 후 확인) |
+| [Plaud Intelligence(Events·Skills·Routines·Artifacts·Connectors)](https://www.plaud.ai/blogs/news/introducing-plaud-intelligence) | 미국 | 2026-09-22 발표, 10월 배포 예정('Oct 12'). Agent가 녹음을 맥락에 맞는 Event에 배정. 외부로 보내기 전 확인 요청 | 사업부별 Event를 만들어 시험(L0~L1 회의만. 학맞통·고객 진단 녹음 제외, [04 문서](./04_data-governance.md) 6.4절). 회의 단위 배정만 되고 구간 분할은 없음 | 직접사용 | 미검증(배포 후 확인) |
 | [Plaud × Zapier](https://zapier.com/apps/plaud/integrations) | 미국 | 트리거 1개(재요약할 때도 다시 발동), 액션 없음 | 노코드 1단계. 파일 ID로 중복 제거 필수. Zapier MCP로 Plaud 데이터를 조회하는 것은 불가 | 직접사용 | 확인 |
 | [Plaud Embedded](https://dev.plaud.ai/device-sdk/) | 미국 | 자사 앱에서 기기를 BLE로 직접 연결하고 전사 API 사용. 무료 구간은 전사 300시간, 기기 50대 | 아라를 제품화할 때 기기 직접 연동 | 부품통합 | 확인 |
 | [Omi](https://github.com/BasedHardware/omi) | 미국 | MIT 오픈소스. 폴더 설명을 보고 대화를 폴더에 자동 배정(2026-01). REST·웹훅·MCP | 공개 코드로 볼 수 있는 분류기 레퍼런스(정확도 문제 이슈 #4043 참고) | 벤치마크 | 미검증(주장은 확인) |
@@ -410,7 +410,7 @@
 ## 3. 반드시 깊게 볼 레퍼런스 Top 10
 
 **1. [Plaud MCP·CLI](https://docs.plaud.ai/plaud-mcp-cli/mcp) + [Plaud Intelligence](https://www.plaud.ai/blogs/news/introducing-plaud-intelligence)**
-- 이유: 입력원은 이미 Plaud입니다. 전사본(화자·타임스탬프 포함)과 요약을 공식 경로로 가져오는 것이 자동화의 출발점입니다. Events·Skills·Routines는 10월에 배포됩니다.
+- 이유: 입력원은 이미 Plaud입니다. 전사본(화자·타임스탬프 포함)과 요약을 공식 경로로 가져오는 것이 자동화의 출발점입니다. Events·Skills·Routines는 10월 배포 예정입니다(기준일 현재 미배포).
 - 가져올 것
   - MCP로 '최근 녹음 → 전사본' 자동 수집(`@plaud-ai/mcp@0.3.13`, `@plaud-ai/cli@0.3.14`로 고정)
   - Shared Team Skills로 제안서·강의계획서·과업 리스트 양식 고정(배포 후 확인. Skills·Routines 실행 시 Plaud Credits 차감)
