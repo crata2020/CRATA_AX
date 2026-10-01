@@ -1,0 +1,463 @@
+{
+  "description": "CRATA 회의 구간 분할·멀티라벨 분류 출력 스키마 v0.2 (docs/research/02_meeting-auto-classification.md 5.4절). project_id·task_type enum은 예시이며 매 호출 때 config/meeting_taxonomy.yaml에서 생성한다. Claude 구조화 출력 제약: 재귀 없음, 모든 객체 additionalProperties=false, 수치 범위는 description에만 적는다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meeting",
+    "segments",
+    "new_project_candidates",
+    "unclassified_notes"
+  ],
+  "properties": {
+    "meeting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "meeting_id",
+        "date",
+        "meeting_type",
+        "sensitivity",
+        "overall_summary"
+      ],
+      "properties": {
+        "meeting_id": {
+          "type": "string",
+          "description": "Plaud 파일 ID"
+        },
+        "date": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "meeting_type": {
+          "type": "string",
+          "enum": [
+            "client_meeting",
+            "agency_consult",
+            "planning",
+            "internal_regular",
+            "review",
+            "one_on_one",
+            "lecture_rehearsal",
+            "other"
+          ]
+        },
+        "sensitivity": {
+          "type": "string",
+          "enum": [
+            "L0",
+            "L1",
+            "L2",
+            "L3"
+          ],
+          "description": "구간 중 가장 높은 등급. pre_sensitivity보다 낮을 수 없음"
+        },
+        "overall_summary": {
+          "type": "string",
+          "description": "회의 전체 3문장 요약"
+        }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "segment_id",
+          "segment_type",
+          "title",
+          "spans",
+          "labels",
+          "summary",
+          "decisions",
+          "action_items",
+          "open_issues",
+          "entities",
+          "suggested_deliverables",
+          "sensitivity",
+          "boundary_reason"
+        ],
+        "properties": {
+          "segment_id": {
+            "type": "string",
+            "description": "S1, S2 ... 같은 주제가 다시 나오면 같은 ID에 span 추가"
+          },
+          "segment_type": {
+            "type": "string",
+            "enum": [
+              "business",
+              "admin",
+              "offtopic"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "20자 내외 구간 제목"
+          },
+          "spans": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start_uid",
+                "end_uid",
+                "start",
+                "end"
+              ],
+              "properties": {
+                "start_uid": {
+                  "type": "string"
+                },
+                "end_uid": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string",
+                  "description": "HH:MM:SS. start_uid 줄의 시각을 그대로 복사"
+                },
+                "end": {
+                  "type": "string",
+                  "description": "HH:MM:SS. end_uid 줄의 시각을 그대로 복사"
+                }
+              }
+            }
+          },
+          "labels": {
+            "type": "array",
+            "description": "primary 1개 + secondary 최대 2개",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "business_line",
+                "project_id",
+                "task_type",
+                "confidence",
+                "evidence_uids"
+              ],
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "primary",
+                    "secondary"
+                  ]
+                },
+                "business_line": {
+                  "type": "string",
+                  "enum": [
+                    "EDU",
+                    "SSI",
+                    "ARA",
+                    "CORE",
+                    "DX",
+                    "AXC",
+                    "UNCLASSIFIED"
+                  ]
+                },
+                "project_id": {
+                  "type": "string",
+                  "enum": [
+                    "EDU-2026-007",
+                    "EDU-CONTENT",
+                    "SSI-2026-003",
+                    "SSI-RESEARCH",
+                    "ARA-CORE",
+                    "ARA-MEETING-PIPELINE",
+                    "CORE-GENERAL",
+                    "NEW",
+                    "NONE"
+                  ]
+                },
+                "task_type": {
+                  "type": "string",
+                  "description": "업무유형을 고를 수 없거나 business_line=UNCLASSIFIED 또는 project_id=NEW이면 UNKNOWN",
+                  "enum": [
+                    "EDU.proposal",
+                    "EDU.curriculum",
+                    "SSI.agency",
+                    "SSI.training",
+                    "ARA.prd",
+                    "ARA.safety",
+                    "CORE.sales",
+                    "UNKNOWN"
+                  ]
+                },
+                "confidence": {
+                  "type": "number",
+                  "description": "0.0~1.0. 기준표: 0.85 이상 직접 언급 / 0.60~0.84 추정 / 0.60 미만 근거 부족"
+                },
+                "evidence_uids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "근거 발화 uid 1~3개"
+                }
+              }
+            }
+          },
+          "summary": {
+            "type": "string",
+            "description": "3~5문장, 사실 위주"
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "decided_by",
+                "evidence_uids"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "decided_by": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "evidence_uids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "action_items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "task",
+                "owner",
+                "due",
+                "due_text",
+                "evidence_uids"
+              ],
+              "properties": {
+                "task": {
+                  "type": "string"
+                },
+                "owner": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "due": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "YYYY-MM-DD"
+                },
+                "due_text": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "원문 기한 표현"
+                },
+                "evidence_uids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "open_issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "evidence_uids"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "evidence_uids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "entities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "text",
+                "evidence_uid",
+                "resolved_id",
+                "is_sensitive"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "internal_person",
+                    "external_role",
+                    "client_org",
+                    "school_or_agency",
+                    "project",
+                    "product",
+                    "document",
+                    "date",
+                    "amount",
+                    "other"
+                  ]
+                },
+                "text": {
+                  "type": "string"
+                },
+                "evidence_uid": {
+                  "type": "string"
+                },
+                "resolved_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "레지스트리의 고객·기관·프로젝트 ID. 없으면 null"
+                },
+                "is_sensitive": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "suggested_deliverables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "deliverable_type",
+                "reason",
+                "priority"
+              ],
+              "properties": {
+                "deliverable_type": {
+                  "type": "string",
+                  "enum": [
+                    "minutes",
+                    "action_list",
+                    "followup_email_draft",
+                    "edu_needs_analysis",
+                    "edu_curriculum",
+                    "edu_workshop_agenda",
+                    "edu_proposal_deck",
+                    "edu_quote_memo",
+                    "edu_preassignment",
+                    "edu_review_memo",
+                    "ssi_consult_memo_deid",
+                    "ssi_requirements_table",
+                    "ssi_proposal_draft",
+                    "ssi_training_plan",
+                    "ssi_form_manual_draft",
+                    "ara_prd_delta",
+                    "ara_dev_ticket",
+                    "ara_adr",
+                    "weekly_report",
+                    "none"
+                  ]
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "priority": {
+                  "type": "string",
+                  "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                  ]
+                }
+              }
+            }
+          },
+          "sensitivity": {
+            "type": "string",
+            "enum": [
+              "L0",
+              "L1",
+              "L2",
+              "L3"
+            ],
+            "description": "노드 기본 등급과 내용 중 높은 쪽. L3면 내용 필드는 비움(2차 안전망)"
+          },
+          "boundary_reason": {
+            "type": "string",
+            "description": "이 구간을 나눈 근거 한 문장. L3 구간은 근거 uid만"
+          }
+        }
+      }
+    },
+    "new_project_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "business_line",
+          "reason",
+          "evidence_uids"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "business_line": {
+            "type": "string",
+            "enum": [
+              "EDU",
+              "SSI",
+              "ARA",
+              "CORE",
+              "DX",
+              "AXC",
+              "UNCLASSIFIED"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "evidence_uids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "unclassified_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "분류하지 못한 내용과 그 이유"
+    }
+  }
+}

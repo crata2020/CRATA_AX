@@ -1,0 +1,290 @@
+# CRATA 회의 분류 체계 v0.2 (초안, 2026-10-01)
+# 이 파일(또는 같은 구조의 Notion DB)이 정본이다. 프롬프트의 enum은 매 호출 때 여기서 생성한다.
+# 설계 문서: docs/research/02_meeting-auto-classification.md 4.2절
+# 민감도 등급 정의의 정본은 docs/research/04_data-governance.md 이다. 아래 sensitivity_levels는 요약이다.
+meta:
+  version: "0.2"
+  owner: "TODO: 분류체계 관리자 1명"
+  last_reviewed: "2026-10-01"
+  review_cycle: "월 1회. 혼동 사례를 보고 description, keywords, aliases를 고친다"
+  changelog:
+    - "0.2 (2026-10-01): 접두어 6종 통일, 등급 재정의(EDU 기본 L1, EDU.proposal L2, ARA.pilot·safety·feedback L2), SSI.case_meeting 삭제, LLM 호출 전 로컬 게이트(pre_llm_gate)와 MVP Filter 추가"
+    - "0.2 보강 (2026-10-01): mvp_filter.exclude_l2_recordings(L2 녹음 계정 분리) 추가, pre_llm_gate.l2_keywords 확장(진단·결재·이관, 파일럿·위기·피드백, 학맞통, 검사), L2 정의에 'GOAL B 고객 진단 자료 포함' 명시"
+
+# ─────────────────────────────── 녹음 제목 접두어 (이 6개만 쓴다)
+title_prefixes:
+  - {prefix: "[강의]", business_line_hint: EDU, mvp: true}
+  - {prefix: "[학맞통]", business_line_hint: SSI, mvp: false, note: "기본 L2. 1개월 차 L2 경로(Bedrock 서울)가 생긴 뒤에만 자동 처리"}
+  - {prefix: "[아라]", business_line_hint: ARA, mvp: true, note: "pilot·safety·feedback 구간은 L2. MVP에서는 L2 키워드로 중단될 수 있음"}
+  - {prefix: "[AX]", business_line_hint: AXC, mvp: true, note: "AX 컨설팅·업무사이트(GOAL B). AXC는 후보 사업부(TODO 확인). CRATA 사내 AX는 CORE.internal_ax. 고객 진단·인터뷰·워크샵·이관 녹음(AXC.diagnosis·AXC.migration)은 L2라 1개월 차 전까지 MVP Zap에 연결된 Plaud 계정으로 녹음하지 않음(mvp_filter.exclude_l2_recordings). MVP 자동 처리는 요구사항·설계·인수인계 등 L1 회의만"}
+  - {prefix: "[공통]", business_line_hint: CORE, mvp: true}
+  - {prefix: "[혼합]", business_line_hint: null, mvp: false, note: "여러 사업부가 섞인 회의. 학맞통 파트가 섞일 수 있어 1개월 차 이후 처리"}
+# 접두어가 없으면 MVP에서는 처리하지 않는다. '[학맞통-사례]' 같은 접두어는 만들지 않는다(L3 대화는 녹음하지 않음).
+
+# ─────────────────────────────── 1주 MVP: Zapier 첫 단계 Filter
+mvp_filter:
+  continue_only_if_prefix_in: ["[강의]", "[아라]", "[AX]", "[공통]"]   # [학맞통]·[혼합]·접두어 없음은 중단
+  exclude_l2_recordings: "GOAL B 고객 진단·인터뷰·워크샵 녹음(AXC.diagnosis·AXC.migration, L2)과 학맞통 기관 협의는 1개월 차 L2 경로 전까지 MVP Zap에 연결하지 않은 별도 Plaud 계정·기기(AutoFlow 끔, 수동 동기화)로 녹음하거나 녹음 없이 메모. ARA.pilot·safety·feedback, 견적·계약 협상 등 L2가 예상되는 회의도 같다(04 문서 2.4절). 실수로 Zap 계정에 들어오면 제목·전사 L2 키워드로 중단 → 수동 처리 큐. 이 분리가 1차 수단이고 Filter는 2차 장치(Zapier가 녹음을 받은 뒤에 중단). AutoFlow를 끄는 방법은 TODO"
+  stop_if_text_contains: "pre_llm_gate.l3_keywords + pre_llm_gate.l2_keywords (제목·전사)"
+  on_stop: "수동 처리 큐(LLM 호출 없음)"
+  llm: "Claude Sonnet 5.5 (Claude API, 학습 미사용)"
+  json_parse_failure: "1회 재시도 후 미분류(UNCLASSIFIED)로 보냄. Zapier Claude 액션의 구조화 출력 지원은 미확인"
+  human_review: "처음 2주는 신뢰도와 관계없이 전부 사람 확인"
+
+# ─────────────────────────────── ② 민감도 사전 판정 (해외 LLM 호출 전, 로컬)
+pre_llm_gate:
+  order: [title_prefix, keyword_dictionary, school_agency_dictionary, kiwi_proper_nouns, gliner_person]
+  mvp_scope: "MVP(Zapier)는 접두어·키워드 규칙만. Kiwi·GLiNER는 1개월 차 국내 서버(경로 B)부터"
+  l3_keywords: [사례회의, 상담일지, 상담 내용, 학폭 사안, 가해학생, 피해학생, 보호자 면담, 지원대상학생 명단]   # (제안) 운영하며 보강
+  l2_keywords: [견적, 단가, 계약 조건, 계약서, NDA, 비밀유지, 대외비, 파일럿, 시범 도입, 대화 로그, 위기, 에스컬레이션, 자해, 사용자 피드백, 학맞통, 학생맞춤통합지원, 교육지원청 협의, 검사 결과, 결과지, 위임전결, 결재선, 결재 양식, 완결 문서, 감사로그, 진단 인터뷰, 이관, 마이그레이션]   # (제안) 운영하며 보강
+  dictionaries:
+    school_agency_names: "TODO: 협의 중인 학교·교육청·기관명 사전"
+    student_patterns: "TODO: 학년·반과 이름의 조합, 학생 호칭 패턴"
+  ner: ["Kiwi 고유명사(NNP)", "GLiNER 인명"]
+  when_unsure: "높은 등급으로 처리"
+  on_l3: "자동 처리 중단 → 격리 → 책임자 알림 → 원본·전사·Plaud 사본 즉시 삭제 절차. 다른 경로로 처리를 계속하지 않는다"
+  on_l2: "Bedrock 서울 In-Region(Claude Sonnet 5 / Opus 5)만. MVP 기간에는 수동 처리"
+  llm_rule_role: "프롬프트의 L3 규칙은 2차 안전망이다"
+  upstream_limit: "Plaud AutoFlow는 동기화 즉시 Plaud 클라우드·미국 LLM으로 요약하므로 이 게이트로 막을 수 없다. 녹음 자체를 통제한다"
+
+cross_rules:   # 사업부가 겹칠 때의 우선순위 (TODO: 대표 확인)
+  - "학맞통이 주제인 연수·강의는 SSI가 primary, EDU는 secondary"
+  - "강의 중 아라 시연·홍보 논의는 EDU primary, ARA secondary"
+  - "아라를 학교·기관에 시범 도입하는 논의는 ARA.pilot primary(L2). 학맞통 관련이면 SSI secondary"
+  - "특정 사업부의 견적·정산은 그 사업부의 업무유형으로 분류. 회사 전체 재무만 CORE.finance"
+  - "견적·계약 조건(금액·단가·조건)이 나오는 구간은 사업부와 관계없이 L2"
+  - "이 회의 분류 시스템 자체에 대한 논의는 ARA-MEETING-PIPELINE"
+
+sensitivity_levels:   # 요약. 정의 정본은 04_data-governance.md
+  L0:
+    desc: "공개·내부 일반 정보"
+    llm: "해외 LLM API 허용(학습 미사용 계약)"
+    storage: "Notion/Drive"
+  L1:
+    desc: "일반 영업·고객 미팅, 일반 개인정보(성명·연락처 수준). EDU 기본값"
+    llm: "녹음 고지·동의 후, 학습 미사용 API 계약(상용 API 또는 Team·Enterprise)으로 해외 LLM 허용. 외부인 연락처는 마스킹 후 전송"
+    storage: "Notion/Drive. 처리방침에 국외이전 공개"
+  L2:
+    desc: "고객이 NDA·비밀로 지정한 자료(GOAL B 고객 진단 자료 포함), 견적·계약 조건(EDU.proposal 포함), 학맞통 기관 협의(학생 비식별 전제), ARA.pilot·ARA.safety·ARA.feedback"
+    llm: "Amazon Bedrock 서울 In-Region의 Claude Sonnet 5 / Opus 5만. Haiku 4.5·Sonnet 5.5·Opus 5.5는 서울에서 Global 교차 리전 전용이라 금지. Message Batches 할인 없음. 요금은 Bedrock 요금(확인 필요)"
+    storage: "국내 저장소(Supabase 서울, NAVER WORKS Drive 등)가 정본. Notion에는 링크만"
+  L3:
+    desc: "학생 식별 가능 정보, 상담·사례 내용"
+    llm: "처리하지 않음"
+    storage: "저장하지 않음"
+    rule: "녹음하지 않는 것이 원칙. 실수로 들어오면 자동 처리 중단·격리·즉시 삭제"
+
+student_l3_triggers: &student_l3_triggers   # SSI와 ARA.pilot·safety·feedback이 같이 쓴다
+  - "학생 실명"
+  - "학년·반과 이름의 조합"
+  - "상담·사례 내용"
+  - "가정·건강·경제 형편"
+  - "학폭 사안 당사자"
+  - "개별 학생 사례 논의(사례회의)"
+  - "실제 학생 대화 로그 원문 인용"
+
+meeting_types:   # 두 번째 축. 산출물 템플릿 선택에 쓴다 (사례회의 유형은 두지 않는다)
+  - {id: client_meeting, name: "고객 미팅", keywords: [요구사항, 견적, 고객사, 담당자]}
+  - {id: agency_consult, name: "기관 협의", keywords: [교육청, 교육지원청, 학교, 센터, 협의]}
+  - {id: planning, name: "기획·브레인스토밍", keywords: [기획, 아이디어, 설계, 구상]}
+  - {id: internal_regular, name: "내부 정기회의", keywords: [주간회의, 진행 상황, 공유]}
+  - {id: review, name: "리뷰·회고", keywords: [리뷰, 회고, 피드백, 만족도]}
+  - {id: one_on_one, name: "1대1 면담", keywords: [면담, 원온원]}
+  - {id: lecture_rehearsal, name: "강의 리허설", keywords: [리허설, 시연, 예행]}
+  - {id: other, name: "기타", keywords: []}
+
+business_lines:
+  # ─────────────────────────────── 강의·워크샵
+  - id: EDU
+    name: "강의·워크샵"
+    status: active
+    owner: "TODO"
+    default_sensitivity: L1
+    description: "기업·학교·교사 대상 AI 강의·워크샵·연수의 수주, 기획, 운영, 사후관리"
+    include: "고객 요구 미팅, 커리큘럼·교안 작업, 강사 배정, 견적·정산, 사후 리뷰"
+    exclude: "학맞통이 주제인 연수(→ SSI), 아라 제품 개발 자체(→ ARA)"
+    keywords: [강의, 특강, 워크샵, 연수, 커리큘럼, 교안, 실습, 강사, 수강생, 출강, 견적, 만족도]
+    aliases: [워크숍, 세미나, 교육과정]
+    examples:
+      - "○○기업 임원 대상 생성형 AI 특강 요구사항 미팅"
+      - "교사 대상 AI 활용 연수 2차시 교안 리뷰"
+    projects:
+      - id: EDU-TEMPLATE
+        name: "{고객사}-{과정명}-{연도}"
+        description: "TODO: 진행 중인 과정마다 1행씩 등록 (예: EDU-2026-007)"
+        client: "TODO"
+        keywords: ["TODO: 고객사명", "TODO: 과정명", "TODO: 담당자 직함"]
+        aliases: []
+        examples: []
+        owner: "TODO"
+        status: template
+      - id: EDU-CONTENT
+        name: "공통 강의 콘텐츠·교안 자산"
+        description: "특정 고객과 무관한 표준 교안·실습 자료 개발"
+        keywords: [표준 교안, 공통 자료, 실습 예제]
+        aliases: []
+        examples: ["생성형 AI 기초 표준 교안 개정 논의"]
+        owner: "TODO"
+        status: active
+    task_types:
+      - {id: EDU.inquiry, name: "문의·수요 발굴", description: "신규 문의 대응, 교육 수요 파악", keywords: [문의, 수요, 소개, 연락], examples: ["○○재단 담당자 첫 통화"], owner: TODO}
+      - {id: EDU.proposal, name: "제안·견적", default_sensitivity: L2, description: "제안서·견적서 작성, 가격·조건 협의 (견적·계약 조건이라 L2)", keywords: [제안서, 견적, 단가, 예산, 계약], examples: ["강사료·인원 기준 견적 조정"], owner: TODO}
+      - {id: EDU.needs, name: "사전진단·요구분석", description: "고객 현업 사례 수집, 대상·수준·목표 파악", keywords: [요구사항, 대상, 수준, 목표, 현업 사례], examples: ["수강 대상 직무와 AI 활용 수준 확인"], owner: TODO}
+      - {id: EDU.curriculum, name: "커리큘럼 설계", description: "차시 구성, 학습 목표, 실습 흐름 설계", keywords: [차시, 모듈, 학습목표, 구성], examples: ["4시간 과정 3모듈 구성안 논의"], owner: TODO}
+      - {id: EDU.materials, name: "교안·실습자료", description: "슬라이드, 실습지, 사전과제 제작", keywords: [교안, 슬라이드, 실습지, 사전과제], examples: ["실습용 프롬프트 예제 교체"], owner: TODO}
+      - {id: EDU.instructor, name: "강사 배정·강사교육", description: "강사 매칭, 강사 사전 교육, 리허설", keywords: [강사, 배정, 리허설, 강사교육], examples: ["보조 강사 2명 배정 논의"], owner: TODO}
+      - {id: EDU.ops, name: "운영·일정·장소", description: "일정, 장소, 장비, 수강생 안내", keywords: [일정, 장소, 장비, 노트북, 안내문], examples: ["교육장 와이파이·노트북 대여 확인"], owner: TODO}
+      - {id: EDU.review, name: "만족도·사후 리뷰", description: "설문 결과 분석, 개선점 정리", keywords: [만족도, 설문, 피드백, 개선], examples: ["1차 교육 설문 결과 리뷰"], owner: TODO}
+      - {id: EDU.billing, name: "정산·계산서", default_sensitivity: L2, description: "강사료·대금 정산, 세금계산서 (계약 금액·조건이라 L2)", keywords: [정산, 계산서, 입금, 강사료], examples: ["10월 출강분 정산 확인"], owner: TODO}
+      - {id: EDU.followup, name: "후속 제안", description: "심화 과정·추가 계약 제안", keywords: [후속, 심화, 2차, 연장], examples: ["심화 과정 추가 제안 논의"], owner: TODO}
+
+  # ─────────────────────────────── 학맞통
+  - id: SSI
+    name: "학맞통(학생맞춤통합지원)"
+    status: active
+    owner: "TODO"
+    default_sensitivity: L2
+    description: "2026.3.1 시행 학생맞춤통합지원법 관련 교육청·교육지원청·학교 대상 컨설팅, 연수, 서식·도구 개발 (학생 비식별 전제)"
+    include: "기관 협의, 지원 체계 구축 컨설팅, 관리자·교사·강사 양성 연수, 서식·매뉴얼 개발, 입찰·조달, 성과보고"
+    exclude: "학생 개별 사례 논의(사례회의, 상담)는 녹음하지 않음. 실수로 들어오면 L3: 자동 처리 중단·격리·즉시 삭제"
+    keywords: [학맞통, 학생맞춤통합지원, 지원대상학생, 지원팀, 교육지원청, 통합지원센터, 연계기관, 학교장, 교감, 운영계획]
+    aliases: [학맞, 학생맞춤, "학맞 통"]
+    l3_triggers: *student_l3_triggers
+    policy_area_tags: [심리·정서, 가정, 기초학력, 학업중단, 경제, 건강, 학폭·법률]   # 기관·정책 단위로만 쓴다. 학생 단위 태깅 금지
+    examples:
+      - "○○교육지원청 학맞통 센터 운영 방안 협의"
+      - "학교 관리자 대상 학맞통 연수 커리큘럼 회의"
+    projects:
+      - id: SSI-TEMPLATE
+        name: "{기관}-{사업명}-{연도}"
+        description: "TODO: 진행 중인 기관 사업마다 1행 (예: SSI-2026-003)"
+        client: "TODO: 교육청·교육지원청·학교명"
+        keywords: ["TODO: 기관명", "TODO: 담당 부서", "TODO: 지역 체계 명칭"]
+        aliases: []
+        examples: []
+        owner: "TODO"
+        status: template
+      - id: SSI-RESEARCH
+        name: "학맞통 법령·정책 리서치 자산"
+        description: "특정 기관과 무관한 법령·지침·사례 정리"
+        keywords: [법령, 시행령, 지침, 매뉴얼, 정책]
+        aliases: []
+        examples: ["시행령 개정 사항 정리"]
+        owner: "TODO"
+        status: active
+    task_types:
+      - {id: SSI.law, name: "법령·지침 해석", description: "학맞통법·시행령·교육청 지침 해석", keywords: [법령, 시행령, 조문, 지침, 동의], examples: ["보호자 동의 절차 해석 논의"], owner: TODO}
+      - {id: SSI.agency, name: "기관 협의", description: "교육청·센터·학교와의 협의, 요구사항 확인 (학생 비식별 전제)", keywords: [협의, 장학사, 센터장, 요청사항], examples: ["센터 의뢰 절차 개선 요청 협의"], owner: TODO}
+      - {id: SSI.system, name: "체계 구축 컨설팅", description: "지원팀 구성, 업무 흐름, 서식 체계 설계", keywords: [지원팀, 업무흐름, 체계, 역할분담], examples: ["학교 지원팀 역할 분담안 검토"], owner: TODO}
+      - {id: SSI.training, name: "연수(관리자·교사·강사 양성)", description: "학맞통 연수 기획·운영, 강사 양성", keywords: [연수, 강사 양성, 찾아가는 연수, 관리자], examples: ["찾아가는 연수 강사 양성 과정 설계"], owner: TODO}
+      - {id: SSI.diagnosis, name: "진단도구 적용", description: "행동방식검사 등 진단 도구의 기관 적용 설계 (개인 결과는 다루지 않음)", keywords: [진단, 검사, 도구, 선별], examples: ["교사 대상 검사 적용 방안"], owner: TODO}
+      - {id: SSI.forms, name: "서식·매뉴얼·도구 개발", description: "표준 서식, 매뉴얼, 체크리스트, AI 도구 개발. 기관이 자기 시스템에서 쓸 비식별 사례회의록 템플릿 개발도 여기에 넣는다(사례 내용은 다루지 않음)", keywords: [서식, 매뉴얼, 체크리스트, 양식, HWP], examples: ["운영계획서 표준 서식 초안"], owner: TODO}
+      - {id: SSI.procurement, name: "입찰·조달", description: "제안요청서 분석, 입찰·수의계약 준비", keywords: [입찰, 제안요청서, 조달, 수의계약, 나라장터], examples: ["연수 용역 제안요청서 검토"], owner: TODO}
+      - {id: SSI.report, name: "성과보고", description: "사업 결과·성과 보고서", keywords: [성과, 결과보고, 실적], examples: ["상반기 연수 실적 보고서 구성"], owner: TODO}
+
+  # ─────────────────────────────── 아라 에이전트 개발
+  - id: ARA
+    name: "아라(ARA) 에이전트 개발"
+    status: active
+    owner: "TODO"
+    default_sensitivity: L1
+    description: "CRATA 자체 AI 에이전트 '아라'의 기획·개발·운영. 회사 웹사이트는 아라를 검사 결과 기반 상담 AI 에이전트로 소개함 (TODO: 현재 제품 범위 확인)"
+    include: "제품 기획, 프롬프트·대화 설계, 개발·인프라, 안전장치, 평가, 기관 파일럿, 요금제"
+    exclude: "아라를 소재로 한 강의(→ EDU), 학맞통 정책 논의(→ SSI)"
+    keywords: [아라, ARA, 에이전트, 프롬프트, 기능, 배포, 버그, 스프린트, PRD, 모델]
+    aliases: [아라 에이전트]
+    examples:
+      - "아라 상담 대화 흐름에 위기 신호 에스컬레이션 추가 논의"
+      - "다음 스프린트 버그 우선순위 정리"
+    projects:
+      - {id: ARA-CORE, name: "아라 제품 본체", description: "제품 기능 개발·운영 전반", keywords: [기능, 릴리스, 버그], aliases: [], examples: ["v1.x 릴리스 범위 확정"], owner: TODO, status: active}
+      - {id: ARA-PILOT-TEMPLATE, name: "{기관}-아라 파일럿", default_sensitivity: L2, description: "TODO: 기관별 시범 도입 1행씩", keywords: ["TODO: 기관명"], aliases: [], examples: [], owner: TODO, status: template}
+      - {id: ARA-MEETING-PIPELINE, name: "회의 자동 분류 파이프라인", description: "이 설계안의 시스템. 이후 아라 모듈로 제품화", keywords: [플라우드, 회의 분류, 자동화, 파이프라인], aliases: [Plaud], examples: ["분류 정확도 주간 점검"], owner: TODO, status: active}
+    task_types:
+      - {id: ARA.prd, name: "제품기획·요구사항", description: "기능 정의, PRD 변경", keywords: [PRD, 요구사항, 기능 정의, 우선순위], examples: ["보호자용 화면 요구사항 정리"], owner: TODO}
+      - {id: ARA.prompt, name: "대화·프롬프트 설계", description: "대화 흐름, 시스템 프롬프트, 톤", keywords: [프롬프트, 대화 흐름, 페르소나, 톤], examples: ["첫 인사 문구와 질문 순서 조정"], owner: TODO}
+      - {id: ARA.data, name: "데이터모델·검사결과 연동", description: "검사 결과·사용자 데이터 구조 (TODO: 연동 여부 확인)", keywords: [데이터, 스키마, 검사 결과, 연동], examples: ["검사 결과 필드 매핑"], owner: TODO}
+      - {id: ARA.ux, name: "UX·UI", description: "화면, 사용 흐름", keywords: [화면, UI, UX, 디자인], examples: ["모바일 결과 화면 개선"], owner: TODO}
+      - {id: ARA.backend, name: "백엔드·인프라", description: "서버, API, 모델 호출, 비용", keywords: [서버, API, 인프라, 배포 환경, 비용], examples: ["모델 호출 비용 절감 방안"], owner: TODO}
+      - {id: ARA.safety, name: "안전장치·위기 에스컬레이션", default_sensitivity: L2, l3_triggers: *student_l3_triggers, description: "위기 신호 감지와 사람 연결 규칙. 실제 학생 대화 로그가 논의될 수 있어 L2", keywords: [위기, 에스컬레이션, 안전, 차단], examples: ["자해 언급 시 사람 연결 절차"], owner: TODO}
+      - {id: ARA.privacy, name: "개인정보·보안", description: "수집 항목, 보관, 국외이전, 동의", keywords: [개인정보, 동의, 보관, 암호화], examples: ["14세 미만 법정대리인 동의 처리"], owner: TODO}
+      - {id: ARA.eval, name: "평가·QA", description: "품질 평가, 테스트 세트", keywords: [평가, 테스트, QA, 정확도], examples: ["상담 응답 평가 기준 합의"], owner: TODO}
+      - {id: ARA.release, name: "배포", description: "릴리스 일정, 배포 체크", keywords: [배포, 릴리스, 출시], examples: ["다음 주 배포 체크리스트"], owner: TODO}
+      - {id: ARA.bm, name: "요금제·BM", description: "가격, 패키지, 판매 모델", keywords: [요금제, 가격, 구독, 패키지], examples: ["기관용 연간 라이선스 가격"], owner: TODO}
+      - {id: ARA.feedback, name: "사용자 피드백·CS", default_sensitivity: L2, l3_triggers: *student_l3_triggers, description: "사용자 의견, 장애 문의. 실제 대화 로그가 인용될 수 있어 L2", keywords: [피드백, 문의, 불만, 오류 신고], examples: ["파일럿 교사 피드백 정리"], owner: TODO}
+      - {id: ARA.pilot, name: "기관 파일럿", default_sensitivity: L2, l3_triggers: *student_l3_triggers, description: "기관 시범 도입 설계·운영. 실제 학생 대화 로그가 논의될 수 있어 L2", keywords: [파일럿, 시범, 도입 기관], examples: ["○○학교 4주 파일럿 일정"], owner: TODO}
+
+  # ─────────────────────────────── 공통(교차 영역)
+  - id: CORE
+    name: "공통·경영"
+    status: active
+    owner: "TODO"
+    default_sensitivity: L1
+    description: "특정 사업부에 속하지 않는 회사 운영 전반 (영업·경영·채용·법무 등)"
+    include: "영업 파이프라인 전체, 재무·투자, 채용·HR, 마케팅, 파트너십, 법무, 정부지원사업, 사내 AX"
+    exclude: "특정 사업부 고객의 견적·정산(→ 해당 사업부)"
+    keywords: [매출, 투자, 채용, 마케팅, 파트너, 계약서, 정부지원, 바우처, 사무실]
+    aliases: []
+    examples: ["분기 매출·현금흐름 점검", "AI바우처 공급기업 등록 준비"]
+    projects:
+      - {id: CORE-GENERAL, name: "회사 운영 일반", description: "프로젝트 단위로 나누지 않는 운영 논의", keywords: [], aliases: [], examples: [], owner: TODO, status: active}
+    task_types:
+      - {id: CORE.sales, name: "영업·파이프라인", description: "전체 영업 현황, 리드 관리", keywords: [영업, 리드, 파이프라인, 수주], examples: ["이번 달 신규 리드 점검"], owner: TODO}
+      - {id: CORE.finance, name: "경영·재무·투자", description: "매출, 비용, 투자 유치", keywords: [매출, 비용, 투자, 현금], examples: ["분기 비용 점검"], owner: TODO}
+      - {id: CORE.hr, name: "채용·HR", description: "채용, 평가, 조직", keywords: [채용, 면접, 인사, 조직], examples: ["개발자 채용 조건 논의"], owner: TODO}
+      - {id: CORE.marketing, name: "마케팅·브랜딩", description: "홍보, 콘텐츠, 브랜드", keywords: [홍보, 콘텐츠, 브랜드, SNS], examples: ["사례 콘텐츠 발행 계획"], owner: TODO}
+      - {id: CORE.partnership, name: "파트너십·MOU", description: "협력사·기관 제휴", keywords: [MOU, 제휴, 협력, 파트너], examples: ["지역 기관 MOU 논의"], owner: TODO}
+      - {id: CORE.legal, name: "법무·개인정보", description: "계약서, 처리방침, 규제 대응 (고객 계약 조건이 나오면 L2)", keywords: [계약서, 처리방침, 개인정보, 법률], examples: ["처리방침 국외이전 표 개정"], owner: TODO}
+      - {id: CORE.gov, name: "정부지원사업", description: "바우처, 지원사업 신청·수행", keywords: [바우처, 지원사업, 공고, 신청서], examples: ["2027 AI바우처 준비"], owner: TODO}
+      - {id: CORE.ops, name: "운영·총무", description: "사무실, 장비, 계정, 도구", keywords: [사무실, 장비, 계정, 구독], examples: ["협업 도구 구독 정리"], owner: TODO}
+      - {id: CORE.internal_ax, name: "사내 AX", description: "CRATA 내부 업무 자동화 (회의 파이프라인은 ARA-MEETING-PIPELINE)", keywords: [자동화, 업무 개선], examples: ["견적서 자동화 아이디어"], owner: TODO}
+
+  # ─────────────────────────────── 후보 사업부 (후보, TODO 확인)
+  - id: DX
+    name: "진단·코칭 (후보, TODO 확인)"
+    status: "TODO_confirm"   # crata.co.kr에 4종 행동방식검사, Re:Cover, 강사교육이 있음. 별도 사업부인지 확인 필요
+    owner: "TODO"
+    default_sensitivity: L2
+    description: "행동방식검사 개발·운영, 결과지, 코칭 과정, 강사·협회 네트워크 (개인 검사 결과가 나올 수 있어 L2)"
+    include: "검사 개발·개정, 결과지, 코칭 과정 운영, 강사 양성"
+    exclude: "학맞통 기관 대상 검사 적용(→ SSI.diagnosis)"
+    keywords: [검사, 결과지, 코칭, 색채, 행동동기, "Re:Cover", 협회, 강사]
+    aliases: [리커버]
+    examples: ["8주 코칭 과정 운영 점검"]
+    projects: []
+    task_types:
+      - {id: DX.test_dev, name: "검사 개발·개정", description: "문항·유형 체계 개정", keywords: [문항, 유형, 개정], examples: [], owner: TODO}
+      - {id: DX.report, name: "결과지", description: "연령별 결과지 구성", keywords: [결과지, 해석], examples: [], owner: TODO}
+      - {id: DX.coaching, name: "코칭 과정 운영", description: "코칭·워크숍 운영", keywords: [코칭, 회기], examples: [], owner: TODO}
+      - {id: DX.network, name: "강사 양성·협회", description: "강사 교육, 협회 운영", keywords: [협회, 강사 양성], examples: [], owner: TODO}
+
+  - id: AXC
+    name: "AX 컨설팅·업무사이트 구축 (후보, TODO 확인)"
+    status: "TODO_confirm"   # GOAL B. 강의·워크샵 하위로 둘지 별도 사업부로 둘지 결정 필요
+    owner: "TODO"
+    default_sensitivity: L1   # 일반 고객 미팅은 L1. 고객 내부 문서·데이터를 다루는 업무유형만 L2
+    description: "고객사 업무 패턴 진단, 맞춤 업무사이트·에이전트 구축"
+    include: "패턴 진단, 요구사항, 포털 설계·개발, 이관, 인수인계 교육"
+    exclude: "단순 강의 납품(→ EDU), CRATA 사내 자동화(→ CORE.internal_ax)"
+    keywords: [진단, 업무사이트, 포털, 결재선, 양식, 구축, 이관]
+    aliases: [AX 컨설팅]
+    examples: ["○○사 결재 흐름 인터뷰 결과 공유"]
+    projects: []
+    task_types:
+      - {id: AXC.diagnosis, name: "패턴 진단", default_sensitivity: L2, description: "문서·회의·조직 데이터로 스타일·패턴 추출 (고객 내부 자료라 L2)", keywords: [진단, 패턴, 인터뷰], examples: [], owner: TODO}
+      - {id: AXC.requirements, name: "요구사항", description: "포털 요구사항 확정", keywords: [요구사항, 메뉴, 권한], examples: [], owner: TODO}
+      - {id: AXC.build, name: "설계·개발", description: "포털·에이전트 구축", keywords: [개발, 화면, 배포], examples: [], owner: TODO}
+      - {id: AXC.migration, name: "데이터 이관", default_sensitivity: L2, description: "기존 자료·DB 이관 (고객 내부 데이터라 L2)", keywords: [이관, 마이그레이션], examples: [], owner: TODO}
+      - {id: AXC.handover, name: "교육·인수인계", description: "운영자 교육, 인수인계", keywords: [인수인계, 운영 교육], examples: [], owner: TODO}
+
+deliverable_catalog: [minutes, action_list, followup_email_draft,
+  edu_needs_analysis, edu_curriculum, edu_workshop_agenda, edu_proposal_deck, edu_quote_memo, edu_preassignment, edu_review_memo,
+  ssi_consult_memo_deid, ssi_requirements_table, ssi_proposal_draft, ssi_training_plan, ssi_form_manual_draft,
+  ara_prd_delta, ara_dev_ticket, ara_adr, weekly_report, none]
+
+glossary:   # STT 부스팅 사전과 분류 힌트로 같이 쓴다
+  - {term: "학맞통", variants: [학맞, 학생맞춤통합지원, "학 맞 통"]}
+  - {term: "아라", variants: [ARA, 아라 에이전트]}
+  - {term: "크라타", variants: [CRATA]}
+  - {term: "플라우드", variants: [Plaud]}
+  - {term: "TODO: 고객사·학교·기관·과정 고유명사", variants: []}

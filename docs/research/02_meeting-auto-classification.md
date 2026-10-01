@@ -2,16 +2,18 @@
 
 > 기준일: 2026-10-01 · 대상: CRATA 대표와 실무자 · 범위: Plaud 녹음 → 사업부·프로젝트별 자동 분류 → 산출물 생성
 > 표기: **TODO**는 CRATA 내부에서 확인해야 할 항목, **(미검증)**은 공식 자료로 확인하지 못한 내용, **(제안)**은 이 문서가 권하는 기준값입니다.
+> 데이터 민감도 등급(L0~L3), 수탁자·국외이전 목록, 정보주체 권리 대응의 **정본은 [04 데이터 거버넌스 부록](./04_data-governance.md)**입니다. 이 문서의 8장은 요약입니다.
+> **구현 파일:** 분류 체계 [`config/meeting_taxonomy.yaml`](../../config/meeting_taxonomy.yaml)(4.2절), 프롬프트 [`prompts/meeting_segment_classify.md`](../../prompts/meeting_segment_classify.md)(5.3절), 출력 스키마 [`schemas/meeting_segments.schema.json`](../../schemas/meeting_segments.schema.json)(5.4절). 문서와 파일이 다르면 파일을 고치고 이 문서를 맞춥니다.
 
 ---
 
 ## 1. 결론 요약
 
 1. 권고는 **"녹음·전사는 지금 쓰는 서비스를 그대로 쓰고(Buy), 분할·분류·라우팅 레이어만 얇게 직접 만든다(Build)"**입니다. Plaud는 그대로 쓰고, 공식 경로인 Zapier 트리거와 Plaud MCP·CLI로 녹음을 가져옵니다. 회의를 구간으로 나누고, 사업부·프로젝트로 분류하고, 알맞은 곳으로 보내는 부분만 CRATA가 만듭니다.
-2. 직접 만드는 이유는 시장에 해당 기능이 없기 때문입니다. 국내외를 다 찾아봐도 "회의 하나를 구간으로 나눠 구간마다 다른 프로젝트로 보내는" 완제품은 확인되지 않았습니다. 가장 가까운 Circleback의 태그 자동 분류와 Plaud Intelligence의 Events 자동 배정도 회의 1건 단위로만 동작합니다.
-3. 비용은 걸림돌이 아닙니다. LLM 처리비는 60분 회의 1건에 약 $0.12(약 175원, Claude Sonnet 5.5 기준)이고, 월 증분 비용은 4~7만 원 수준입니다. 성패는 분류 체계를 얼마나 잘 설계하느냐와 사람 검수 루프에 달려 있습니다.
-4. 순서는 다음과 같습니다. 1주 MVP(Zapier → Claude → Notion 또는 Drive, 전부 사람 확인) → 1개월(Plaud CLI·MCP로 타임스탬프 기반 구간 분할과 프로젝트 메모리 구축) → 3개월(학습 루프를 붙이고 아라 모듈로 제품화).
-5. 학맞통 학생 개인정보가 들어 있는 회의(사례회의, 상담)는 이 파이프라인에 넣지 않습니다. Plaud 클라우드와 해외 LLM을 거치기 때문입니다. 이것이 전체 설계의 전제 조건입니다.
+2. 직접 만드는 이유는 그런 완제품을 확인하지 못했기 때문입니다. 이번 조사 범위에서 "회의 하나를 구간으로 나눠 구간마다 다른 프로젝트로 보내는" 완제품은 확인되지 않았습니다. 가장 가까운 Circleback의 태그 자동 분류와 Plaud Intelligence의 Events 자동 배정도 회의 1건 단위로만 동작합니다. Feishu·n8n·Zapier로 부품을 조립하는 수준은 가능합니다.
+3. 비용은 걸림돌이 아닙니다. LLM 처리비는 60분 회의 1건에 약 $0.12(약 175원, Claude Sonnet 5.5 기준. thinking 설정에 따라 1.5~2배 가능)입니다. 월 **총 운영비**(Plaud 구독 포함)는 3인 기준 4~7만 원, 10인 기준 12~19만 원(Plaud 개인 플랜 연간가) 또는 약 33~38만 원(Plaud Team)입니다(9.2절). 성패는 분류 체계를 얼마나 잘 설계하느냐와 사람 검수 루프에 달려 있습니다.
+4. 순서는 다음과 같습니다. 1주 MVP(경로 A: Zapier → Claude Sonnet 5.5 → Notion 또는 Drive, **[강의][아라][AX][공통] 회의만**, 전부 사람 확인) → 1개월(경로 B: Plaud CLI·MCP로 전환, 타임스탬프 기반 구간 분할과 프로젝트 메모리, **L2 경로(Bedrock 서울) 구축 후 학맞통 회의 투입**) → 3개월(Haiku 분리(L0~L1 전용), 학습 루프, 아라 모듈로 제품화).
+5. 전체 설계의 전제 조건은 **"녹음 자체를 통제한다"**입니다. 학생 식별 정보와 상담·사례 내용(L3)은 녹음하지 않습니다. Plaud AutoFlow는 동기화 즉시 Plaud 클라우드와 미국 LLM으로 요약하므로, Plaud 단계의 노출은 CRATA 파이프라인으로 막을 수 없습니다. 파이프라인 안에서는 해외 LLM을 부르기 **전에** 로컬에서 L3를 먼저 탐지하고, 걸리면 처리를 멈추고 격리·삭제합니다. 등급 정의는 [04 문서](./04_data-governance.md)가 정본입니다.
 
 ---
 
@@ -22,11 +24,11 @@
 | 기능 | 가능 여부 | 근거와 비고 |
 |---|---|---|
 | 한국어 전사·화자 분리 | ○ | 112개 언어에 한국어 포함 ([Plaud 요금](https://www.plaud.ai/pages/plaud-ai-plan-pricing)) |
-| 자동 전사·요약 (AutoFlow) | ○ | 클라우드 동기화 때 자동 실행되고, 이메일 발송 옵션이 있음 ([AutoFlow](https://support.plaud.ai/hc/en-us/articles/50835520394009-AutoFlow)) |
+| 자동 전사·요약 (AutoFlow) | ○ | 클라우드 동기화 때 자동 실행되고, 이메일 발송 옵션이 있음 ([AutoFlow](https://support.plaud.ai/hc/en-us/articles/50835520394009-AutoFlow)). **동기화 즉시 Plaud 클라우드와 미국 LLM으로 요약하므로 CRATA 게이트보다 앞단에서 처리됨** → 녹음 통제로만 관리(8.3절) |
 | 커스텀 요약 템플릿 | ○ | CRATA 전용 템플릿을 만들어 요약 안에 "사업부 후보 / 주제 전환 지점" 섹션을 넣을 수 있음 |
 | 일반 공개 API | ✕ | 일반 사용자용 범용 API가 없고 대기자 명단도 없다고 공식 안내 ([Plaud 지원센터](https://support.plaud.ai/hc/en-us/articles/60726890231449)) |
 | MCP·CLI | ○ (읽기 전용) | 2026-05-12 GA. 도구는 login, logout, get_current_user, list_files, get_file, get_note, get_transcript 7개. get_transcript는 타임스탬프와 화자 라벨을 주고, get_file은 24시간 유효한 오디오 URL을 줌 ([MCP 문서](https://docs.plaud.ai/plaud-mcp-cli/mcp), [변경 이력](https://docs.plaud.ai/plaud-mcp-cli/changelog.md)). 모든 활성 계정에서 무료 |
-| MCP 버전 | 주의 | 문서에는 "v1.0.0"으로 적혀 있지만 npm 패키지는 0.x입니다(2026-09 기준 @plaud-ai/mcp 0.3.13, @plaud-ai/cli 0.3.14). **버전은 0.x로 고정하세요** ([npm](https://registry.npmjs.org/@plaud-ai/mcp)) |
+| MCP 버전 | 주의 | 문서에는 "v1.0.0"으로 적혀 있지만 npm 패키지는 0.x입니다(2026-09 기준 @plaud-ai/mcp 0.3.13, @plaud-ai/cli 0.3.14). 0.x에서는 마이너 버전도 호환이 깨질 수 있으므로 **`@plaud-ai/mcp@0.3.13`, `@plaud-ai/cli@0.3.14`로 정확히 고정**하고, 올릴 때는 골든셋 회귀 테스트를 먼저 돌립니다. 버전 없는 `npx` 실행은 매번 최신판을 받으므로 쓰지 않습니다 ([npm](https://registry.npmjs.org/@plaud-ai/mcp)) |
 | 녹음 목록 필터 | 제한적 | list_files는 제목 키워드와 날짜 범위로만 거를 수 있고 폴더·태그 필터는 없음. CLI 검색은 최근 500개 녹음의 제목만 대상 ([CLI 문서](https://docs.plaud.ai/plaud-mcp-cli/cli)) |
 | Zapier 연동 | ○ (트리거 1개) | "Transcript & Summary Ready" 하나뿐. 재전사·재요약 때도 다시 발동하고, 액션은 0개. 출력 필드는 문서화되어 있지 않음 ([Zapier](https://zapier.com/apps/plaud/integrations)) |
 | Plaud 폴더 자동 배정, 폴더 쓰기 | ✕ | 공식 수단으로는 폴더를 읽을 수도 쓸 수도 없음. 따라서 분류 결과의 정본은 Plaud 밖에 둬야 함 |
@@ -57,15 +59,15 @@
 | **텐센트회의** (중국) | ✕ | 장·주제·발언자별 요약(V3.35.0) ([릴리스](https://cloud.tencent.com/document/product/1095/47064)) | Open API | 미확인 | 요약 축 설계 참고 |
 | **통의청오** (알리바바) | ContentExtraction: 사용자가 정의한 차원을 최대 100개까지 추출 ([문서](https://help.aliyun.com/zh/tingwu/content-extraction)) | 주제 기반 장 분할과 **세밀도 선택**(시간당 Coarse 약 4개 ~ Meticulous 12~15개) ([문서](https://help.aliyun.com/zh/tingwu/chapter-quick-view)) | API. 문장 ID를 근거로 반환 ([CustomPrompt](https://help.aliyun.com/zh/tingwu/custom-prompt)) | 한국어 전사는 감지하지만 장 요약은 중국어/영어로만 출력 | **베이징 리전 전용**이라 도입은 권하지 않음. API 설계만 참고 |
 | **Feishu** 妙记 + 다차원표 | 워크플로의 "AI 분류" 노드가 2~10개 분기에 "기타"까지 지원 ([문서](https://www.feishu.cn/hc/zh-CN/articles/843535382074)) | 章节纪要(장별 요약) ([API](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/minutes-v1/minute/artifacts)) | Open API와 이벤트 | 미확인 | 완제품은 아니고 부품을 조립하는 구조. 파이프라인 설계 참고 |
-| **Rimo**(구 Rimo Voice, 일본) | Actions: 태스크를 제안하고, 승인하면 산출물로 실행 ([소개](https://rimo.app/about/actions)) | — | 권한을 반영하는 CLI·MCP(2026-06) ([공지](https://rimo.app/about/company/news/cli-mcp)) | 60개 이상 언어 | 2026-10-01 이름 변경 |
+| **Rimo**(구 Rimo Voice, 일본) | Actions: 태스크를 제안하고, 승인하면 산출물을 생성 ([소개](https://rimo.app/about/actions)) | — | 권한을 반영하는 CLI·MCP(2026-06) ([공지](https://rimo.app/about/company/news/cli-mcp)) | 60개 이상 언어 | 2026-10-01 이름 변경 |
 | **Otolio**(구 스마트書記, 일본) | kintone 필드 업데이트를 **근거 타임스탬프와 함께 제안**하고 1클릭으로 승인 ([공지](https://www.smartshoki.com/news/post-9933/)) | — | kintone, Salesforce | 미확인 | **사람 검수 UX의 모범 사례** |
 | **Omi** (오픈소스) | 폴더 설명을 보고 대화를 폴더에 자동 배정(MIT) ([변경 이력](https://feedback.omi.me/changelog/goals-tracking-long-awaited-folders-daily-recaps-and-much-more)) | — | REST, 웹훅, MCP | 미확인 | 정확도 문제가 보고된 적 있음 ([#4043](https://github.com/BasedHardware/omi/issues/4043)) |
 
 ### 2.3 시사점
 
-- **빈 영역은 "구간 단위 라우팅" 하나입니다.** 분할(Teams, 텐센트, 통의청오, Feishu)과 회의 단위 분류(Circleback, Read AI, Plaud Events)는 각각 있습니다. 둘을 이어 "구간마다 다른 프로젝트로 보내는" 제품은 확인되지 않았습니다. 이 부분이 CRATA가 만들 부분이자, 나중에 아라에 넣을 차별점입니다.
+- **완제품이 확인되지 않은 영역은 "구간 단위 라우팅" 하나입니다.** 분할(Teams, 텐센트, 통의청오, Feishu)과 회의 단위 분류(Circleback, Read AI, Plaud Events)는 각각 있습니다. 둘을 이어 "구간마다 다른 프로젝트로 보내는" 제품은 이번 조사에서 확인되지 않았습니다(Feishu·n8n·Zapier로 부품을 조립하는 수준은 가능). 이 부분이 CRATA가 만들 부분이자, 나중에 아라에 넣을 차별점 후보입니다.
 - **바로 가져다 쓸 설계 원칙**은 네 가지입니다. ① 닫힌 태그 목록과 설명을 기반으로 분류(Circleback) ② 사업부 축과 회의 유형 축을 나눈 2축 분류(Read AI, MeetGeek) ③ 근거를 붙여 제안하고 사람이 1클릭으로 승인(Otolio, Rimo) ④ 세밀도 조절과 문장 ID 근거(통의청오).
-- **특정 업체에 묶이면 위험합니다.** Limitless는 Meta에 인수된 뒤 한국 서비스가 바로 종료됐고(2025-12, [9to5mac](https://9to5mac.com/2025/12/05/rewind-limitless-meta-acquisition/)), Fathom은 인수됐으며, OpenAI Agent Builder는 2026-11-30 종료 예정입니다([공지](https://developers.openai.com/api/docs/deprecations)). 원문 전사본과 분류 결과는 CRATA 소유 저장소에 보관해야 합니다.
+- **특정 업체에 묶이면 위험합니다.** Limitless는 Meta에 인수(2025-12-05)된 뒤 한국 서비스가 바로 종료됐고([9to5mac](https://9to5mac.com/2025/12/05/rewind-limitless-meta-acquisition/)), Fathom은 2026-09-14 Superhuman 인수가 발표됐으며(종결 미확인), OpenAI Agent Builder는 deprecated 상태로 2026-11-30 종료 예정입니다([공지](https://developers.openai.com/api/docs/deprecations)). 원문 전사본과 분류 결과는 CRATA 소유 저장소에 보관해야 합니다.
 - **국내 실전 선례**도 있습니다. GPTers의 "클로바노트 → 고객사별 Notion DB 자동 정리" 사례에서는 사전 인터뷰, 1건 검증 후 일괄 처리, 처리 로그, "애매하면 미분류" 원칙을 썼습니다([GPTers](https://www.gpters.org/nocode/post/clobanote-which-only-accumulated-UHMKOafs00VtQ8X)). 공개된 Plaud 루틴 예시는 녹음을 4개 프로젝트로 내용 기반 분류하고, 애매한 건은 "Unsorted"로 보내며, 태스크를 NEW/UPDATE/TRACKED로 구분해 중복을 제거합니다([gist](https://gist.github.com/voyera/8b2aa27c9f080497a83e9f0c3849bcb6)).
 
 ---
@@ -76,26 +78,33 @@
 
 ```mermaid
 flowchart TD
-    A["Plaud 녹음<br/>(AutoFlow 전사·요약)"] --> B1["MVP: Zapier 트리거<br/>Transcript & Summary Ready"]
-    A --> B2["1개월~: Plaud CLI·MCP 폴링<br/>get_transcript / get_note"]
+    R["녹음 통제 (파이프라인보다 앞)<br/>L3 대화는 녹음하지 않음 · CRATA가 당사자인 대화만<br/>학맞통 기관 협의는 AutoFlow 제외 방법 확인(TODO)"] --> A
+    A["Plaud 녹음<br/>(AutoFlow 전사·요약: Plaud 클라우드·미국 LLM)"] --> B1["MVP: Zapier 트리거<br/>Transcript & Summary Ready<br/>+ Filter: [강의][아라][AX][공통]만 통과"]
+    A --> B2["1개월~: Plaud CLI·MCP 폴링 (국내 서버)<br/>get_transcript / get_note"]
     B1 --> C["① 수집·정규화<br/>발화ID·화자·타임스탬프, 중복 제거, 원문 보관"]
     B2 --> C
-    C --> D{"② 민감도 등급 판정<br/>L0~L3"}
-    D -- "L3 학생 민감정보" --> Q["격리: 자동 처리 중단<br/>사람 확인 · 국내/온프레미스 경로만"]
+    C --> D{"② 민감도 사전 판정 (LLM 호출 전, 로컬)<br/>제목 접두어 · 키워드·학교/학생 사전<br/>Kiwi 고유명사 · GLiNER"}
+    D -- "L3 의심" --> Q["격리: 자동 처리 중단 · 책임자 알림<br/>원본·전사·Plaud 사본 즉시 삭제 절차"]
     D -- "L0~L2" --> E["③ 규칙 1차 신호<br/>제목 접두어·캘린더·참석자 소속·반복 회의"]
-    E --> F["④ LLM 구간 분할 + 멀티라벨 분류<br/>(PII 마스킹 후, 구조화 JSON)"]
-    F --> G{"⑤ 신뢰도 게이트"}
+    E -- "L0~L1" --> F["④ LLM 구간 분할 + 멀티라벨 분류<br/>Claude API Sonnet 5.5 (학습 미사용 계약)<br/>외부인 연락처 마스킹 후 · 구조화 JSON"]
+    E -- "L2 (MVP 기간은 수동 처리)" --> F2["④ L2 경로 (1개월 차부터)<br/>Bedrock 서울 In-Region Claude Sonnet 5<br/>정본은 국내 저장소"]
+    F --> S{"2차 안전망<br/>LLM이 L3 표시 또는 등급 상향?"}
+    F2 --> S
+    S -- "L3 표시" --> Q
+    S -- "정상" --> G{"⑤ 신뢰도 게이트"}
+    S -- "등급 상향" --> I
     G -- "0.85 이상 + 규칙 일치" --> H["자동 라우팅"]
-    G -- "0.60~0.85" --> I["확인 제안 카드<br/>근거 타임스탬프 · 1클릭 승인"]
-    G -- "0.60 미만 / NEW" --> J["미분류 인박스"]
+    G -- "0.60~0.84" --> I["확인 제안 카드<br/>근거 타임스탬프 · 1클릭 승인"]
+    G -- "0.60 미만 / NEW / JSON 오류" --> J["미분류 인박스"]
     I --> H
     J --> H
-    H --> K["⑥ 저장·라우팅<br/>Notion DB · Google Drive · (이후) 업무사이트"]
+    H --> K["⑥ 저장·라우팅<br/>L0~L1: Notion DB · Google Drive<br/>L2: 국내 저장소(Notion에는 링크만) · (이후) 업무사이트"]
     K --> L["⑦ 산출물 생성<br/>회의록·제안서·강의안·개발 티켓"]
     K --> M["⑧ 프로젝트 메모리<br/>결정·이슈·액션·용어집"]
     I -. "수정 결과" .-> N["⑨ 예시 DB<br/>few-shot · 골든셋"]
     J -. "확정 결과" .-> N
     N -.-> F
+    N -.-> F2
 ```
 
 ### 3.2 단계별 설명
@@ -103,71 +112,79 @@ flowchart TD
 | 단계 | 하는 일 | 핵심 규칙 |
 |---|---|---|
 | ① 수집·정규화 | 전사본을 `[uid │ 시각 │ 화자] 발화` 형태로 바꾸고, 녹음 ID로 중복을 제거함 | Zapier 트리거는 재요약 때도 다시 발동하므로 **중복 제거가 필수**. 원문은 CRATA 저장소에 따로 보관 |
-| ② 민감도 판정 | L0~L3 등급을 매김(8장 참조) | 등급은 **해외 LLM에 보내기 전에** 정해야 함. 메타데이터, 제목 접두어, 키워드 규칙을 쓰고, 판단이 애매하면 높은 등급으로 처리 |
+| ② 민감도 판정 | L0~L3 사전 등급을 매김(8장, 정본은 [04 문서](./04_data-governance.md)) | 등급은 **해외 LLM에 보내기 전에, 로컬에서** 정함. 제목 접두어, 키워드·학교/학생 사전, Kiwi 고유명사, GLiNER 인명 인식을 쓰고, 애매하면 높은 등급으로 처리. MVP(Zapier)에서는 Filter 단계의 접두어·키워드 규칙만 가능. LLM 프롬프트의 L3 규칙은 **2차 안전망**일 뿐임. Plaud 단계(AutoFlow)의 노출은 이 단계로 막을 수 없으므로 녹음 자체를 통제함 |
 | ③ 규칙 신호 | 제목 접두어, 녹음 시각과 맞는 캘린더 일정(일정명, 참석자 도메인, 장소), 반복 일정 여부, 프로젝트 별칭 일치 | Fireflies·Avoma·Granola처럼 결정론적 신호를 먼저 씀. LLM에는 "힌트"로 전달 |
-| ④ LLM 분할·분류 | 회의 전체를 한 번에 넣어 구간과 라벨을 JSON으로 받음 | 60분 회의는 컨텍스트에 통째로 들어감. 구간 범위는 발화 ID로 지정하게 해서 시각을 지어내지 못하게 함 |
+| ④ LLM 분할·분류 | 회의 전체를 한 번에 넣어 구간과 라벨을 JSON으로 받음(LLM 1회 호출) | 60분 회의는 컨텍스트에 통째로 들어감. 구간 범위는 발화 ID로 지정하게 해서 시각을 지어내지 못하게 함. 모델은 사전 등급으로 고름: L0~L1은 Claude API, L2는 Bedrock 서울 In-Region(Sonnet 5 / Opus 5)만 |
 | ⑤ 신뢰도 게이트 | 자동 처리, 확인 제안, 미분류 중 하나로 보냄 | 6장 참조. 처음 2주는 **전부 사람이 확인** |
-| ⑥ 저장·라우팅 | 구간마다 1행을 만들고 프로젝트 DB와 연결함 | **정본은 Plaud 밖**에 둠. Plaud 폴더는 API로 쓸 수 없음 |
+| ⑥ 저장·라우팅 | 구간마다 1행을 만들고 프로젝트 DB와 연결함 | **정본은 Plaud 밖**에 둠. Plaud 폴더는 API로 쓸 수 없음. L2 정본은 국내 저장소(Supabase 서울, NAVER WORKS Drive 등)에 두고 Notion에는 링크만 둠 |
 | ⑦ 산출물 | 사업부와 업무유형별 템플릿으로 초안을 만듦 | 외부로 나가는 것(메일, 고객 공유)은 항상 사람이 확인 |
 | ⑧ 메모리 | 결정, 이슈, 액션, 용어를 덧붙이기만 하는 방식으로 누적 | 원본 회의 링크와 타임스탬프를 근거로 남김 |
 | ⑨ 학습 | 사람이 수정한 결과를 예시로 저장 | 다음 분류 때 비슷한 예시를 자동으로 넣음 |
 
 ### 3.3 입력 경로 4가지 비교
 
-| 경로 | 구성 | 장점 | 한계 | 월 증분 비용(3인·월 40건 / 10인·월 80건) | 설치 시간 |
+| 경로 | 구성 | 장점 | 한계 | 월 총 운영비(3인·월 40건 / 10인·월 80건, Plaud 개인 플랜 기준) | 설치 시간 |
 |---|---|---|---|---|---|
-| **A. Zapier** (1주 MVP 권장) | Plaud 트리거 → Claude → Looping → Notion/Drive → 알림 | 노코드. 녹음이 끝나면 바로 실행되는 푸시 방식 | 출력 필드가 문서화되지 않아 타임스탬프가 빠질 수 있음(**먼저 테스트**). 태스크 과금 | 약 $50 / $110~130 | 8~16시간 |
-| **B. 에이전트 루틴 + Plaud CLI·MCP** (1개월 목표) | 상시 서버나 Claude Code 루틴이 `plaud recent`로 조회 → get_transcript → 분할·분류 → Notion MCP | 타임스탬프와 화자를 확실히 받음. 산출물 생성까지 한 흐름 | 읽기 전용이고 웹훅이 없어 폴링해야 함. Node 20 이상 필요. 0.x 버전 고정 | 약 $35~40 / $105 | 20~40시간 |
-| **C. Plaud 기본 기능** (병행 실험) | Events, Skills, Routines, Notion 커넥터 | 개발이 필요 없음 | 회의 단위로만 배정되고, 보낼 때마다 확인이 필요하며, 크레딧이 들고, 출시 전임 | $20~60 / $80~200 | 2~6시간 |
-| **D. AutoFlow 메일** (최저가 대안) | AutoFlow 메일 → 전용 Gmail → Apps Script → Claude → Drive/Notion | Zapier 비용이 없음 | 메일 형식이 바뀌면 깨지기 쉽고, 화자와 타임스탬프가 빠질 수 있음 | 약 $28 / $85 | 10~20시간 |
+| **A. Zapier** (1주 MVP 권장) | Plaud 트리거 → **Filter(접두어·키워드)** → Claude → JSON 파싱 → Looping → Notion/Drive → 알림 | 노코드. 녹음이 끝나면 바로 실행되는 푸시 방식 | 출력 필드가 문서화되지 않아 타임스탬프가 빠질 수 있음(**먼저 테스트**). Zapier Claude 액션의 구조화 출력 지원은 미확인. 태스크 과금. L0~L1 전용 | 약 $50 / $110~130 | 8~16시간 |
+| **B. 국내 서버 스크립트 + Plaud CLI·MCP** (1개월 목표) | 국내(예: AWS 서울) 상시 서버의 스크립트가 `plaud recent`로 조회 → get_transcript → 로컬 민감도 판정 → 등급별 LLM(Claude API 또는 Bedrock 서울) → Notion MCP 또는 국내 저장소 | 타임스탬프와 화자를 확실히 받음. 로컬 L3 탐지와 L2 경로를 넣을 수 있음. 산출물 생성까지 한 흐름 | 읽기 전용이고 웹훅이 없어 폴링해야 함. Node 20 이상 필요. `@plaud-ai/cli@0.3.14`·`@plaud-ai/mcp@0.3.13` 고정. Claude Code 같은 에이전트가 전사본을 직접 읽게 하면 그 자체가 해외 LLM 호출이 되므로 L2 회의에는 쓰지 않음 | 약 $35~40 / $105 (L2 Bedrock 비용 별도, 확인 필요) | 20~40시간 |
+| **C. Plaud 기본 기능** (병행 실험) | Events, Skills, Routines, Notion 커넥터 | 개발이 필요 없음 | 회의 단위로만 배정되고, 보낼 때마다 확인이 필요하며, 크레딧이 들고, 출시 전임. Plaud 내부 처리라 등급 경계는 녹음 통제로만 지킴 | $20~60 / $80~200 | 2~6시간 |
+| **D. AutoFlow 메일** (Zapier 출력 필드에 결함이 있을 때의 대안, 최저가) | AutoFlow 메일 → 전용 Gmail → Apps Script → Claude → Drive/Notion | Zapier 비용이 없음 | 메일 형식이 바뀌면 깨지기 쉽고, 화자와 타임스탬프가 빠질 수 있음. L0~L1 전용 | 약 $28 / $85 | 10~20시간 |
 
-> 위 비용에는 Plaud 구독, Zapier, LLM API가 포함되고 Notion 좌석료는 빠져 있습니다. Notion Business를 쓰면 3인 +$60, 10인 +$200이 추가됩니다. 경로 A·B·C·D의 구성은 [Zapier](https://zapier.com/apps/plaud/integrations), [Plaud CLI](https://docs.plaud.ai/plaud-mcp-cli/cli), [Plaud Intelligence](https://www.plaud.ai/blogs/news/introducing-plaud-intelligence), [AutoFlow](https://support.plaud.ai/hc/en-us/articles/50835520394009-AutoFlow) 기준입니다. 참고로 Zapier MCP로는 Plaud 데이터를 조회할 수 없습니다. Plaud 쪽에 액션이 없기 때문입니다.
+> 위 비용은 **증분이 아니라 총 운영비**입니다. Plaud 구독(개인 플랜 연간가), Zapier, LLM API가 포함되고 Notion 좌석료는 빠져 있습니다. Notion Business를 쓰면 3인 +$60, 10인 +$200이 추가됩니다. 10인이 Plaud Team을 쓰면 Plaud만 $200(1인당 $20 × 10)이라 경로 A 기준 약 $230~260이 됩니다(9.2절). 경로 A·B·C·D의 구성은 [Zapier](https://zapier.com/apps/plaud/integrations), [Plaud CLI](https://docs.plaud.ai/plaud-mcp-cli/cli), [Plaud Intelligence](https://www.plaud.ai/blogs/news/introducing-plaud-intelligence), [AutoFlow](https://support.plaud.ai/hc/en-us/articles/50835520394009-AutoFlow) 기준입니다. 참고로 Zapier MCP로는 Plaud 데이터를 조회할 수 없습니다. Plaud 쪽에 액션이 없기 때문입니다.
+
+> **TODO (여러 사람의 Plaud 계정):** MCP·CLI·Zapier는 **로그인한 계정의 녹음만** 봅니다. 녹음하는 사람이 여럿이면 다음 중 하나를 정해야 합니다. ① 계정별로 CLI·MCP 인증을 따로 두고 서버가 계정마다 폴링 ② 계정마다 Zap을 복제(10인이면 Zap 10개, 태스크 사용량 증가) ③ Plaud Team의 공유 공간으로 모으기(공유 범위와 API 노출 여부 확인 필요). 1주 MVP는 녹음을 주로 하는 1~2개 계정으로 시작합니다.
 
 ### 3.4 도구 선택과 이유
 
 | 역할 | MVP 선택 | 이유 | 대안·나중 |
 |---|---|---|---|
-| 처리 엔진 | Claude Sonnet 5.5 API + 구조화 출력 | 한국어 품질이 좋고, JSON 스키마 형식을 보장하며([문서](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)), 건당 약 175원 | 분류만 할 때는 Haiku 4.5(건당 약 65원). L2 등급은 국내 리전(8장) |
-| 자동화 | Zapier Pro 750 태스크($19.99/월, 연간 결제) | Formatter·Paths·Filter 단계는 태스크로 차감되지 않음([요금](https://zapier.com/pricing)) | n8n: Text Classifier 노드가 "여러 클래스 동시 허용"과 "매칭 없음 → Other 분기"를 지원([문서](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.text-classifier/)). 셀프호스팅 CE는 무료 |
-| 정본 저장소 | **TODO: 지금 쓰는 협업 도구 확인.** Notion을 쓰고 있다면 Notion DB(관계·뷰를 검수 화면으로 겸용), 아니라면 Google Sheets + Drive | DB 하나에 회의, 구간, 프로젝트, 결정, 액션을 관계로 연결 | 3개월 이후 CRATA 업무사이트(GOAL B와 같은 구조) |
+| 처리 엔진 | Claude Sonnet 5.5 API(상용 API, 학습 미사용) + 구조화 출력 | 한국어 품질이 좋고, API 직접 호출 시 JSON 스키마 형식을 보장하며([문서](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)), 건당 약 175원. 단 **Zapier의 Claude 액션이 구조화 출력을 지원하는지는 미확인** → MVP는 JSON 파싱 실패에 대비(3.5절) | 3개월 차에 분류만 Haiku 4.5(건당 약 80원)로 분리하되 **L0~L1 전용**(Haiku 4.5는 Bedrock 서울에서 Global 교차 리전 전용이라 L2에 쓸 수 없음). L2는 Bedrock 서울 In-Region의 Claude Sonnet 5 / Opus 5만(8장) |
+| 자동화 | Zapier Pro 750 태스크($19.99/월, 연간 결제) | Formatter·Paths·Filter 단계는 태스크로 차감되지 않음([요금](https://zapier.com/pricing)). 첫 단계 Filter로 MVP 대상이 아닌 회의를 걸러냄 | n8n: Text Classifier 노드가 "여러 클래스 동시 허용"과 "매칭 없음 → Other 분기"를 지원([문서](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.text-classifier/)). 셀프호스팅 CE는 무료 |
+| 정본 저장소 | **TODO: 지금 쓰는 협업 도구 확인.** L0~L1은 Notion을 쓰고 있다면 Notion DB(관계·뷰를 검수 화면으로 겸용), 아니라면 Google Sheets + Drive. **L2는 국내 저장소**(Supabase 서울, NAVER WORKS Drive 등)가 정본이고 Notion에는 링크만 | DB 하나에 회의, 구간, 프로젝트, 결정, 액션을 관계로 연결 | 3개월 이후 CRATA 업무사이트(GOAL B와 같은 구조) |
 | 알림 | Slack 또는 메일(**TODO: 사내 메신저 확인**) | 미분류와 확인 요청을 알림 | 사내 메신저 봇 |
 | 장표 산출물 | Gamma API(템플릿 기반 생성, PDF/PPTX 내보내기) ([문서](https://developers.gamma.app/)) | 브랜드 템플릿을 재사용할 수 있음 | 사내 PPT 템플릿 |
 | 개발 티켓 | Linear MCP(**TODO: 사용 여부**) ([문서](https://linear.app/docs/mcp)) | 아라 개발 회의에서 바로 티켓 생성 | Notion 업무 DB 또는 GitHub |
 
-> Notion Custom Agents는 Business 이상에서 쓸 수 있고 2026-05-04부터 1,000 크레딧당 $10로 과금됩니다([도움말](https://www.notion.com/help/custom-agents)). Plaud에서 온 데이터로 에이전트를 돌리려면 "AI 회의록 완료" 트리거가 아니라 "DB에 페이지 추가" 트리거를 써야 합니다. MVP는 Custom Agents 없이 만들 수 있습니다.
+> Notion Custom Agents는 Business 이상에서 쓸 수 있고 2026-05-04부터 1,000 크레딧당 $10로 과금됩니다([도움말](https://www.notion.com/help/custom-agents), [제품 페이지](https://www.notion.com/product/ai) 기준. 회의 1건당 크레딧 소모량은 미검증). 트리거에는 "AI 회의록 완료"와 "DB에 페이지 추가" 등이 있습니다. Plaud에서 온 데이터로 에이전트를 돌리려면 "DB에 페이지 추가" 트리거를 써야 할 것으로 보입니다 **(미검증: 추론)**. MVP는 Custom Agents 없이 만들 수 있습니다.
 
 ### 3.5 단계별 로드맵
 
 #### 0단계 (1~2일, 추가 비용 0원): 준비
-- 대표와 1~2시간 인터뷰해서 분류 체계 v0.1(4장)을 확정합니다. 진행 중인 고객과 과정, 학맞통 기관, 아라 하위 과제를 레지스트리에 등록합니다.
-- Claude Desktop/Code에 Plaud MCP를 연결합니다. 과거 녹음 30건을 수동으로 분할·라벨링해서 **골든셋**(정답 세트)을 만듭니다. 이 단계에서 프롬프트를 다듬습니다. 순서는 1건 검증 후 일괄 처리입니다.
-- 녹음 제목 규칙을 정합니다. 녹음 직후 앱에서 `[강의] [학맞통] [아라] [공통] [혼합]` 접두어를 붙입니다. 제목 키워드는 list_files 필터로도 쓰입니다.
+- 대표와 1~2시간 인터뷰해서 분류 체계 v0.2(4장)를 확정합니다. 진행 중인 고객과 과정, 학맞통 기관, 아라 하위 과제를 레지스트리에 등록합니다.
+- Claude에 Plaud MCP(`@plaud-ai/mcp@0.3.13`)를 연결합니다. Claude는 **Team/Enterprise 플랜 또는 API(학습 미사용)**로 씁니다. 개인 플랜을 써야 한다면 학습 허용 설정이 꺼져 있는지 먼저 확인합니다.
+- 과거 녹음을 수동으로 분할·라벨링해서 **골든셋**(정답 세트)을 만듭니다. 골든셋은 **[강의][아라][AX][공통] 회의만**으로 구성합니다. 과거 녹음에는 접두어가 없으므로 사람이 제목과 내용을 보고 고르고, 학맞통·학생이 언급된 회의와 견적·계약 조건(L2)이 중심인 회의는 뺍니다. 애매하면 뺍니다. 회의 30건 안팎에서 시작해 **구간 100개 이상**이 되도록 늘립니다. 이 단계에서 프롬프트를 다듬습니다. 순서는 1건 검증 후 일괄 처리입니다.
+- 녹음 제목 규칙을 정합니다. 녹음 직후 앱에서 `[강의] [학맞통] [아라] [AX] [공통] [혼합]` 6개 접두어 중 하나를 붙입니다(4.2절 `title_prefixes`). 제목 키워드는 list_files 필터와 Zapier Filter에도 쓰입니다.
+- 녹음 원칙을 공지합니다(8.1절): CRATA 진행자가 당사자로 참여한 대화만 녹음, L3 대화는 녹음하지 않음, 학교·교육청에서는 녹음 전 기관 보안담당 확인.
 
 #### 1주 MVP: "복사·붙여넣기를 없애고, 전부 사람이 확인"
-1. Plaud AutoFlow를 켜고 **CRATA 전용 요약 템플릿**을 만듭니다. 섹션은 회의 요약, 사업부 후보, 프로젝트·고객 후보, 주제 전환 지점(시각), 언급된 기관·고객명, 결정·할 일입니다.
-2. Zapier: 트리거(최소 길이 3~5분) → 중복 키(파일 ID 필드가 있으면 그것, 없으면 제목+시각) → Claude 호출(5장 프롬프트, JSON) → 구간마다 반복 → "구간 DB" 행 생성과 프로젝트 관계 연결 → 신뢰도와 관계없이 "확인 대기"로 넣고 알림.
+- **대상은 [강의][아라][AX][공통] 회의만**입니다. 학맞통 회의(기본 L2)는 L2 경로가 생기는 1개월 차 이후에만 넣습니다. **MVP 기간(그리고 AutoFlow 제외 방법이 확인되기 전까지) 학맞통 기관 협의 등 L2가 예상되는 회의는 Zap에 연결된 Plaud 계정으로 녹음하지 않습니다.** 메모 또는 국내 STT(RTZR·CLOVA Speech)로 기록하거나, Zap에 연결하지 않고 AutoFlow를 끈 별도 계정·기기를 씁니다([04 문서](./04_data-governance.md) 6.4절).
+1. Zap 연결 계정(L0~L1 회의용)에서 Plaud AutoFlow를 켜고 **CRATA 전용 요약 템플릿**을 만듭니다. 섹션은 회의 요약, 사업부 후보, 프로젝트·고객 후보, 주제 전환 지점(시각), 언급된 기관·고객명, 결정·할 일입니다. AutoFlow는 동기화 즉시 Plaud 클라우드와 미국 LLM으로 요약하므로, **TODO: 학맞통 기관 협의 녹음을 AutoFlow 대상에서 빼는 방법 확인(별도 계정·기기, 수동 동기화)**.
+2. Zapier: 트리거(최소 길이 3~5분) → **Filter(첫 단계): 제목 접두어가 `[학맞통]`이거나 접두어가 없으면 중단.** MVP 대상이 아닌 `[혼합]`도 중단합니다(실제 설정은 `[강의][아라][AX][공통]` allow-list). `[AX]` 녹음 중 고객 진단·인터뷰(L2)는 MVP 대상이 아닙니다(별도 계정). **Zapier 트리거는 Filter보다 먼저 전사·요약을 Zapier(미국)로 받으므로 Filter는 '해외 LLM 호출 전' 게이트일 뿐 국외 전송 전 게이트가 아닙니다. 그래서 1개월 차 전까지 학맞통 기관 협의·GOAL B 고객 진단 녹음은 MVP Zap에 연결된 계정에 동기화하지 않습니다**([04 문서](./04_data-governance.md) 6.2·6.4절, 4.2절 `mvp_filter.exclude_l2_recordings`). 제목·전사에 L3·L2 키워드(4.2절 `pre_llm_gate`)가 있어도 중단하고 수동 처리 큐로 보냅니다 → 중복 키(파일 ID 필드가 있으면 그것, 없으면 제목+시각) → Claude Sonnet 5.5 호출(5장 프롬프트, JSON) → **JSON 파싱(Code 또는 Formatter 단계). Zapier Claude 액션의 구조화 출력 지원은 미확인이므로, 파싱에 실패하면 1회 재시도하고 다시 실패하면 '미분류'로 보냄** → 구간마다 반복 → "구간 DB" 행 생성과 프로젝트 관계 연결 → 신뢰도와 관계없이 "확인 대기"로 넣고 알림.
 3. 산출물은 회의록과 액션아이템 2종만 만듭니다.
-4. **통과 기준(제안):** 회의 20건 처리, 사업부 단위 정확도 측정, 담당자의 수정 시간 기록.
+4. L2 키워드(견적·계약 조건, 학맞통 연수, 아라 파일럿·위기·피드백, 고객 진단·결재·이관, 검사 결과 등. 4.2절 `pre_llm_gate.l2_keywords`)로 중단되는 [강의][아라][AX][공통] 회의가 생기므로 MVP의 자동화 범위는 그만큼 줄어듭니다. 1개월 차 L2 경로가 생기면 해소됩니다.
+5. **MVP 점검(제안, 통과 판정 아님):** 회의 20건 처리, 사업부 단위 정확도 측정, 담당자의 수정 시간 기록, Filter 중단 건수와 JSON 파싱 실패율 기록. Zapier 출력 필드(파일 ID, 타임스탬프, 화자)에 결함이 있으면 경로 D(AutoFlow 메일)로 바꿉니다.
 
-#### 1개월: "정확한 구간 분할 + 프로젝트 메모리"
-1. 수집을 경로 B로 옮깁니다. Plaud CLI·MCP(0.3.x로 고정)로 폴링하고, processed_ids로 처리 이력을 남기고, 원문 전사를 별도 보관합니다.
+#### 1개월: "정확한 구간 분할 + 프로젝트 메모리 + L2 경로"
+1. 수집을 경로 B로 옮깁니다. 국내 서버의 스크립트가 Plaud CLI(`@plaud-ai/cli@0.3.14`)·MCP(`@plaud-ai/mcp@0.3.13`)로 폴링하고, processed_ids로 처리 이력을 남기고, 원문 전사를 별도 보관합니다. 버전을 올릴 때는 골든셋 회귀 테스트를 먼저 돌립니다.
 2. 발화 ID 기반 정규화와 2단계 처리를 도입합니다. 라우팅용은 굵게 나누고, 산출물용은 구간 안에서 세밀하게 나눕니다.
-3. 민감도 게이트와 PII 마스킹(8장)을 적용하고, L3는 격리 큐로 보냅니다.
-4. 프로젝트 메모리 DB(결정, 이슈, 액션, 이해관계자, 용어집)를 만들고 다음 회의 전 자동 브리핑을 붙입니다.
-5. 산출물 템플릿 5종을 추가합니다(7장): 강의 요구분석, 견적 제안, 학맞통 기관 협의 메모(비식별), 아라 티켓, 후속 메일 초안.
-6. 신뢰도 게이트를 켭니다. 0.85 이상이면서 규칙과 일치할 때만 자동 처리합니다.
-7. Plaud Intelligence가 배포되면 사업부별 Event를 만들어 2~4주 병행 시험하고 분류 정확도를 비교합니다.
-8. **통과 기준(제안):** 사업부 정확도 95% 이상, 프로젝트 정확도 85% 이상, 자동 처리 비율 40% 이상.
+3. **LLM 호출 전 로컬 민감도 판정**을 넣습니다: 접두어·키워드·학교/학생 사전, Kiwi 고유명사, GLiNER 인명 인식, PII 마스킹(8장). L3 의심이면 처리를 멈추고 격리·삭제 절차로 보냅니다.
+4. **L2 경로를 만듭니다:** Amazon Bedrock 서울 리전 계정 개설, Claude Sonnet 5 / Opus 5 모델 접근 신청, 서울 In-Region 호출 확인(교차 리전 프로파일 사용 금지), 국내 정본 저장소(Supabase 서울 또는 NAVER WORKS Drive) 연결, Notion에는 링크만 게시. Bedrock 경로는 Message Batches 할인이 없고 요금은 Bedrock 요금을 따릅니다(확인 필요). 이 경로가 동작한 뒤에 학맞통 기관 협의(학생 비식별 전제)와 L2 키워드로 중단되던 회의를 투입합니다.
+5. 프로젝트 메모리 DB(결정, 이슈, 액션, 이해관계자, 용어집)를 만들고 다음 회의 전 자동 브리핑을 붙입니다.
+6. 산출물 템플릿 5종을 추가합니다(7장): 강의 요구분석, 견적 제안, 학맞통 기관 협의 메모(비식별), 아라 티켓, 후속 메일 초안.
+7. 신뢰도 게이트를 켭니다. 처음 2주가 지난 뒤 0.85 이상이면서 규칙과 일치할 때만 자동 처리합니다.
+8. Plaud Intelligence가 배포되면 사업부별 Event를 만들어 2~4주 병행 시험하고 분류 정확도를 비교합니다(L0~L1 회의만).
+9. **통과 기준(제안):** 사업부 정확도 95% 이상, 프로젝트 정확도 85% 이상, 자동 처리 비율 40% 이상. **평가 표본:** 사람이 확정한 구간 100개 이상, 사업부별 최소 20구간, 활성 프로젝트별 최소 5구간. 표본이 모자란 클래스는 "판정 보류"로 두고 다음 달에 다시 봅니다. 회의 20~30건(구간 30~50개)으로 95%를 판정하면 95% 신뢰구간이 ±6~8%p로 넓어 의미가 약하고, 구간 100개면 약 ±4%p로 좁혀집니다(정규근사 계산). 미분류율과 산출물 작성시간 단축률은 **보조 지표**로 추이만 봅니다.
 
 #### 3개월: "스스로 좋아지는 시스템, 그리고 아라 모듈화"
 1. 예시 DB에서 비슷한 사례 5개를 KURE-v1 한국어 임베딩([모델](https://huggingface.co/nlpai-lab/KURE-v1))으로 찾아 few-shot으로 자동 삽입합니다.
-2. 확정 라벨이 쌓이면 SetFit(클래스당 약 8개 예시로도 경쟁력이 있음, [GitHub](https://github.com/huggingface/setfit))으로 값싼 1차 분류기를 만듭니다. SetFit과 LLM의 결과가 다르면 검수로 보냅니다.
-3. 긴 회의는 경계를 교차 검증합니다. 임베딩 변화점(ruptures, TreeSeg)과 LLM 경계를 비교합니다([ruptures](https://github.com/deepcharles/ruptures), [TreeSeg](https://github.com/AugmendTech/treeseg)).
-4. 여러 회의를 묶은 리포트를 만듭니다. 사업부별 주간 리포트와 "이 프로젝트에서 지난 3번 회의의 결정은?" 같은 질의응답입니다.
-5. (선택) 시간축 메모리 Graphiti를 도입합니다([GitHub](https://github.com/getzep/graphiti)). CRATA 회의 저장소를 MCP로 노출해 Claude와 아라가 직접 조회하게 합니다(Rimo 방식).
-6. 품질이 나쁜 녹음은 재전사 A/B를 합니다: RTZR, CLOVA Speech(한영 혼합 enko 모드)(9장).
-7. 파이프라인을 아라 모듈로 정리해서 GOAL B(고객사 업무사이트)에 재사용합니다.
-8. **통과 기준(제안):** 프로젝트 정확도 90% 이상, 자동 처리 60% 이상, 회의 1건당 사람 검수 2분 이하.
+2. **Haiku 분리(L0~L1 전용):** L0~L1 회의는 Haiku 4.5로 분할·분류하고, 확정된 구간의 산출물만 Sonnet 5.5로 만듭니다. L2 회의는 계속 Bedrock 서울 In-Region Sonnet 5로 처리합니다.
+3. 확정 라벨이 쌓이면 SetFit(클래스당 약 8개 예시로도 경쟁력이 있음, [GitHub](https://github.com/huggingface/setfit))으로 값싼 1차 분류기를 만듭니다. SetFit과 LLM의 결과가 다르면 검수로 보냅니다.
+4. 긴 회의는 경계를 교차 검증합니다. 임베딩 변화점(ruptures, TreeSeg)과 LLM 경계를 비교합니다([ruptures](https://github.com/deepcharles/ruptures), [TreeSeg](https://github.com/AugmendTech/treeseg)).
+5. 여러 회의를 묶은 리포트를 만듭니다. 사업부별 주간 리포트와 "이 프로젝트에서 지난 3번 회의의 결정은?" 같은 질의응답입니다.
+6. (선택) 시간축 메모리 Graphiti를 도입합니다([GitHub](https://github.com/getzep/graphiti)). 그 전까지는 Notion DB 또는 Postgres/YAML로 충분합니다. CRATA 회의 저장소를 MCP로 노출해 Claude와 아라가 직접 조회하게 합니다(Rimo 방식).
+7. 품질이 나쁜 녹음은 재전사 A/B를 합니다: RTZR, CLOVA Speech(한영 혼합 enko 모드)(9장).
+8. 파이프라인을 아라 모듈로 정리해서 GOAL B(고객사 업무사이트)에 재사용합니다. 학교·교육청에 멀티테넌트 SaaS로 제공하려면 CSAP 인증이 필요하므로, 그 전까지 공공 고객에는 내부망 설치형이나 인증 그룹웨어 내장형만 제안합니다([03 문서](./03_company-dna-playbook.md) 로드맵).
+9. **통과 기준(제안):** 프로젝트 정확도 90% 이상, 자동 처리 60% 이상, 회의 1건당 사람 검수 2분 이하. 평가 표본 기준은 1개월과 같습니다(분기 정밀 평가는 6.3절).
 
 ---
 
@@ -181,38 +198,106 @@ flowchart TD
 4. **코드가 아니라 데이터로 관리합니다.** 정본은 YAML이나 Notion DB입니다. 프롬프트의 enum은 매 호출 때 정본에서 생성하므로 새 프로젝트가 생겨도 프롬프트를 고칠 필요가 없습니다.
 5. **계층은 3단으로 고정하고, 형제 노드는 10개 안팎으로 유지합니다.** Feishu의 AI 분류 노드도 2~10개 분기로 제한됩니다.
 6. **교차 규칙을 문서로 적어 둡니다.** 예: "학맞통 주제의 교사 연수는 SSI가 primary, EDU는 secondary." 규칙이 없으면 같은 회의가 매번 다르게 분류됩니다.
-7. **민감도 기본값을 노드에 붙입니다.** 예를 들어 SSI는 기본 L2이고, 학생 정보가 감지되면 L3로 올립니다.
+7. **민감도 기본값을 노드에 붙입니다.** EDU는 기본 L1, EDU.proposal(견적·계약 조건)은 L2입니다. SSI는 기본 L2이고, ARA.pilot·ARA.safety·ARA.feedback도 기본 L2이며 SSI와 같은 L3 트리거를 씁니다. L3 트리거가 걸리면 등급을 올려 처리를 계속하는 것이 아니라 **처리를 멈추고 격리·삭제**합니다. 등급 정의의 정본은 [04 문서](./04_data-governance.md)입니다.
 8. **용어집은 두 군데에 씁니다.** 같은 별칭 목록을 STT 부스팅 사전과 분류 힌트로 함께 씁니다.
 9. **미분류는 실패가 아니라 정상적인 출구입니다.** 억지로 분류하는 것보다 미분류가 낫습니다(GPTers 사례와 voyera 루틴의 공통 원칙).
 10. **담당자와 리뷰 주기를 정합니다.** 월 1회 혼동 사례를 보고 설명과 별칭을 고칩니다.
 
-### 4.2 CRATA 분류 체계 YAML 초안 v0.1
+### 4.2 CRATA 분류 체계 YAML 초안 v0.2
 
-> 강의·워크샵, 학맞통, 아라는 사용자가 말한 사업부입니다. DX(진단·코칭)는 회사 웹사이트([crata.co.kr](https://crata.co.kr/about))에 4종 행동방식검사, Re:Cover 프로그램, 강사교육이 보여서 후보로 넣었습니다. AXC(AX 컨설팅·업무사이트)는 GOAL B를 반영한 후보입니다. 두 후보는 별도 사업부인지 **TODO**로 확인해야 합니다.
+> 강의·워크샵, 학맞통, 아라는 사용자가 말한 사업부입니다. DX(진단·코칭)는 회사 웹사이트([crata.co.kr](https://crata.co.kr/about))에 4종 행동방식검사, Re:Cover 프로그램, 강사교육이 보여서 **후보(TODO 확인)**로 넣었습니다. AXC(AX 컨설팅·업무사이트)는 GOAL B를 반영한 **후보(TODO 확인)**입니다. 두 후보는 별도 사업부인지 대표 인터뷰에서 확인해야 합니다.
+>
+> v0.2에서 바뀐 점: 녹음 제목 접두어를 `[강의][학맞통][아라][AX][공통][혼합]` 6개로 통일했습니다(`[학맞통-사례]` 삭제). EDU 기본 등급은 L1, EDU.proposal은 L2입니다. ARA.pilot·ARA.safety·ARA.feedback은 기본 L2이고 SSI와 같은 L3 트리거를 씁니다. 학생 사례를 다루는 업무유형(`SSI.case_meeting`)은 삭제했습니다. 사례회의는 녹음하지 않으므로 분류 대상이 아닙니다. LLM 호출 전 로컬 게이트(`pre_llm_gate`)와 MVP Filter(`mvp_filter`)를 추가했습니다.
+>
+> 구현 파일: [`config/meeting_taxonomy.yaml`](../../config/meeting_taxonomy.yaml) (아래 블록과 같은 내용).
 
 ```yaml
-# CRATA 회의 분류 체계 v0.1 (초안, 2026-10-01)
+# CRATA 회의 분류 체계 v0.2 (초안, 2026-10-01)
 # 이 파일(또는 같은 구조의 Notion DB)이 정본이다. 프롬프트의 enum은 매 호출 때 여기서 생성한다.
+# 설계 문서: docs/research/02_meeting-auto-classification.md 4.2절
+# 민감도 등급 정의의 정본은 docs/research/04_data-governance.md 이다. 아래 sensitivity_levels는 요약이다.
 meta:
-  version: "0.1"
+  version: "0.2"
   owner: "TODO: 분류체계 관리자 1명"
   last_reviewed: "2026-10-01"
   review_cycle: "월 1회. 혼동 사례를 보고 description, keywords, aliases를 고친다"
+  changelog:
+    - "0.2 (2026-10-01): 접두어 6종 통일, 등급 재정의(EDU 기본 L1, EDU.proposal L2, ARA.pilot·safety·feedback L2), SSI.case_meeting 삭제, LLM 호출 전 로컬 게이트(pre_llm_gate)와 MVP Filter 추가"
+    - "0.2 보강 (2026-10-01): mvp_filter.exclude_l2_recordings(L2 녹음 계정 분리) 추가, pre_llm_gate.l2_keywords 확장(진단·결재·이관, 파일럿·위기·피드백, 학맞통, 검사), L2 정의에 'GOAL B 고객 진단 자료 포함' 명시"
+
+# ─────────────────────────────── 녹음 제목 접두어 (이 6개만 쓴다)
+title_prefixes:
+  - {prefix: "[강의]", business_line_hint: EDU, mvp: true}
+  - {prefix: "[학맞통]", business_line_hint: SSI, mvp: false, note: "기본 L2. 1개월 차 L2 경로(Bedrock 서울)가 생긴 뒤에만 자동 처리"}
+  - {prefix: "[아라]", business_line_hint: ARA, mvp: true, note: "pilot·safety·feedback 구간은 L2. MVP에서는 L2 키워드로 중단될 수 있음"}
+  - {prefix: "[AX]", business_line_hint: AXC, mvp: true, note: "AX 컨설팅·업무사이트(GOAL B). AXC는 후보 사업부(TODO 확인). CRATA 사내 AX는 CORE.internal_ax. 고객 진단·인터뷰·워크샵·이관 녹음(AXC.diagnosis·AXC.migration)은 L2라 1개월 차 전까지 MVP Zap에 연결된 Plaud 계정으로 녹음하지 않음(mvp_filter.exclude_l2_recordings). MVP 자동 처리는 요구사항·설계·인수인계 등 L1 회의만"}
+  - {prefix: "[공통]", business_line_hint: CORE, mvp: true}
+  - {prefix: "[혼합]", business_line_hint: null, mvp: false, note: "여러 사업부가 섞인 회의. 학맞통 파트가 섞일 수 있어 1개월 차 이후 처리"}
+# 접두어가 없으면 MVP에서는 처리하지 않는다. '[학맞통-사례]' 같은 접두어는 만들지 않는다(L3 대화는 녹음하지 않음).
+
+# ─────────────────────────────── 1주 MVP: Zapier 첫 단계 Filter
+mvp_filter:
+  continue_only_if_prefix_in: ["[강의]", "[아라]", "[AX]", "[공통]"]   # [학맞통]·[혼합]·접두어 없음은 중단
+  exclude_l2_recordings: "GOAL B 고객 진단·인터뷰·워크샵 녹음(AXC.diagnosis·AXC.migration, L2)과 학맞통 기관 협의는 1개월 차 L2 경로 전까지 MVP Zap에 연결하지 않은 별도 Plaud 계정·기기(AutoFlow 끔, 수동 동기화)로 녹음하거나 녹음 없이 메모. ARA.pilot·safety·feedback, 견적·계약 협상 등 L2가 예상되는 회의도 같다(04 문서 2.4절). 실수로 Zap 계정에 들어오면 제목·전사 L2 키워드로 중단 → 수동 처리 큐. 이 분리가 1차 수단이고 Filter는 2차 장치(Zapier가 녹음을 받은 뒤에 중단). AutoFlow를 끄는 방법은 TODO"
+  stop_if_text_contains: "pre_llm_gate.l3_keywords + pre_llm_gate.l2_keywords (제목·전사)"
+  on_stop: "수동 처리 큐(LLM 호출 없음)"
+  llm: "Claude Sonnet 5.5 (Claude API, 학습 미사용)"
+  json_parse_failure: "1회 재시도 후 미분류(UNCLASSIFIED)로 보냄. Zapier Claude 액션의 구조화 출력 지원은 미확인"
+  human_review: "처음 2주는 신뢰도와 관계없이 전부 사람 확인"
+
+# ─────────────────────────────── ② 민감도 사전 판정 (해외 LLM 호출 전, 로컬)
+pre_llm_gate:
+  order: [title_prefix, keyword_dictionary, school_agency_dictionary, kiwi_proper_nouns, gliner_person]
+  mvp_scope: "MVP(Zapier)는 접두어·키워드 규칙만. Kiwi·GLiNER는 1개월 차 국내 서버(경로 B)부터"
+  l3_keywords: [사례회의, 상담일지, 상담 내용, 학폭 사안, 가해학생, 피해학생, 보호자 면담, 지원대상학생 명단]   # (제안) 운영하며 보강
+  l2_keywords: [견적, 단가, 계약 조건, 계약서, NDA, 비밀유지, 대외비, 파일럿, 시범 도입, 대화 로그, 위기, 에스컬레이션, 자해, 사용자 피드백, 학맞통, 학생맞춤통합지원, 교육지원청 협의, 검사 결과, 결과지, 위임전결, 결재선, 결재 양식, 완결 문서, 감사로그, 진단 인터뷰, 이관, 마이그레이션]   # (제안) 운영하며 보강
+  dictionaries:
+    school_agency_names: "TODO: 협의 중인 학교·교육청·기관명 사전"
+    student_patterns: "TODO: 학년·반과 이름의 조합, 학생 호칭 패턴"
+  ner: ["Kiwi 고유명사(NNP)", "GLiNER 인명"]
+  when_unsure: "높은 등급으로 처리"
+  on_l3: "자동 처리 중단 → 격리 → 책임자 알림 → 원본·전사·Plaud 사본 즉시 삭제 절차. 다른 경로로 처리를 계속하지 않는다"
+  on_l2: "Bedrock 서울 In-Region(Claude Sonnet 5 / Opus 5)만. MVP 기간에는 수동 처리"
+  llm_rule_role: "프롬프트의 L3 규칙은 2차 안전망이다"
+  upstream_limit: "Plaud AutoFlow는 동기화 즉시 Plaud 클라우드·미국 LLM으로 요약하므로 이 게이트로 막을 수 없다. 녹음 자체를 통제한다"
 
 cross_rules:   # 사업부가 겹칠 때의 우선순위 (TODO: 대표 확인)
   - "학맞통이 주제인 연수·강의는 SSI가 primary, EDU는 secondary"
   - "강의 중 아라 시연·홍보 논의는 EDU primary, ARA secondary"
-  - "아라를 학교·기관에 시범 도입하는 논의는 ARA.pilot primary. 학맞통 관련이면 SSI secondary"
+  - "아라를 학교·기관에 시범 도입하는 논의는 ARA.pilot primary(L2). 학맞통 관련이면 SSI secondary"
   - "특정 사업부의 견적·정산은 그 사업부의 업무유형으로 분류. 회사 전체 재무만 CORE.finance"
+  - "견적·계약 조건(금액·단가·조건)이 나오는 구간은 사업부와 관계없이 L2"
   - "이 회의 분류 시스템 자체에 대한 논의는 ARA-MEETING-PIPELINE"
 
-sensitivity_levels:
-  L0: "공개 정보 위주: 강의 기획, 마케팅, 공개 자료"
-  L1: "CRATA 내부 업무: 아라 개발, 내부 운영, 업무 연락처 수준의 개인정보"
-  L2: "고객 기밀: 고객사·기관 내부 사정, 계약 조건"
-  L3: "민감: 학생 개인정보·상담·건강·가정, 14세 미만, 인사 분쟁"
+sensitivity_levels:   # 요약. 정의 정본은 04_data-governance.md
+  L0:
+    desc: "공개·내부 일반 정보"
+    llm: "해외 LLM API 허용(학습 미사용 계약)"
+    storage: "Notion/Drive"
+  L1:
+    desc: "일반 영업·고객 미팅, 일반 개인정보(성명·연락처 수준). EDU 기본값"
+    llm: "녹음 고지·동의 후, 학습 미사용 API 계약(상용 API 또는 Team·Enterprise)으로 해외 LLM 허용. 외부인 연락처는 마스킹 후 전송"
+    storage: "Notion/Drive. 처리방침에 국외이전 공개"
+  L2:
+    desc: "고객이 NDA·비밀로 지정한 자료(GOAL B 고객 진단 자료 포함), 견적·계약 조건(EDU.proposal 포함), 학맞통 기관 협의(학생 비식별 전제), ARA.pilot·ARA.safety·ARA.feedback"
+    llm: "Amazon Bedrock 서울 In-Region의 Claude Sonnet 5 / Opus 5만. Haiku 4.5·Sonnet 5.5·Opus 5.5는 서울에서 Global 교차 리전 전용이라 금지. Message Batches 할인 없음. 요금은 Bedrock 요금(확인 필요)"
+    storage: "국내 저장소(Supabase 서울, NAVER WORKS Drive 등)가 정본. Notion에는 링크만"
+  L3:
+    desc: "학생 식별 가능 정보, 상담·사례 내용"
+    llm: "처리하지 않음"
+    storage: "저장하지 않음"
+    rule: "녹음하지 않는 것이 원칙. 실수로 들어오면 자동 처리 중단·격리·즉시 삭제"
 
-meeting_types:   # 두 번째 축. 산출물 템플릿 선택에 쓴다
+student_l3_triggers: &student_l3_triggers   # SSI와 ARA.pilot·safety·feedback이 같이 쓴다
+  - "학생 실명"
+  - "학년·반과 이름의 조합"
+  - "상담·사례 내용"
+  - "가정·건강·경제 형편"
+  - "학폭 사안 당사자"
+  - "개별 학생 사례 논의(사례회의)"
+  - "실제 학생 대화 로그 원문 인용"
+
+meeting_types:   # 두 번째 축. 산출물 템플릿 선택에 쓴다 (사례회의 유형은 두지 않는다)
   - {id: client_meeting, name: "고객 미팅", keywords: [요구사항, 견적, 고객사, 담당자]}
   - {id: agency_consult, name: "기관 협의", keywords: [교육청, 교육지원청, 학교, 센터, 협의]}
   - {id: planning, name: "기획·브레인스토밍", keywords: [기획, 아이디어, 설계, 구상]}
@@ -226,8 +311,9 @@ business_lines:
   # ─────────────────────────────── 강의·워크샵
   - id: EDU
     name: "강의·워크샵"
+    status: active
     owner: "TODO"
-    default_sensitivity: L0
+    default_sensitivity: L1
     description: "기업·학교·교사 대상 AI 강의·워크샵·연수의 수주, 기획, 운영, 사후관리"
     include: "고객 요구 미팅, 커리큘럼·교안 작업, 강사 배정, 견적·정산, 사후 리뷰"
     exclude: "학맞통이 주제인 연수(→ SSI), 아라 제품 개발 자체(→ ARA)"
@@ -256,27 +342,28 @@ business_lines:
         status: active
     task_types:
       - {id: EDU.inquiry, name: "문의·수요 발굴", description: "신규 문의 대응, 교육 수요 파악", keywords: [문의, 수요, 소개, 연락], examples: ["○○재단 담당자 첫 통화"], owner: TODO}
-      - {id: EDU.proposal, name: "제안·견적", description: "제안서·견적서 작성, 가격·조건 협의", keywords: [제안서, 견적, 단가, 예산, 계약], examples: ["강사료·인원 기준 견적 조정"], owner: TODO}
+      - {id: EDU.proposal, name: "제안·견적", default_sensitivity: L2, description: "제안서·견적서 작성, 가격·조건 협의 (견적·계약 조건이라 L2)", keywords: [제안서, 견적, 단가, 예산, 계약], examples: ["강사료·인원 기준 견적 조정"], owner: TODO}
       - {id: EDU.needs, name: "사전진단·요구분석", description: "고객 현업 사례 수집, 대상·수준·목표 파악", keywords: [요구사항, 대상, 수준, 목표, 현업 사례], examples: ["수강 대상 직무와 AI 활용 수준 확인"], owner: TODO}
       - {id: EDU.curriculum, name: "커리큘럼 설계", description: "차시 구성, 학습 목표, 실습 흐름 설계", keywords: [차시, 모듈, 학습목표, 구성], examples: ["4시간 과정 3모듈 구성안 논의"], owner: TODO}
       - {id: EDU.materials, name: "교안·실습자료", description: "슬라이드, 실습지, 사전과제 제작", keywords: [교안, 슬라이드, 실습지, 사전과제], examples: ["실습용 프롬프트 예제 교체"], owner: TODO}
       - {id: EDU.instructor, name: "강사 배정·강사교육", description: "강사 매칭, 강사 사전 교육, 리허설", keywords: [강사, 배정, 리허설, 강사교육], examples: ["보조 강사 2명 배정 논의"], owner: TODO}
       - {id: EDU.ops, name: "운영·일정·장소", description: "일정, 장소, 장비, 수강생 안내", keywords: [일정, 장소, 장비, 노트북, 안내문], examples: ["교육장 와이파이·노트북 대여 확인"], owner: TODO}
       - {id: EDU.review, name: "만족도·사후 리뷰", description: "설문 결과 분석, 개선점 정리", keywords: [만족도, 설문, 피드백, 개선], examples: ["1차 교육 설문 결과 리뷰"], owner: TODO}
-      - {id: EDU.billing, name: "정산·계산서", description: "강사료·대금 정산, 세금계산서", keywords: [정산, 계산서, 입금, 강사료], examples: ["10월 출강분 정산 확인"], owner: TODO}
+      - {id: EDU.billing, name: "정산·계산서", default_sensitivity: L2, description: "강사료·대금 정산, 세금계산서 (계약 금액·조건이라 L2)", keywords: [정산, 계산서, 입금, 강사료], examples: ["10월 출강분 정산 확인"], owner: TODO}
       - {id: EDU.followup, name: "후속 제안", description: "심화 과정·추가 계약 제안", keywords: [후속, 심화, 2차, 연장], examples: ["심화 과정 추가 제안 논의"], owner: TODO}
 
   # ─────────────────────────────── 학맞통
   - id: SSI
     name: "학맞통(학생맞춤통합지원)"
+    status: active
     owner: "TODO"
     default_sensitivity: L2
-    description: "2026.3.1 시행 학생맞춤통합지원법 관련 교육청·교육지원청·학교 대상 컨설팅, 연수, 서식·도구 개발"
+    description: "2026.3.1 시행 학생맞춤통합지원법 관련 교육청·교육지원청·학교 대상 컨설팅, 연수, 서식·도구 개발 (학생 비식별 전제)"
     include: "기관 협의, 지원 체계 구축 컨설팅, 관리자·교사·강사 양성 연수, 서식·매뉴얼 개발, 입찰·조달, 성과보고"
-    exclude: "학생 개별 사례 논의(사례회의, 상담)는 이 파이프라인에서 처리하지 않음 (L3 격리)"
+    exclude: "학생 개별 사례 논의(사례회의, 상담)는 녹음하지 않음. 실수로 들어오면 L3: 자동 처리 중단·격리·즉시 삭제"
     keywords: [학맞통, 학생맞춤통합지원, 지원대상학생, 지원팀, 교육지원청, 통합지원센터, 연계기관, 학교장, 교감, 운영계획]
     aliases: [학맞, 학생맞춤, "학맞 통"]
-    l3_triggers: ["학생 실명", "학년·반과 이름의 조합", "상담 내용", "가정·건강·경제 형편", "학폭 사안 당사자"]
+    l3_triggers: *student_l3_triggers
     policy_area_tags: [심리·정서, 가정, 기초학력, 학업중단, 경제, 건강, 학폭·법률]   # 기관·정책 단위로만 쓴다. 학생 단위 태깅 금지
     examples:
       - "○○교육지원청 학맞통 센터 운영 방안 협의"
@@ -301,18 +388,18 @@ business_lines:
         status: active
     task_types:
       - {id: SSI.law, name: "법령·지침 해석", description: "학맞통법·시행령·교육청 지침 해석", keywords: [법령, 시행령, 조문, 지침, 동의], examples: ["보호자 동의 절차 해석 논의"], owner: TODO}
-      - {id: SSI.agency, name: "기관 협의", description: "교육청·센터·학교와의 협의, 요구사항 확인", keywords: [협의, 장학사, 센터장, 요청사항], examples: ["센터 의뢰 절차 개선 요청 협의"], owner: TODO}
+      - {id: SSI.agency, name: "기관 협의", description: "교육청·센터·학교와의 협의, 요구사항 확인 (학생 비식별 전제)", keywords: [협의, 장학사, 센터장, 요청사항], examples: ["센터 의뢰 절차 개선 요청 협의"], owner: TODO}
       - {id: SSI.system, name: "체계 구축 컨설팅", description: "지원팀 구성, 업무 흐름, 서식 체계 설계", keywords: [지원팀, 업무흐름, 체계, 역할분담], examples: ["학교 지원팀 역할 분담안 검토"], owner: TODO}
       - {id: SSI.training, name: "연수(관리자·교사·강사 양성)", description: "학맞통 연수 기획·운영, 강사 양성", keywords: [연수, 강사 양성, 찾아가는 연수, 관리자], examples: ["찾아가는 연수 강사 양성 과정 설계"], owner: TODO}
-      - {id: SSI.diagnosis, name: "진단도구 적용", description: "행동방식검사 등 진단 도구의 기관 적용 설계", keywords: [진단, 검사, 도구, 선별], examples: ["교사 대상 검사 적용 방안"], owner: TODO}
-      - {id: SSI.forms, name: "서식·매뉴얼·도구 개발", description: "표준 서식, 매뉴얼, 체크리스트, AI 도구 개발", keywords: [서식, 매뉴얼, 체크리스트, 양식, HWP], examples: ["운영계획서 표준 서식 초안"], owner: TODO}
+      - {id: SSI.diagnosis, name: "진단도구 적용", description: "행동방식검사 등 진단 도구의 기관 적용 설계 (개인 결과는 다루지 않음)", keywords: [진단, 검사, 도구, 선별], examples: ["교사 대상 검사 적용 방안"], owner: TODO}
+      - {id: SSI.forms, name: "서식·매뉴얼·도구 개발", description: "표준 서식, 매뉴얼, 체크리스트, AI 도구 개발. 기관이 자기 시스템에서 쓸 비식별 사례회의록 템플릿 개발도 여기에 넣는다(사례 내용은 다루지 않음)", keywords: [서식, 매뉴얼, 체크리스트, 양식, HWP], examples: ["운영계획서 표준 서식 초안"], owner: TODO}
       - {id: SSI.procurement, name: "입찰·조달", description: "제안요청서 분석, 입찰·수의계약 준비", keywords: [입찰, 제안요청서, 조달, 수의계약, 나라장터], examples: ["연수 용역 제안요청서 검토"], owner: TODO}
       - {id: SSI.report, name: "성과보고", description: "사업 결과·성과 보고서", keywords: [성과, 결과보고, 실적], examples: ["상반기 연수 실적 보고서 구성"], owner: TODO}
-      - {id: SSI.case_meeting, name: "사례회의(처리 제외)", process: false, description: "학생 개별 사례 논의. CRATA 파이프라인에서 처리하지 않고 격리", keywords: [사례회의, 상담, 학생 A], examples: [], owner: TODO}
 
   # ─────────────────────────────── 아라 에이전트 개발
   - id: ARA
     name: "아라(ARA) 에이전트 개발"
+    status: active
     owner: "TODO"
     default_sensitivity: L1
     description: "CRATA 자체 AI 에이전트 '아라'의 기획·개발·운영. 회사 웹사이트는 아라를 검사 결과 기반 상담 AI 에이전트로 소개함 (TODO: 현재 제품 범위 확인)"
@@ -325,7 +412,7 @@ business_lines:
       - "다음 스프린트 버그 우선순위 정리"
     projects:
       - {id: ARA-CORE, name: "아라 제품 본체", description: "제품 기능 개발·운영 전반", keywords: [기능, 릴리스, 버그], aliases: [], examples: ["v1.x 릴리스 범위 확정"], owner: TODO, status: active}
-      - {id: ARA-PILOT-TEMPLATE, name: "{기관}-아라 파일럿", description: "TODO: 기관별 시범 도입 1행씩", keywords: ["TODO: 기관명"], aliases: [], examples: [], owner: TODO, status: template}
+      - {id: ARA-PILOT-TEMPLATE, name: "{기관}-아라 파일럿", default_sensitivity: L2, description: "TODO: 기관별 시범 도입 1행씩", keywords: ["TODO: 기관명"], aliases: [], examples: [], owner: TODO, status: template}
       - {id: ARA-MEETING-PIPELINE, name: "회의 자동 분류 파이프라인", description: "이 설계안의 시스템. 이후 아라 모듈로 제품화", keywords: [플라우드, 회의 분류, 자동화, 파이프라인], aliases: [Plaud], examples: ["분류 정확도 주간 점검"], owner: TODO, status: active}
     task_types:
       - {id: ARA.prd, name: "제품기획·요구사항", description: "기능 정의, PRD 변경", keywords: [PRD, 요구사항, 기능 정의, 우선순위], examples: ["보호자용 화면 요구사항 정리"], owner: TODO}
@@ -333,20 +420,21 @@ business_lines:
       - {id: ARA.data, name: "데이터모델·검사결과 연동", description: "검사 결과·사용자 데이터 구조 (TODO: 연동 여부 확인)", keywords: [데이터, 스키마, 검사 결과, 연동], examples: ["검사 결과 필드 매핑"], owner: TODO}
       - {id: ARA.ux, name: "UX·UI", description: "화면, 사용 흐름", keywords: [화면, UI, UX, 디자인], examples: ["모바일 결과 화면 개선"], owner: TODO}
       - {id: ARA.backend, name: "백엔드·인프라", description: "서버, API, 모델 호출, 비용", keywords: [서버, API, 인프라, 배포 환경, 비용], examples: ["모델 호출 비용 절감 방안"], owner: TODO}
-      - {id: ARA.safety, name: "안전장치·위기 에스컬레이션", description: "위기 신호 감지와 사람 연결 규칙", keywords: [위기, 에스컬레이션, 안전, 차단], examples: ["자해 언급 시 사람 연결 절차"], owner: TODO}
+      - {id: ARA.safety, name: "안전장치·위기 에스컬레이션", default_sensitivity: L2, l3_triggers: *student_l3_triggers, description: "위기 신호 감지와 사람 연결 규칙. 실제 학생 대화 로그가 논의될 수 있어 L2", keywords: [위기, 에스컬레이션, 안전, 차단], examples: ["자해 언급 시 사람 연결 절차"], owner: TODO}
       - {id: ARA.privacy, name: "개인정보·보안", description: "수집 항목, 보관, 국외이전, 동의", keywords: [개인정보, 동의, 보관, 암호화], examples: ["14세 미만 법정대리인 동의 처리"], owner: TODO}
       - {id: ARA.eval, name: "평가·QA", description: "품질 평가, 테스트 세트", keywords: [평가, 테스트, QA, 정확도], examples: ["상담 응답 평가 기준 합의"], owner: TODO}
       - {id: ARA.release, name: "배포", description: "릴리스 일정, 배포 체크", keywords: [배포, 릴리스, 출시], examples: ["다음 주 배포 체크리스트"], owner: TODO}
       - {id: ARA.bm, name: "요금제·BM", description: "가격, 패키지, 판매 모델", keywords: [요금제, 가격, 구독, 패키지], examples: ["기관용 연간 라이선스 가격"], owner: TODO}
-      - {id: ARA.feedback, name: "사용자 피드백·CS", description: "사용자 의견, 장애 문의", keywords: [피드백, 문의, 불만, 오류 신고], examples: ["파일럿 교사 피드백 정리"], owner: TODO}
-      - {id: ARA.pilot, name: "기관 파일럿", description: "기관 시범 도입 설계·운영", keywords: [파일럿, 시범, 도입 기관], examples: ["○○학교 4주 파일럿 일정"], owner: TODO}
+      - {id: ARA.feedback, name: "사용자 피드백·CS", default_sensitivity: L2, l3_triggers: *student_l3_triggers, description: "사용자 의견, 장애 문의. 실제 대화 로그가 인용될 수 있어 L2", keywords: [피드백, 문의, 불만, 오류 신고], examples: ["파일럿 교사 피드백 정리"], owner: TODO}
+      - {id: ARA.pilot, name: "기관 파일럿", default_sensitivity: L2, l3_triggers: *student_l3_triggers, description: "기관 시범 도입 설계·운영. 실제 학생 대화 로그가 논의될 수 있어 L2", keywords: [파일럿, 시범, 도입 기관], examples: ["○○학교 4주 파일럿 일정"], owner: TODO}
 
   # ─────────────────────────────── 공통(교차 영역)
   - id: CORE
     name: "공통·경영"
+    status: active
     owner: "TODO"
     default_sensitivity: L1
-    description: "특정 사업부에 속하지 않는 회사 운영 전반"
+    description: "특정 사업부에 속하지 않는 회사 운영 전반 (영업·경영·채용·법무 등)"
     include: "영업 파이프라인 전체, 재무·투자, 채용·HR, 마케팅, 파트너십, 법무, 정부지원사업, 사내 AX"
     exclude: "특정 사업부 고객의 견적·정산(→ 해당 사업부)"
     keywords: [매출, 투자, 채용, 마케팅, 파트너, 계약서, 정부지원, 바우처, 사무실]
@@ -360,21 +448,21 @@ business_lines:
       - {id: CORE.hr, name: "채용·HR", description: "채용, 평가, 조직", keywords: [채용, 면접, 인사, 조직], examples: ["개발자 채용 조건 논의"], owner: TODO}
       - {id: CORE.marketing, name: "마케팅·브랜딩", description: "홍보, 콘텐츠, 브랜드", keywords: [홍보, 콘텐츠, 브랜드, SNS], examples: ["사례 콘텐츠 발행 계획"], owner: TODO}
       - {id: CORE.partnership, name: "파트너십·MOU", description: "협력사·기관 제휴", keywords: [MOU, 제휴, 협력, 파트너], examples: ["지역 기관 MOU 논의"], owner: TODO}
-      - {id: CORE.legal, name: "법무·개인정보", description: "계약서, 처리방침, 규제 대응", keywords: [계약서, 처리방침, 개인정보, 법률], examples: ["처리방침 국외이전 표 개정"], owner: TODO}
+      - {id: CORE.legal, name: "법무·개인정보", description: "계약서, 처리방침, 규제 대응 (고객 계약 조건이 나오면 L2)", keywords: [계약서, 처리방침, 개인정보, 법률], examples: ["처리방침 국외이전 표 개정"], owner: TODO}
       - {id: CORE.gov, name: "정부지원사업", description: "바우처, 지원사업 신청·수행", keywords: [바우처, 지원사업, 공고, 신청서], examples: ["2027 AI바우처 준비"], owner: TODO}
       - {id: CORE.ops, name: "운영·총무", description: "사무실, 장비, 계정, 도구", keywords: [사무실, 장비, 계정, 구독], examples: ["협업 도구 구독 정리"], owner: TODO}
       - {id: CORE.internal_ax, name: "사내 AX", description: "CRATA 내부 업무 자동화 (회의 파이프라인은 ARA-MEETING-PIPELINE)", keywords: [자동화, 업무 개선], examples: ["견적서 자동화 아이디어"], owner: TODO}
 
-  # ─────────────────────────────── 후보 사업부 (TODO: 존재·범위 확인)
+  # ─────────────────────────────── 후보 사업부 (후보, TODO 확인)
   - id: DX
-    name: "진단·코칭 (후보)"
+    name: "진단·코칭 (후보, TODO 확인)"
     status: "TODO_confirm"   # crata.co.kr에 4종 행동방식검사, Re:Cover, 강사교육이 있음. 별도 사업부인지 확인 필요
     owner: "TODO"
     default_sensitivity: L2
-    description: "행동방식검사 개발·운영, 결과지, 코칭 과정, 강사·협회 네트워크"
+    description: "행동방식검사 개발·운영, 결과지, 코칭 과정, 강사·협회 네트워크 (개인 검사 결과가 나올 수 있어 L2)"
     include: "검사 개발·개정, 결과지, 코칭 과정 운영, 강사 양성"
     exclude: "학맞통 기관 대상 검사 적용(→ SSI.diagnosis)"
-    keywords: [검사, 결과지, 코칭, 색채, 행동동기, Re:Cover, 협회, 강사]
+    keywords: [검사, 결과지, 코칭, 색채, 행동동기, "Re:Cover", 협회, 강사]
     aliases: [리커버]
     examples: ["8주 코칭 과정 운영 점검"]
     projects: []
@@ -385,22 +473,22 @@ business_lines:
       - {id: DX.network, name: "강사 양성·협회", description: "강사 교육, 협회 운영", keywords: [협회, 강사 양성], examples: [], owner: TODO}
 
   - id: AXC
-    name: "AX 컨설팅·업무사이트 구축 (후보)"
+    name: "AX 컨설팅·업무사이트 구축 (후보, TODO 확인)"
     status: "TODO_confirm"   # GOAL B. 강의·워크샵 하위로 둘지 별도 사업부로 둘지 결정 필요
     owner: "TODO"
-    default_sensitivity: L2
+    default_sensitivity: L1   # 일반 고객 미팅은 L1. 고객 내부 문서·데이터를 다루는 업무유형만 L2
     description: "고객사 업무 패턴 진단, 맞춤 업무사이트·에이전트 구축"
     include: "패턴 진단, 요구사항, 포털 설계·개발, 이관, 인수인계 교육"
-    exclude: "단순 강의 납품(→ EDU)"
+    exclude: "단순 강의 납품(→ EDU), CRATA 사내 자동화(→ CORE.internal_ax)"
     keywords: [진단, 업무사이트, 포털, 결재선, 양식, 구축, 이관]
     aliases: [AX 컨설팅]
     examples: ["○○사 결재 흐름 인터뷰 결과 공유"]
     projects: []
     task_types:
-      - {id: AXC.diagnosis, name: "패턴 진단", description: "문서·회의·조직 데이터로 스타일·패턴 추출", keywords: [진단, 패턴, 인터뷰], examples: [], owner: TODO}
+      - {id: AXC.diagnosis, name: "패턴 진단", default_sensitivity: L2, description: "문서·회의·조직 데이터로 스타일·패턴 추출 (고객 내부 자료라 L2)", keywords: [진단, 패턴, 인터뷰], examples: [], owner: TODO}
       - {id: AXC.requirements, name: "요구사항", description: "포털 요구사항 확정", keywords: [요구사항, 메뉴, 권한], examples: [], owner: TODO}
       - {id: AXC.build, name: "설계·개발", description: "포털·에이전트 구축", keywords: [개발, 화면, 배포], examples: [], owner: TODO}
-      - {id: AXC.migration, name: "데이터 이관", description: "기존 자료·DB 이관", keywords: [이관, 마이그레이션], examples: [], owner: TODO}
+      - {id: AXC.migration, name: "데이터 이관", default_sensitivity: L2, description: "기존 자료·DB 이관 (고객 내부 데이터라 L2)", keywords: [이관, 마이그레이션], examples: [], owner: TODO}
       - {id: AXC.handover, name: "교육·인수인계", description: "운영자 교육, 인수인계", keywords: [인수인계, 운영 교육], examples: [], owner: TODO}
 
 deliverable_catalog: [minutes, action_list, followup_email_draft,
@@ -447,7 +535,11 @@ Plaud get_transcript는 타임스탬프와 화자 라벨을 돌려줍니다([MCP
 
 ### 5.3 LLM 프롬프트 초안 (전문)
 
-> 프롬프트 캐싱을 위해 시스템 프롬프트, 분류 체계, 용어집처럼 매번 같은 부분을 앞에 둡니다. 캐시 읽기는 기본 입력가의 0.1배입니다([요금](https://platform.claude.com/docs/en/about-claude/pricing)).
+> **캐싱 순서:** system → `<taxonomy>` → `<glossary>` → **[cache_control 중단점]** → `<meeting_meta>` → `<examples>` → `<transcript>`. 분류 체계와 용어집은 버전이 바뀔 때만 달라지므로 중단점 앞에 두고, 매번 바뀌는 `<meeting_meta>`와 예시·전사는 중단점 뒤에 둡니다. 캐시 읽기는 기본 입력가의 0.1배(Sonnet 5.5 기준)이고 기본 TTL은 5분입니다([요금](https://platform.claude.com/docs/en/about-claude/pricing)). 월 40~80건이면 회의 사이 간격이 대부분 5분을 넘으므로 분류 호출끼리는 거의 적중하지 않습니다. 그래서 9.1절 비용에는 캐시 할인을 넣지 않았습니다. 캐시가 실제로 효과를 내는 것은 **같은 회의에서 산출물을 연속 생성할 때**뿐입니다(7.2절).
+>
+> **민감도 규칙의 위치:** 등급은 이 프롬프트를 부르기 **전에** 로컬에서 정합니다(3.2절 ②). 아래 19번(L3)과 20번(등급) 규칙은 **2차 안전망**입니다. 모델도 사전 등급으로 고릅니다: L0~L1은 Claude API, L2는 Bedrock 서울 In-Region(Sonnet 5 / Opus 5)만 씁니다.
+>
+> 구현 파일: [`prompts/meeting_segment_classify.md`](../../prompts/meeting_segment_classify.md). 아래 템플릿의 `{{calendar}}`·`{{rule_hints}}`·`{{pre_sensitivity}}`·`{{plaud_summary}}`·`{{examples}}`·`{{transcript}}` 등 자리표시자에 무엇을 채우는지는 구현 파일의 자리표시자 표에만 적습니다(치환 코드는 이 이름으로 찾습니다).
 
 **[시스템 프롬프트]**
 
@@ -459,11 +551,11 @@ Plaud get_transcript는 타임스탬프와 화자 라벨을 돌려줍니다([MCP
 (3) 구간별 요약, 결정사항, 액션아이템, 미해결 쟁점, 엔티티, 추천 산출물을 뽑는다.
 결과는 주어진 JSON 스키마로만 출력합니다.
 
-## 입력
-- <meeting_meta>: 날짜, 길이, 녹음 제목, 캘린더 일정명·참석자 소속(있을 때), 규칙 엔진 힌트, Plaud 요약(참고용)
-- <taxonomy>: 허용된 사업부·프로젝트·업무유형 ID와 설명, 포함/제외 기준, 키워드, 별칭, 교차 규칙
-- <examples>: 사람이 확정하거나 수정한 과거 구간 예시(있을 때). 비슷한 판단이 필요하면 이 예시를 따른다.
+## 입력 (이 순서로 주어진다)
+- <taxonomy>: 허용된 사업부·프로젝트·업무유형 ID와 설명, 포함/제외 기준, 키워드, 별칭, 노드별 기본 민감도, 교차 규칙
 - <glossary>: 사내 용어와 전사 오류 별칭
+- <meeting_meta>: 날짜, 길이, 녹음 제목, 캘린더 일정명·참석자 소속(있을 때), 규칙 엔진 힌트, LLM 호출 전 사전 판정 등급(pre_sensitivity), Plaud 요약(참고용)
+- <examples>: 사람이 확정하거나 수정한 과거 구간 예시(있을 때). 비슷한 판단이 필요하면 이 예시를 따른다.
 - <transcript>: 한 줄에 발화 하나. 형식: [uid | HH:MM:SS | 화자] 내용
 
 ## 구간 나누기
@@ -485,15 +577,15 @@ Plaud get_transcript는 타임스탬프와 화자 라벨을 돌려줍니다([MCP
 9. 맞는 프로젝트가 없지만 새 고객·새 과정·새 기관 사업이 분명하면 project_id="NEW"로 두고,
    new_project_candidates에 가칭, 사업부, 근거 uid를 적는다.
    사업부조차 판단하기 어려우면 business_line="UNCLASSIFIED", project_id="NONE"으로 둔다.
+   업무유형을 고를 수 없거나 UNCLASSIFIED·NEW이면 task_type="UNKNOWN"으로 둔다.
 10. 한 구간에 여러 사업부가 섞이면 분량이 가장 많고 결정이 걸린 쪽을 role="primary"로,
     나머지를 role="secondary"로 둔다(라벨은 최대 3개). <taxonomy>의 cross_rules를 먼저 적용한다.
 11. <meeting_meta>의 rule_hints(제목 접두어, 참석자 소속 등)는 강한 단서다.
     하지만 구간 내용이 명백히 다르면 내용을 따르고, boundary_reason에 "힌트와 다름"이라고 적는다.
-12. confidence 기준:
-    - 0.90 이상: 프로젝트명·고객명·기관명·과정명이 그 구간 안에서 직접 언급됨
-    - 0.70~0.89: 직접 언급은 없지만 키워드·참석자·맥락으로 거의 확실함
-    - 0.50~0.69: 두세 후보 중 하나로 추정함
-    - 0.50 미만: 근거 부족. UNCLASSIFIED 또는 NEW를 검토함
+12. confidence 기준(시스템의 처리 구간과 같다):
+    - 0.85 이상: 프로젝트명·고객명·기관명·과정명이 그 구간 안에서 직접 언급됨
+    - 0.60~0.84: 직접 언급은 없지만 키워드·참석자·맥락으로 추정함(두세 후보 중 하나로 고른 경우 포함)
+    - 0.60 미만: 근거 부족. UNCLASSIFIED 또는 NEW를 검토함
 13. evidence_uids에는 판단 근거가 된 발화 uid를 1~3개 넣는다.
 
 ## 추출
@@ -504,50 +596,62 @@ Plaud get_transcript는 타임스탬프와 화자 라벨을 돌려줍니다([MCP
 17. summary는 구간마다 3~5문장, 사실 위주로 쓴다. 전사본에 없는 내용을 더하지 않는다.
 18. suggested_deliverables는 카탈로그 값 중에서만 고르고, 그 구간 내용만으로 초안을 만들 수 있는 것만 제안한다.
 
-## 개인정보
-19. 학생 이름, 학년·반과 이름의 조합, 상담 내용, 건강·가정·경제 형편 등 학생 개인정보가 보이면
-    해당 구간 sensitivity="L3"로 표시하고 meeting.sensitivity도 "L3"로 올린다.
-    summary, decisions, action_items, entities에 이름이나 식별 정보를 쓰지 말고 "학생 A"처럼 표현한다.
-20. 외부 인물은 가능하면 이름 대신 소속과 역할로 적는다(예: "○○교육지원청 장학사"). CRATA 내부 인원은 이름을 써도 된다.
-21. 외부 인물·기관 엔티티 중 개인 식별이 가능한 것은 is_sensitive=true로 표시한다.
+## 민감도·개인정보
+19. (2차 안전망) 이 전사본은 LLM 호출 전에 로컬 판정을 통과했다. 그래도 학생 실명, 학년·반과 이름의 조합,
+    상담·사례 내용, 건강·가정·경제 형편, 실제 학생 대화 로그 원문 같은 학생 식별 정보가 보이면
+    해당 구간 sensitivity="L3"로, meeting.sensitivity도 "L3"로 표시한다.
+    L3 구간의 summary에는 "L3 의심 구간. 내용 생략"만 쓰고, decisions·action_items·open_issues·entities·
+    suggested_deliverables는 빈 배열로 둔다. boundary_reason에는 근거 uid만 적고 내용을 옮겨 적지 않는다.
+    (시스템은 이 표시를 받으면 자동 처리를 멈추고 격리·삭제 절차로 넘긴다.)
+20. 구간 sensitivity는 <taxonomy>의 노드 기본 등급(default_sensitivity)과 내용 중 높은 쪽으로 정한다.
+    견적·계약 조건이나 고객이 비밀로 지정한 자료가 나오면 L2로 표시한다.
+    <meeting_meta>의 pre_sensitivity보다 낮게 표시하지 않는다.
+21. 외부 인물은 가능하면 이름 대신 소속과 역할로 적는다(예: "○○교육지원청 장학사"). CRATA 내부 인원은 이름을 써도 된다.
+22. 외부 인물·기관 엔티티 중 개인 식별이 가능한 것은 is_sensitive=true로 표시한다.
 
 ## 출력
-22. JSON만 출력한다. 설명 문장, 마크다운, 코드블록 표시를 붙이지 않는다.
+23. JSON만 출력한다. 설명 문장, 마크다운, 코드블록 표시를 붙이지 않는다.
 ```
 
-**[사용자 메시지 템플릿]**
+**[사용자 메시지 템플릿]** (콘텐츠 블록 2개. 블록 1의 끝에 `cache_control`)
 
 ```text
+──────── [블록 1: 캐시 대상. 분류 체계 버전이 바뀔 때만 달라짐] ────────
+<taxonomy>
+{{taxonomy}}
+</taxonomy>
+
+<glossary>
+{{glossary}}
+</glossary>
+──────── cache_control: {"type": "ephemeral"}  ← 블록 1의 마지막에 둔다 ────────
+
+──────── [블록 2: 매 호출마다 바뀜. 캐시 중단점 뒤] ────────
 <meeting_meta>
 meeting_id: {{plaud_file_id}}
 date: {{YYYY-MM-DD}}
 duration_min: {{분}}
 recording_title: {{녹음 제목}}
-calendar: {{일정명 / 참석자 소속 / 장소. 없으면 "없음"}}
-rule_hints: {{예: title_prefix=[혼합]; attendee_domain=○○교육지원청 → SSI-2026-003; recurring=주간회의 → CORE-GENERAL}}
-plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
+calendar: {{calendar}}
+rule_hints: {{rule_hints}}
+pre_sensitivity: {{pre_sensitivity}}
+plaud_summary: {{plaud_summary}}
 </meeting_meta>
 
-<taxonomy>
-{{레지스트리에서 생성: 사업부·프로젝트(status=active만)·업무유형 ID, 설명, 포함/제외, 키워드, 별칭, cross_rules}}
-</taxonomy>
-
-<glossary>
-{{표준어 | 별칭 목록}}
-</glossary>
-
 <examples>
-{{임베딩 유사도로 고른 확정 예시 3~5개. 각 예시: 구간 원문(마스킹됨) → 정답 라벨 → 수정 사유}}
+{{examples}}
 </examples>
 
 <transcript>
-{{[u0001 | 00:00:05 | 화자1] ...}}
+{{transcript}}
 </transcript>
 ```
 
 ### 5.4 출력 JSON 스키마
 
-> Claude 구조화 출력의 제약에 맞췄습니다. 재귀 구조가 없고, 모든 객체에 `additionalProperties: false`를 넣었고, 수치 범위(min/max)는 description에 적었습니다. 선택 파라미터와 유니온 타입 수도 한도 안에 있습니다. 또 enum 값의 대소문자가 보장되지 않으므로 비교할 때 대소문자를 무시하세요([문서](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)). `project_id`와 `task_type`의 enum은 **매 호출 때 레지스트리에서 생성**합니다. 아래 값은 예시입니다.
+> Claude 구조화 출력의 제약에 맞췄습니다. 재귀 구조가 없고, 모든 객체에 `additionalProperties: false`를 넣었고, 수치 범위(min/max)는 description에 적었습니다. 선택 파라미터와 유니온 타입 수도 한도 안에 있습니다([문서](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)). `project_id`와 `task_type`의 enum은 **매 호출 때 레지스트리에서 생성**합니다. 아래 값은 예시입니다. 응답이 `refusal`이나 `max_tokens`로 끝나면 스키마를 벗어날 수 있으므로 `stop_reason`을 먼저 확인합니다. MVP의 Zapier Claude 액션은 구조화 출력 지원이 확인되지 않았으므로 파싱 실패에 대비합니다(재시도 1회 후 미분류, 5.5절).
+>
+> 구현 파일: [`schemas/meeting_segments.schema.json`](../../schemas/meeting_segments.schema.json) (아래와 같은 구조. 최상위에 설명 `description`만 추가).
 
 ```json
 {
@@ -563,7 +667,7 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
         "meeting_id": {"type": "string", "description": "Plaud 파일 ID"},
         "date": {"type": "string", "description": "YYYY-MM-DD"},
         "meeting_type": {"type": "string", "enum": ["client_meeting", "agency_consult", "planning", "internal_regular", "review", "one_on_one", "lecture_rehearsal", "other"]},
-        "sensitivity": {"type": "string", "enum": ["L0", "L1", "L2", "L3"], "description": "구간 중 가장 높은 등급"},
+        "sensitivity": {"type": "string", "enum": ["L0", "L1", "L2", "L3"], "description": "구간 중 가장 높은 등급. pre_sensitivity보다 낮을 수 없음"},
         "overall_summary": {"type": "string", "description": "회의 전체 3문장 요약"}
       }
     },
@@ -602,8 +706,8 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
                 "role": {"type": "string", "enum": ["primary", "secondary"]},
                 "business_line": {"type": "string", "enum": ["EDU", "SSI", "ARA", "CORE", "DX", "AXC", "UNCLASSIFIED"]},
                 "project_id": {"type": "string", "enum": ["EDU-2026-007", "EDU-CONTENT", "SSI-2026-003", "SSI-RESEARCH", "ARA-CORE", "ARA-MEETING-PIPELINE", "CORE-GENERAL", "NEW", "NONE"]},
-                "task_type": {"type": "string", "enum": ["EDU.proposal", "EDU.curriculum", "SSI.agency", "SSI.training", "ARA.prd", "ARA.safety", "CORE.sales", "UNKNOWN"]},
-                "confidence": {"type": "number", "description": "0.0~1.0. 시스템 프롬프트의 기준표를 따름"},
+                "task_type": {"type": "string", "description": "업무유형을 고를 수 없거나 business_line=UNCLASSIFIED 또는 project_id=NEW이면 UNKNOWN", "enum": ["EDU.proposal", "EDU.curriculum", "SSI.agency", "SSI.training", "ARA.prd", "ARA.safety", "CORE.sales", "UNKNOWN"]},
+                "confidence": {"type": "number", "description": "0.0~1.0. 기준표: 0.85 이상 직접 언급 / 0.60~0.84 추정 / 0.60 미만 근거 부족"},
                 "evidence_uids": {"type": "array", "items": {"type": "string"}, "description": "근거 발화 uid 1~3개"}
               }
             }
@@ -677,8 +781,8 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
               }
             }
           },
-          "sensitivity": {"type": "string", "enum": ["L0", "L1", "L2", "L3"]},
-          "boundary_reason": {"type": "string", "description": "이 구간을 나눈 근거 한 문장"}
+          "sensitivity": {"type": "string", "enum": ["L0", "L1", "L2", "L3"], "description": "노드 기본 등급과 내용 중 높은 쪽. L3면 내용 필드는 비움(2차 안전망)"},
+          "boundary_reason": {"type": "string", "description": "이 구간을 나눈 근거 한 문장. L3 구간은 근거 uid만"}
         }
       }
     },
@@ -701,7 +805,7 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
 }
 ```
 
-**출력 예시 (가상의 회의, 일부만 표시)**
+**출력 예시 (가상의 회의, 일부만 표시)** — 견적 구간(EDU.proposal)과 학맞통 구간이 있어 사전 판정이 L2인 회의입니다. 따라서 1개월 차 이후 **L2 경로(Bedrock 서울 In-Region Sonnet 5)**로 처리된 예이고, MVP 기간이라면 Filter에서 중단되어 수동 처리됩니다.
 
 ```json
 {
@@ -717,7 +821,7 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
       "action_items": [{"task": "수정 견적서 송부", "owner": "김○○", "due": "2026-10-06", "due_text": "다음 주 월요일", "evidence_uids": ["u0080"]}],
       "open_issues": [], "entities": [{"type": "client_org", "text": "○○기업", "evidence_uid": "u0001", "resolved_id": "CLIENT-021", "is_sensitive": false}],
       "suggested_deliverables": [{"deliverable_type": "edu_quote_memo", "reason": "인원 변경에 따른 재견적", "priority": "high"}],
-      "sensitivity": "L1", "boundary_reason": "회의 시작부터 ○○기업 견적만 다룸. 후반 u0210에서 같은 건으로 돌아와 범위를 추가함"
+      "sensitivity": "L2", "boundary_reason": "회의 시작부터 ○○기업 견적만 다룸. 후반 u0210에서 같은 건으로 돌아와 범위를 추가함"
     },
     {
       "segment_id": "S2", "segment_type": "business", "title": "교육지원청 학맞통 연수 협의 준비",
@@ -736,12 +840,14 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
 
 ### 5.5 후처리 규칙
 
-1. **시각 재계산:** 모든 범위의 start와 end를 원문 uid로 다시 계산합니다. LLM이 쓴 값과 다르면 원문 값으로 바꾸고 로그를 남깁니다.
-2. **enum 검증:** 대소문자를 무시하고 레지스트리와 대조합니다. 목록 밖의 값이 나오면 미분류로 보냅니다.
-3. **라우팅:** 구간 × primary 라벨마다 1행을 만들고, secondary 라벨은 해당 프로젝트에 "관련 언급"으로 연결합니다.
-4. **같은 프로젝트 병합:** 프로젝트 페이지에는 "원본 회의 링크 + 해당 구간 요약 + 액션"만 게시합니다.
-5. **액션 중복 제거:** 기존 업무와 비교해 NEW, UPDATE, TRACKED로 구분합니다(voyera 루틴 방식).
-6. **엔티티 연결:** 별칭 테이블로 고객·기관 ID를 붙입니다. 실패하면 "신규 엔티티 후보"로 올리고, 사람이 한 번 승인하면 다음부터는 자동으로 처리합니다.
+1. **응답 검증:** `stop_reason`이 `refusal`이나 `max_tokens`면 결과를 쓰지 않습니다. JSON 파싱이나 스키마 검증에 실패하면 1회 재시도하고, 다시 실패하면 회의 전체를 미분류 인박스로 보냅니다(MVP의 Zapier도 같은 규칙).
+2. **등급 교차 확인(2차 안전망):** LLM이 L3를 표시하면 자동 처리를 멈추고 격리·삭제 절차로 보냅니다. LLM이 매긴 등급이 사전 판정보다 높으면(예: L1 경로로 왔는데 L2 표시) 자동 라우팅을 멈추고 확인 큐로 보내며, 정본은 국내 저장소에 둡니다. 사전 판정 사전·키워드를 보강할 사례로 기록합니다.
+3. **시각 재계산:** 모든 범위의 start와 end를 원문 uid로 다시 계산합니다. LLM이 쓴 값과 다르면 원문 값으로 바꾸고 로그를 남깁니다.
+4. **enum 검증(방어 코드):** 레지스트리와 대조합니다. 구조화 출력이 스키마 준수를 보장하므로 보통은 걸리지 않지만, 방어용으로 대소문자를 무시하고 비교합니다. 목록 밖의 값이 나오면 미분류로 보냅니다.
+5. **라우팅:** 구간 × primary 라벨마다 1행을 만들고, secondary 라벨은 해당 프로젝트에 "관련 언급"으로 연결합니다.
+6. **같은 프로젝트 병합:** 프로젝트 페이지에는 "원본 회의 링크 + 해당 구간 요약 + 액션"만 게시합니다. L2 구간은 요약·액션도 국내 저장소에 두고 Notion에는 링크만 게시합니다.
+7. **액션 중복 제거:** 기존 업무와 비교해 NEW, UPDATE, TRACKED로 구분합니다(voyera 루틴 방식).
+8. **엔티티 연결:** 별칭 테이블로 고객·기관 ID를 붙입니다. 실패하면 "신규 엔티티 후보"로 올리고, 사람이 한 번 승인하면 다음부터는 자동으로 처리합니다.
 
 ---
 
@@ -752,9 +858,10 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
 | 조건 | 처리 | 알림 |
 |---|---|---|
 | primary 신뢰도 **0.85 이상**이고 규칙 힌트와 일치 | 자동 라우팅(로그 기록) | 일일 요약에만 포함 |
-| **0.60~0.85**, 또는 0.85 이상이지만 규칙 힌트와 불일치 | **확인 제안 카드**: "이 구간 → 학맞통 > SSI-2026-003 > 연수 (근거 18:40 재생)" + 승인/수정 버튼 | 즉시 |
-| **0.60 미만**, `UNCLASSIFIED`, `NEW` | 미분류 인박스 | 즉시 |
-| 등급 **L3** | 신뢰도와 관계없이 격리. 자동 처리와 산출물 생성을 중단 | 즉시(책임자) |
+| **0.60~0.84**, 또는 0.85 이상이지만 규칙 힌트와 불일치 | **확인 제안 카드**: "이 구간 → 학맞통 > SSI-2026-003 > 연수 (근거 18:40 재생)" + 승인/수정 버튼 | 즉시 |
+| **0.60 미만**, `UNCLASSIFIED`, `NEW`, JSON 파싱 실패(재시도 1회 후) | 미분류 인박스 | 즉시 |
+| LLM 등급이 사전 판정보다 높음(예: L1 → L2) | 신뢰도와 관계없이 확인 큐. 정본은 국내 저장소 | 즉시 |
+| 등급 **L3**(사전 판정 또는 LLM 2차 안전망) | 신뢰도와 관계없이 격리. 자동 처리와 산출물 생성을 중단하고 즉시 삭제 절차 | 즉시(책임자) |
 | 외부 발송(메일, 고객 공유, 외부 공개 티켓) | 항상 사람 확인 | — |
 
 - LLM이 스스로 매긴 신뢰도는 정확히 보정된 값이 아닙니다. **운영 첫 2주는 자동 라우팅을 끄고 전부 확인 제안으로 보냅니다.** 그동안 쌓인 정답과 신뢰도를 비교해 임계값을 다시 정합니다.
@@ -764,7 +871,7 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
 
 ```
 회의 처리 완료
-  └→ 확인 제안 카드 생성 (Notion "확인 대기" 뷰 + 알림)
+  └→ 확인 제안 카드 생성 (Notion "확인 대기" 뷰 + 알림. L2 카드는 국내 저장소 화면에 두고 Notion·알림에는 링크만)
         카드 = [구간 제목] [추천 라벨·신뢰도] [근거 발화 1~3줄 + 재생 시각] [추천 산출물]
         ├─ 승인      → 라우팅 확정 → 산출물 생성 → 예시 DB에 "정답" 저장
         ├─ 라벨 수정 → 라우팅 확정 → 예시 DB에 "수정 전/후 + 사유" 저장
@@ -777,11 +884,11 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
 
 | 주기 | 할 일 | 도구 |
 |---|---|---|
-| 매 건 | 확정·수정 결과를 **예시 DB**에 저장. 필드: 구간 원문(마스킹), 메타, 예측 라벨, 정답 라벨, 수정 사유, 검수자, 날짜 | Notion 또는 Sheets |
+| 매 건 | 확정·수정 결과를 **예시 DB**에 저장. 필드: 구간 원문(마스킹), 메타, 예측 라벨, 정답 라벨, 수정 사유, 검수자, 날짜. L2 구간의 예시는 국내 저장소에 두고, L3 구간은 예시로 저장하지 않음. 원문 보유기간은 8.3절 | Notion 또는 Sheets(L0~L1), 국내 저장소(L2) |
 | 매 호출 | 새 회의의 각 구간과 비슷한 확정 예시 3~5개를 임베딩으로 찾아 `<examples>`에 넣음(1개월 차는 같은 사업부 최근 예시로 시작) | KURE-v1 |
 | 매주 | 지표 확인: 사업부·프로젝트·업무유형별 정확도, 자동 처리 비율, 미분류 비율, 건당 검수 시간 | 대시보드 |
 | 매월 | **혼동 사례 리뷰.** 자주 헷갈리는 쌍(예: EDU.curriculum과 SSI.training)을 보고 description, 제외 기준, 교차 규칙, 별칭을 고침. 분류 체계 버전을 올림 | YAML/DB |
-| 분기 | 골든셋 200~300건으로 정밀 평가. 확정 라벨이 충분히 쌓인 클래스는 SetFit 1차 분류기를 다시 학습 | SetFit, Label Studio([GitHub](https://github.com/HumanSignal/label-studio)) |
+| 분기 | 골든셋 200~300건(구간 기준, 클래스별 최소 표본 충족)으로 정밀 평가. Plaud MCP·CLI 버전을 올릴 때도 같은 골든셋으로 회귀 테스트. 확정 라벨이 충분히 쌓인 클래스는 SetFit 1차 분류기를 다시 학습 | SetFit, Label Studio([GitHub](https://github.com/HumanSignal/label-studio)) |
 
 > Linear Triage Intelligence도 과거 배정 이력을 학습해 팀·프로젝트·라벨을 추천합니다([문서](https://linear.app/docs/triage-intelligence)). 사람이 수정할수록 정확해지는 구조는 이미 검증된 방식입니다.
 
@@ -794,21 +901,22 @@ plaud_summary: {{Plaud 요약. 참고용이며 판단은 전사본 기준}}
 | 사업부 | 트리거(업무유형 × 회의 유형) | 산출물 | 형식·도구 | 검수 |
 |---|---|---|---|---|
 | **강의·워크샵** | EDU.needs × 고객 미팅 | 교육 요구분석서 + 커리큘럼안 초안 | Notion 페이지 또는 DOCX | 담당 강사 |
-| | EDU.proposal | 제안서(장표) + 견적 메모 | Gamma API(템플릿 기반, PDF/PPTX) | 대표 |
+| | EDU.proposal (L2) | 제안서(장표) + 견적 메모 | 견적 메모는 국내 저장소에서 작성. 장표는 견적·계약 조건을 뺀 L0~L1 내용만 Gamma API(템플릿 기반, PDF/PPTX)로 | 대표 |
 | | EDU.curriculum, EDU.materials × 기획 | 워크샵 아젠다, 진행 시나리오, 사전과제 | Notion, 슬라이드 | 강사 |
 | | EDU.review × 리뷰 | 개선 메모 + 후속 제안 초안 | Notion | 대표 |
-| **학맞통** | SSI.agency × 기관 협의 | **비식별** 협의 메모(요구사항표, 결정, 후속 일정) | Notion. 기관 제출본은 HWP 양식(필요하면 python-hwpx) | 담당자 |
+| **학맞통** (L2, 1개월 차부터) | SSI.agency × 기관 협의 | **비식별** 협의 메모(요구사항표, 결정, 후속 일정) | 국내 저장소(Notion에는 링크만). 기관 제출본은 HWP 양식(필요하면 python-hwpx) | 담당자 |
 | | SSI.system | 지원팀 구성안, 서식 개선안 초안 | DOCX/HWP | 담당자 |
 | | SSI.training | 연수 계획서, 교안 구성 | DOCX, 슬라이드 | 담당자 |
 | | SSI.procurement | 제안요청서 요건 대조표, 제안서 목차 | Notion | 대표 |
-| | **SSI.case_meeting** | **CRATA 파이프라인에서 처리하지 않음.** CRATA는 기관이 자기 시스템 안에서 쓸 **비식별 사례회의록 템플릿**만 제공 | 템플릿 파일 | — |
 | **아라** | ARA.prd × 기획 | PRD 변경분(diff) | Notion 또는 Git | PM |
-| | ARA.* × 스프린트·버그 | 개발 티켓(NEW/UPDATE/TRACKED 구분) | Linear MCP 또는 Notion 업무 DB(**TODO**) | 개발 리드 |
+| | ARA.* × 스프린트·버그 | 개발 티켓(NEW/UPDATE/TRACKED 구분). ARA.pilot·safety·feedback(L2)에서 나온 티켓에는 대화 로그·기관 정보를 넣지 않고 국내 저장소 링크만 | Linear MCP 또는 Notion 업무 DB(**TODO**) | 개발 리드 |
 | | 설계 결정 | ADR(결정 기록) | Markdown | 개발 리드 |
-| | ARA.safety | 에스컬레이션 규칙 변경 기록 | Notion | 대표 |
+| | ARA.safety (L2) | 에스컬레이션 규칙 변경 기록 | 국내 저장소(Notion에는 링크만) | 대표 |
 | **공통** | 모든 회의 | 회의록, 액션 목록, 후속 메일 초안(발송은 사람) | Notion, 메일 초안 | 회의 주최자 |
 | **여러 회의 묶음** | 매주 | 사업부별 주간 리포트(결정, 지연된 액션, 리스크) | Notion | 대표 |
 
+> 학생 개별 사례(사례회의·상담)는 녹음하지 않으므로 산출물 행이 없습니다. CRATA가 기관에 주는 **비식별 사례회의록 템플릿**은 파이프라인 밖에서 만드는 서식(SSI.forms)이며, 사례 내용은 다루지 않습니다.
+>
 > 여러 회의를 묶어 주기적으로 분석하는 기능은 Fireflies의 다중 회의 AI Skills, tl;dv의 정기 리포트와 같은 개념입니다. 고객용 산출물에는 "AI 생성 초안, CRATA 검수" 표기를 기본으로 붙입니다(8장의 AI 기본법 참조).
 
 ### 7.2 산출물 레시피 작성 규칙
@@ -828,11 +936,11 @@ review: required
 label: "AI 생성 초안 · CRATA 검수"
 ```
 
-산출물을 생성하는 프롬프트에는 **해당 구간 원문 + 프로젝트 카드(누적 결정·용어) + 레시피**만 넣습니다. 같은 회의에서 산출물을 여러 개 만들 때는 전사본을 캐시해 연속 호출하면 입력 비용이 크게 줄어듭니다.
+산출물을 생성하는 프롬프트에는 **해당 구간 원문 + 프로젝트 카드(누적 결정·용어) + 레시피**만 넣습니다. 같은 회의에서 산출물을 여러 개 만들 때는 전사본을 캐시하고 **5분 안에 연속 호출**하면 입력 비용이 크게 줄어듭니다. 프롬프트 캐싱이 실제로 효과를 내는 곳은 여기뿐입니다(5.3절). 산출물 모델도 등급을 따릅니다: L0~L1은 Claude API, L2는 Bedrock 서울 In-Region Sonnet 5 / Opus 5.
 
 ### 7.3 프로젝트별 누적 메모리
 
-**DB 구조 (Notion 기준, 관계로 연결)**
+**DB 구조 (Notion 기준, 관계로 연결)** — L0~L1 기준입니다. L2 프로젝트(학맞통, 견적·계약, ARA.pilot·safety·feedback)의 같은 구조는 국내 저장소(Supabase 서울 등 Postgres)에 두고 Notion에는 링크만 둡니다. 초기에는 Notion DB 또는 Postgres/YAML로 충분하고, Graphiti 같은 그래프 메모리는 선택입니다.
 
 | DB | 주요 필드 | 쌓는 방식 |
 |---|---|---|
@@ -846,53 +954,81 @@ label: "AI 생성 초안 · CRATA 검수"
 | **용어집** | 용어, 정의, 별칭(전사 오류 포함), 프로젝트 | 분류 힌트와 STT 부스팅에 함께 사용 |
 
 **운영 원칙**
-- 기존 내용을 덮어쓰지 않고, **추가(ADD), 갱신(UPDATE), 종결(CLOSE) 기록만** 남깁니다. 모든 항목에는 원본 회의와 시각을 링크로 붙입니다.
-- **다음 회의 전 자동 브리핑:** 캘린더에 해당 프로젝트 일정이 있으면 하루 전에 "최근 결정 5개, 열린 이슈, 기한이 임박한 액션"을 보냅니다. 미국의 학생지원(MTSS) 플랫폼 Branching Minds도 회의 전에 학생 정보를 모으고 아젠다를 만드는 방식으로 준비 시간을 줄인다고 말합니다([소개](https://www.branchingminds.com/meeting-assistant)).
+- 기존 내용을 덮어쓰지 않고, **추가(ADD), 갱신(UPDATE), 종결(CLOSE) 기록만** 남깁니다. 모든 항목에는 원본 회의와 시각을 링크로 붙입니다. 단, 정보주체의 삭제 요청과 L3 유입은 예외로 **실제 삭제**합니다(8.3절).
+- **다음 회의 전 자동 브리핑:** 캘린더에 해당 프로젝트 일정이 있으면 하루 전에 "최근 결정 5개, 열린 이슈, 기한이 임박한 액션"을 보냅니다. 미국의 학생지원(MTSS) 플랫폼 Branching Minds도 회의 전에 학생 정보를 모으고 아젠다를 만드는 방식으로 준비 시간을 줄인다고 말합니다([소개](https://www.branchingminds.com/meeting-assistant)). CRATA 브리핑은 이 방식 중 '아젠다 준비'만 참고하고 학생 정보는 다루지 않습니다.
 - **질의응답:** "SSI-2026-003에서 지난 3번 회의의 결정은?"처럼 프로젝트 범위로 좁혀 검색합니다.
-- (3개월, 선택) 결정이 시간에 따라 바뀐 이력이 중요해지면 Graphiti로 옮깁니다. Graphiti는 바뀐 사실을 지우지 않고 무효 처리하며, 원본 에피소드를 추적합니다([GitHub](https://github.com/getzep/graphiti)).
+- (3개월, 선택) 결정이 시간에 따라 바뀐 이력이 중요해지면 Graphiti로 옮깁니다. Graphiti는 바뀐 사실을 지우지 않고 무효 처리하며, 원본 에피소드를 추적합니다([GitHub](https://github.com/getzep/graphiti)). 무효 처리는 삭제가 아니므로, 도입하면 삭제 요청 때 해당 에피소드와 파생 노드를 지우는 절차를 함께 만듭니다.
 
 ---
 
 ## 8. 보안·개인정보
 
+> 이 장은 요약입니다. 데이터 민감도 등급(L0~L3)의 정의, 수탁자·국외이전 전체 표, 정보주체 권리 대응 절차의 **정본은 [04 데이터 거버넌스 부록](./04_data-governance.md)**입니다. 둘이 다르면 04를 따릅니다.
+
 ### 8.1 법적 기본 사항
 
 | 영역 | 핵심 | CRATA의 할 일 |
 |---|---|---|
-| 녹음 (통신비밀보호법) | 대화에 **직접 참여한 사람**의 녹음은 위법이 아님([2013도16404](https://casenote.kr/대법원/2013도16404)). 제3자 녹음은 1~10년 징역 대상. 학부모가 교실 수업을 녹음한 것은 위법이고 증거로도 인정되지 않음([2020도1538](https://casenote.kr/대법원/2020도1538)) | CRATA 인원이 참석한 회의만 녹음. 자리를 비우면 녹음 중지. 회의실에 녹음기를 두고 나가지 않음 |
-| 처리위탁·국외이전 (개인정보 보호법) | 해외 서버를 거치면 ZDR(무보존) 계약이 있어도 **국외이전**에 해당하므로 처리방침에 공개하거나 동의를 받아야 함([제28조의8](https://casenote.kr/법령/개인정보_보호법/제28조의8)). 위탁은 문서로 계약하고 공개해야 함([제26조](https://casenote.kr/법령/개인정보_보호법/제26조)) | 처리방침에 수탁자 표와 국외이전 표 추가(다글로 처리방침 형식 참고, [다글로](https://daglo.ai/d/ko/legal/privacy)) |
-| AI 기본법 (2026-01-22 시행) | 고영향·생성형 AI 서비스는 사전 고지와 결과물 표시 의무가 있고, 고지 위반 등은 3천만 원 이하 과태료([제31조](https://casenote.kr/법령/인공지능_발전과_신뢰_기반_조성_등에_관한_기본법/제31조)). 학생 평가는 고영향 AI 범주 | 내부 회의 분류기는 대상이 아님. 고객용 산출물에는 AI 생성 표기. 아라가 학생 판단에 관여하면 고영향 검토 |
-| 학맞통 | 지원할 때 학생과 보호자 동의 필수(제11조③). 정보시스템은 승인받은 담당자만 다룸(제17조) ([법령](https://casenote.kr/법령/학생맞춤통합지원법)). 학교의 학습지원 SW는 교육부 기준을 충족하고 학교운영위원회 심의를 거쳐야 함(2026학년도부터) ([보도](http://v.daum.net/v/20251229142323534)) | 학생 정보는 CRATA 시스템 밖에 두는 것을 기본으로 함 |
+| 녹음 (통신비밀보호법) | 대화에 **직접 참여한 사람**의 녹음은 위법이 아님([2013도16404](https://casenote.kr/대법원/2013도16404)). 제3자 녹음은 1~10년 징역 대상. 학부모가 교실 수업을 녹음한 것은 위법이고 증거로도 인정되지 않음([2020도1538](https://casenote.kr/대법원/2020도1538)) | **CRATA 진행자가 당사자로 참여한 대화만** 녹음. 자리를 비우면 녹음 중지. 회의실에 녹음기를 두고 나가지 않음. 워크샵 소그룹 토론은 녹음하지 않거나, 그룹 전원 동의를 받고 진행자가 동석. 셰도잉(업무 관찰) 중에는 Plaud로 녹음하지 않고 메모만 하며, NEIS·에듀파인·학생 업무 화면은 캡처하지 않음. 학교·교육청에서는 녹음 전에 기관 보안담당에게 녹음기 사용과 해외 클라우드 업로드가 허용되는지 확인 |
+| 처리위탁·국외이전 (개인정보 보호법) | 해외 서버를 거치면 ZDR(무보존) 계약이 있어도 **국외이전**에 해당하므로 처리방침에 공개하거나 동의를 받아야 함([제28조의8](https://casenote.kr/법령/개인정보_보호법/제28조의8)). 위탁은 문서로 계약하고 공개해야 함([제26조](https://casenote.kr/법령/개인정보_보호법/제26조)) | 처리방침에 수탁자 표와 국외이전 표 추가(다글로 처리방침 형식 참고, [다글로](https://daglo.ai/d/ko/legal/privacy)). 표의 정본은 [04 문서](./04_data-governance.md) |
+| 화자 음성 등록 (개인정보 보호법 제23조, 시행령 제18조) | 특정인을 식별하려고 만든 음성 특징정보(목소리 프로필)는 생체인식정보로 **민감정보** | 화자 라벨용 목소리 등록은 **내부 직원만, 별도 서면 동의 후**. 고객·기관 참석자의 목소리는 등록하지 않고, 고객사 화자 프로필을 산출물로 만들지 않음 |
+| AI 기본법 (2026-01-22 시행) | 고영향·생성형 AI 서비스는 사전 고지와 결과물 표시 의무가 있음([제31조](https://casenote.kr/법령/인공지능_발전과_신뢰_기반_조성_등에_관한_기본법/제31조) 의무). 고지 위반 등은 3천만 원 이하 과태료([제43조](https://casenote.kr/법령/인공지능_발전과_신뢰_기반_조성_등에_관한_기본법/제43조) 과태료). 학생 평가는 고영향 AI 범주 | 내부 회의 분류기는 대상이 아님. 고객용 산출물에는 AI 생성 표기. 아라가 학생 판단에 관여하면 고영향 검토 |
+| 학맞통 | 지원할 때 학생과 보호자 동의 필수(제11조③). 정보시스템은 승인받은 담당자만 다룸(제17조) ([법령](https://casenote.kr/법령/학생맞춤통합지원법)). 학교의 학습지원 SW는 교육부 기준을 충족하고 학교운영위원회 심의를 거쳐야 함(2026학년도부터) ([보도](http://v.daum.net/v/20251229142323534)) | 학생 정보는 CRATA 시스템 밖에 두는 것을 기본으로 함. 학생 식별 정보와 상담·사례 내용(L3)은 녹음하지 않음 |
 
 **녹음 고지 스크립트 (고객 회의 시작 시):**
-"오늘 회의는 정확한 기록과 후속 자료 작성을 위해 녹음하고 AI로 전사·요약합니다. 녹음은 Plaud 클라우드에서 처리되고 AI 요약은 미국에 있는 AI 제공사를 거칩니다. 원본은 30일 뒤 삭제합니다. 원치 않으시면 말씀해 주세요. 녹음을 끄거나 그 부분을 빼겠습니다." 같은 문구를 캘린더 초대 메일에도 미리 넣습니다.
+"오늘 회의는 정확한 기록과 후속 자료 작성을 위해 녹음하고 AI로 전사·요약합니다. 녹음은 해외(미국 등)에 있는 Plaud 클라우드에서 처리·보관되고, AI 요약은 미국에 있는 AI 제공사를 거칩니다. CRATA가 보관하는 원본 녹음은 30일 뒤 삭제하며, 외부 처리사의 보관 기간은 각 사 정책을 따릅니다. 원치 않으시면 말씀해 주세요. 녹음을 끄거나 그 부분을 빼겠습니다." 같은 문구를 캘린더 초대 메일에도 미리 넣습니다.
+- **TODO:** Plaud 클라우드 사본의 자동 삭제 설정을 확인한 뒤 문구를 확정합니다. 확인 전에는 "외부 처리사의 보관 기간은 각 사 정책을 따름"보다 강한 약속을 하지 않습니다(Anthropic은 정책 위반 플래그 데이터를 최대 2년 보관, 8.2절).
+- L2 회의(고객이 비밀로 지정한 자료, 견적·계약 조건, 학맞통 기관 협의)는 이 고지에 더해 **서면 동의서**를 받습니다(8.3절).
 
 ### 8.2 데이터 경로 사실 확인 (설계에 반영할 점)
 
-- **Plaud:** 데이터센터는 미국, 프랑크푸르트, 싱가포르, 일본에 있고 **한국 리전은 없습니다.** EU 밖 사용자는 **미국에서 호스팅되는 LLM**(OpenAI, Anthropic, Google)을 쓰며, 계약(DPA)으로 학습 금지와 무보존을 적용합니다([신뢰센터](https://www.plaud.ai/pages/trust-center)). MCP를 HTTP로 연결하면 미국에 있는 Plaud MCP 서버를 거칩니다(처리 중 경유만 하고 저장하지 않음) ([MCP 문서](https://docs.plaud.ai/plaud-mcp-cli/mcp)).
+- **Plaud:** 데이터센터는 미국, 프랑크푸르트, 싱가포르, 일본에 있고 **한국 리전은 없습니다.** EU 밖 사용자는 **미국에서 호스팅되는 LLM**(OpenAI, Anthropic, Google)을 쓰며, 계약(DPA)으로 학습 금지와 무보존을 적용합니다([신뢰센터](https://www.plaud.ai/pages/trust-center), 원문 확인). MCP를 HTTP로 연결하면 미국에 있는 Plaud MCP 서버를 거칩니다(처리 중 경유만 하고 저장하지 않음) ([MCP 문서](https://docs.plaud.ai/plaud-mcp-cli/mcp)). AutoFlow를 켜면 동기화 즉시 이 경로로 요약되므로, **Plaud 단계는 CRATA 게이트보다 앞단**입니다. 이 노출은 녹음 통제로만 관리합니다.
 - **국내 서비스라고 국내에서만 처리되는 것은 아닙니다.** 티로는 저장만 서울에서 하고, 음성과 전사는 미국 수탁자가 처리합니다([처리방침](https://tiro.ooo/privacy-policy)). 다글로도 미국 클라우드와 LLM으로 국외이전한다고 공개합니다.
-- **Anthropic API:** 상용 데이터는 기본적으로 학습에 쓰지 않고, 30일 안에 삭제하며, ZDR 계약도 가능합니다. 다만 정책 위반으로 플래그된 데이터는 최대 2년 보관합니다([보관](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data)).
-- **국내에서 추론하는 선택지:** Amazon Bedrock 서울 리전에서 최신 Claude 모델(Sonnet 5.5, Opus 5.5 등)은 **Global 교차 리전 추론만** 됩니다. **Claude Opus 5와 Sonnet 5는 서울 리전 안에서 추론**할 수 있습니다([AWS](https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html)). Azure OpenAI는 Korea Central 리전에서 Standard·Regional 배포를 써야 국내 처리가 됩니다. Global 배포는 레지던시를 보장하지 않습니다([MS](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/deployment-types)).
-- **온디바이스:** 셀바스AI 셀비노트는 인터넷 없이 단말에서 전사하고, 경찰·법무부·특허청·지자체의 조사·상담 기록에 쓰입니다(GS 1등급, 약 70개 고객사) ([보도](https://m.ddaily.co.kr/page/view/2026022608415070571)).
+- **Anthropic API:** 상용 데이터는 기본적으로 학습에 쓰지 않고, 30일 안에 삭제하며, ZDR 계약도 가능합니다. 다만 정책 위반으로 플래그된 데이터는 최대 2년 보관합니다([보관](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data). 공식 도움말 원문 확인). Claude 앱을 쓸 때는 **Team/Enterprise 플랜 또는 API**를 쓰고, 개인 플랜이면 학습 허용 설정이 꺼져 있는지 확인합니다.
+- **국내에서 추론하는 선택지(L2 경로):** Amazon Bedrock 서울 리전에서 Sonnet 5.5, Opus 5.5 같은 최신 모델과 Haiku 4.5 등은 **Global 교차 리전 추론만** 됩니다. **Claude Opus 5와 Sonnet 5는 서울 리전 안(In-Region)에서 추론**할 수 있습니다([AWS](https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html)). 그래서 L2는 Bedrock 서울 In-Region의 Sonnet 5 / Opus 5만 씁니다.
+  - **실행 준비(1개월 차):** AWS 서울 계정 개설 → Bedrock 모델 접근 신청(Claude Sonnet 5 / Opus 5) → 교차 리전 추론 프로파일이 아닌 In-Region 호출인지 확인 → 국내 정본 저장소 연결.
+  - **요금과 기능:** Bedrock 경로는 Anthropic API 요금이 아니라 Bedrock 요금을 따릅니다(Sonnet 5 Bedrock 단가 **확인 필요**). Message Batches를 지원하지 않으므로 배치 50% 할인이 없습니다. 구조화 출력과 프롬프트 캐싱은 지원합니다.
+  - 참고: Azure OpenAI는 Korea Central 리전에서 Standard·Regional 배포를 써야 국내 처리가 되고, Global 배포는 레지던시를 보장하지 않습니다([MS](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/deployment-types)). 이 설계의 L2 경로는 Bedrock 서울로 통일합니다.
+- **온디바이스:** 셀바스AI 셀비노트는 인터넷 없이 단말에서 전사합니다. 경찰·법무부·특허청·지자체의 조사·상담 기록에 쓰였고([ddaily 2024-06-27](https://www.ddaily.co.kr/page/view/2024062709553042906)), 2026-02-26 보도는 경찰·지자체·소방·군 등 약 70개 고객사와 GS 1등급을 전합니다([ddaily 2026-02-26](https://m.ddaily.co.kr/page/view/2026022608415070571)). 기관이 자체적으로 기록을 남길 때 권할 수 있는 온디바이스 옵션이며, CRATA가 녹음·보관하는 용도가 아닙니다.
+
+**이 파이프라인의 수탁자 요약 (허용 등급은 이 설계의 결정. 처리 국가·계약 상태 등 전체 표는 [04 문서](./04_data-governance.md))**
+
+| 서비스 | 이 파이프라인에서의 용도 | 허용 등급 |
+|---|---|---|
+| Plaud | 녹음·전사·요약, MCP·CLI | L0~L2 (L2는 서면 동의서에 국외 보관 명시). L3 금지 |
+| Zapier | 1주 MVP 자동화(경로 A) | L0~L1. Zapier 트리거는 Filter보다 먼저 전사·요약을 Zapier(미국)로 받으므로 Filter는 '해외 LLM 호출 전' 게이트일 뿐 국외 전송 전 게이트가 아님. 그래서 1개월 차 전까지 학맞통 기관 협의·GOAL B 고객 진단 녹음은 MVP Zap에 연결된 계정에 동기화하지 않음([04 문서](./04_data-governance.md) 6.2·6.4절) |
+| Anthropic Claude API | 분류·산출물(L0~L1) | L0~L1 |
+| AWS Bedrock 서울 In-Region | 분류·산출물(L2) | L0~L2 |
+| Notion | L0~L1 정본, L2는 링크만 | L0~L1 |
+| Google(Gmail·Apps Script·Drive) | 경로 D, 파일 저장 | L0~L1 |
+| Gamma | 장표 산출물 | L0~L1 (견적·계약 조건 제외) |
+| Linear·Slack (**TODO: 사용 여부**) | 티켓·알림 | L0~L1 (L2는 국내 저장소 링크만) |
+| 국내 저장소(Supabase 서울, NAVER WORKS Drive 등) | L2 정본 | L0~L2 |
+| RTZR·CLOVA Speech | 재전사, L2 회의의 국내 STT 대안 | L0~L2 (**TODO: 처리 위치·학습 미사용 조항 확인**) |
+
+> GOAL B에서 쓰는 도구(Lovable·v0·Vercel, Firecrawl, Worklytics, Scribe, Miro, Listen Labs, OpenAI 등)는 이 파이프라인에는 쓰지 않으며, 04 문서의 공통 표에서 다룹니다.
 
 ### 8.3 등급별 처리 경로와 외부 LLM 전송 정책
 
-| 등급 | 녹음 | Plaud 클라우드 | 분류·산출물 LLM | 저장 위치 |
-|---|---|---|---|---|
-| **L0** 공개 | 가능 | 가능 | 해외 LLM API(학습 미사용 기업 계약) | Notion/Drive |
-| **L1** 내부 | 가능(고지) | 가능 | 해외 LLM. 외부인 이름과 연락처는 **마스킹 후** 전송. 가능하면 ZDR | Notion/Drive. 처리방침에 국외이전 공개 |
-| **L2** 고객 기밀 | 고지 + 고객 동의 | 고객이 서면 동의한 경우만 | **국내 리전 추론**(Bedrock 서울 리전의 Claude Opus 5/Sonnet 5, Azure Korea Central Standard/Regional). 해외 LLM은 고객 승인과 마스킹이 있을 때만 | 국내 저장 |
-| **L3** 학생 민감 | **원칙적으로 녹음하지 않음.** 꼭 필요하면 참석자 전원의 서면 동의를 받고 학생이 없는 자리에서만 | **사용 금지** | 온디바이스·온프레미스 또는 기관이 승인한 시스템만 | 기관 시스템. 외부로 내보내는 것은 가명·합성 사례만 |
+| 등급 | 해당 회의·자료 | 녹음 | Plaud 클라우드 | 분류·산출물 LLM | 저장 위치 |
+|---|---|---|---|---|---|
+| **L0** 공개·내부 일반 | 공개 자료, 내부 일반 정보 | 가능 | 가능 | 해외 LLM API 허용(학습 미사용 계약) | Notion/Drive |
+| **L1** 일반 영업·고객 | 일반 영업·고객 미팅, 일반 개인정보(성명·연락처 수준). **EDU 기본값** | 고지·동의 후 | 가능. 처리방침에 국외이전 공개 | 학습 미사용 API 계약(상용 API 또는 Team·Enterprise)으로 해외 LLM 허용. 외부인 연락처는 **마스킹 후** 전송 | Notion/Drive |
+| **L2** 고객 비밀 | 고객이 NDA·비밀로 지정한 자료(GOAL B 고객 진단 자료 포함), 견적·계약 조건(EDU.proposal 포함), 학맞통 기관 협의(학생 비식별 전제), ARA.pilot·ARA.safety·ARA.feedback | 고지 + 고객·기관 서면 동의. 동의하지 않으면 Plaud 클라우드에 올리지 않고 국내 STT(RTZR·CLOVA Speech)로 전사하거나, 녹음 없이 메모 | 서면 동의한 경우만. **Plaud 사본은 국외(미국 등)에 보관됨을 동의서에 명시** | **Bedrock 서울 In-Region의 Claude Sonnet 5 / Opus 5만.** Haiku 4.5·Sonnet 5.5·Opus 5.5는 서울에서 Global 교차 리전 전용이라 금지. Message Batches 할인 없음 | **정본은 국내 저장소**(Supabase 서울, NAVER WORKS Drive 등). Notion에는 링크만 |
+| **L3** 학생 민감 | 학생 식별 가능 정보, 상담·사례 내용 | **녹음하지 않음(원칙)** | **사용 금지** | **CRATA는 처리하지 않음.** 실수로 들어오면 자동 처리 중단·격리·즉시 삭제 | 저장하지 않음(삭제 기록만 남김) |
 
 **학맞통 운영 규칙**
-1. **사례회의와 상담은 Plaud로 녹음하지 않습니다.** CRATA 컨설팅은 가상·합성 사례와 비식별 템플릿으로 진행합니다.
-2. 교사 연수나 기관 협의 녹음(L2)에서 질의응답 중 학생 사례가 나오면, 그 구간은 **자동으로 L3 격리**됩니다. 처리를 멈추고, 책임자에게 알리고, 해당 구간을 삭제하거나 마스킹한 뒤 재처리합니다. 원본 녹음 삭제 여부도 검토합니다.
-3. **판정 순서가 중요합니다.** 분류도 본문을 읽어야 하므로, 해외 LLM에 보내기 전에 메타데이터와 제목 접두어(예: `[학맞통-사례]`), 키워드 규칙으로 먼저 등급을 정합니다. 애매하면 높은 등급으로 처리합니다.
-4. **가명처리:** Presidio의 한국 인식기(KR_RRN 주민등록번호, KR_FRN, KR_PASSPORT, KR_DRIVER_LICENSE, KR_BRN)([문서](https://presidio.dataprivacystack.org/supported_entities/))에 이름 인식(GLiNER 등)과 학교·기관 사전을 더해 "학생 A", "○○초" 같은 표기로 바꿉니다. **원본과 가명의 매핑표는 국내 저장소에만** 두고 열람 권한을 제한합니다.
-5. **보안 구조 참고:** 서울시교육청 쎈GPT는 ZDR 모델만 쓰고, 기관·이용자·에이전트별로 데이터를 분리하고, 민감정보를 필터링합니다([보도](http://v.daum.net/v/20261001111514949)). NHN 두레이는 인프라·반출·사용 통제 3계층에 프롬프트 DLP를 더합니다([보도](https://www.econovill.com/news/articleView.html?idxno=752387)). 학맞통 프로젝트 데이터는 **별도 공간과 별도 키**로 분리합니다.
-6. **공공기관 고객:** 발주기관에 개인정보보호위원회의 "공공 AX 혁신지원 헬프데스크" 사전 검토를 권합니다([PIPC](https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS074&mCode=C020010000&nttId=11869)).
+1. **사례회의와 상담은 녹음하지 않습니다**(Plaud뿐 아니라 어떤 기기로도). CRATA 컨설팅은 가상·합성 사례와 비식별 템플릿으로 진행합니다. 가명정보도 개인정보이므로 "가명이라 괜찮다"는 근거가 되지 않습니다.
+2. **녹음 자체를 통제합니다.** Plaud 단계(AutoFlow가 동기화 즉시 Plaud 클라우드·미국 LLM으로 요약)의 노출은 파이프라인으로 막을 수 없습니다. 학맞통 기관 협의는 녹음 전에 기관 보안담당 확인과 기관의 서면 동의를 받습니다. **TODO: 학맞통 기관 협의 녹음을 AutoFlow 대상에서 빼는 방법 확인(별도 계정·기기, 수동 동기화).**
+3. **판정 순서:** 해외 LLM을 부르기 **전에** 로컬에서 먼저 등급을 정합니다. 제목 접두어, 키워드·학교/학생 사전, Kiwi 고유명사, GLiNER 인명 인식을 쓰고, 애매하면 높은 등급으로 처리합니다. LLM 프롬프트의 L3 규칙(5.3절 19번)은 **2차 안전망**입니다.
+4. **실수로 L3가 들어온 경우**(예: 교사 연수나 기관 협의 녹음의 질의응답 중 학생 사례가 나옴): ① 자동 처리를 멈추고 격리 ② 책임자에게 알림 ③ 원본 녹음, 전사, 산출물 초안, Plaud 클라우드 사본, 예시 DB 항목을 즉시 삭제 ④ 필요한 회의 내용은 사람이 L3 부분을 뺀 메모로 다시 작성. 다른 경로로 자동 처리를 이어가지 않고, 삭제 기록(언제, 누가, 무엇을)만 남깁니다.
+5. **가명처리(L1·L2 마스킹용):** Presidio의 한국 인식기(KR_RRN 주민등록번호, KR_FRN, KR_PASSPORT, KR_DRIVER_LICENSE, KR_BRN)([문서](https://presidio.dataprivacystack.org/supported_entities/))에 이름 인식(GLiNER 등)과 학교·기관 사전을 더해 외부인 이름·연락처, 학교·기관명을 "○○교육지원청 장학사", "○○초" 같은 표기로 바꿉니다. 학생 정보를 처리하기 위한 수단이 아닙니다. **원본과 가명의 매핑표는 국내 저장소에만** 두고 열람 권한을 제한합니다.
+6. **보안 구조 참고:** 서울시교육청 쎈GPT는 ZDR 모델만 쓰고, 기관·이용자·에이전트별로 데이터를 분리하고, 민감정보를 필터링합니다([보도](http://v.daum.net/v/20261001111514949)). NHN 두레이는 인프라·반출·사용 통제 3계층에 프롬프트 DLP를 더합니다([보도](https://www.econovill.com/news/articleView.html?idxno=752387)). 학맞통 프로젝트 데이터는 **별도 공간과 별도 키**로 분리합니다.
+7. **공공기관 고객:** 발주기관에 개인정보보호위원회의 "공공 AX 혁신지원 헬프데스크" 사전 검토를 권합니다([PIPC](https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS074&mCode=C020010000&nttId=11869)).
 
-**보유기간 기본값 (제안):** 원본 오디오 30일, 전사본 1년, 산출물은 개인정보를 제거한 뒤 보관. Plaud 클라우드 사본은 CRATA 저장소로 옮긴 뒤 삭제 여부를 정책으로 정합니다. Plaud가 주는 오디오 URL은 24시간 뒤 만료되므로 필요하면 즉시 내려받습니다.
+**보유기간 기본값 (제안):** 원본 오디오 30일, 전사본 1년, 예시 DB의 구간 원문(마스킹) 1년(이후 라벨과 수정 사유만 남기고 원문 삭제), 골든셋은 분기 평가 때마다 재검토, 산출물은 개인정보를 제거한 뒤 보관. Plaud 클라우드 사본은 **TODO: 자동 삭제 설정을 확인한 뒤** "CRATA 저장소로 옮긴 뒤 삭제" 규칙을 정합니다. Plaud가 주는 오디오 URL은 24시간 뒤 만료되므로 필요하면 즉시 내려받습니다.
+
+**정보주체 권리 대응 (요약, 절차 정본은 [04 문서](./04_data-governance.md)):** 녹음된 외부인이 열람·삭제를 요청하면 회의 ID로 다음을 한꺼번에 찾아 처리합니다. ① Plaud 클라우드의 녹음·전사·요약 ② CRATA 정본(원문 전사, 구간, 산출물, 프로젝트 메모리의 결정·이슈·액션 행) ③ 예시 DB의 few-shot 원문 ④ 골든셋 ⑤ (도입 시) Graphiti 에피소드와 파생 노드 ⑥ **Zapier의 Zap 실행 이력 삭제**(MVP 트리거가 전사·요약을 받아 두므로 Filter에서 중단된 녹음도 대상. 보관 기간·삭제 방법 확인 필요)와 그 밖의 자동화 도구 실행 이력(Apps Script 등). 외부 LLM 제공사 쪽 보관분은 각 사 정책을 따른다고 회신에 적습니다. 이를 위해 모든 저장소에 Plaud 파일 ID(회의 ID)를 공통 키로 남깁니다. **TODO: 회신 법정 기한 확인.**
 
 ---
 
@@ -900,27 +1036,32 @@ label: "AI 생성 초안 · CRATA 검수"
 
 ### 9.1 LLM 처리비 (60분 한국어 회의 1건, 분할·분류와 산출물 1개)
 
-가정: 전사 약 2만 토큰(4.7 이후 모델은 새 토크나이저 때문에 약 30% 더 많음), 시스템 프롬프트와 분류 체계 6천 토큰은 캐시, 출력 약 7천 토큰, 환율 1달러=1,450원.
+가정: 입력 합계 약 2만 토큰(전사 + 시스템 프롬프트·분류 체계·예시, Haiku 4.5 토크나이저 기준. 4.7 이후 모델은 새 토크나이저 때문에 약 30% 더 많아 약 2.6만 토큰), 출력 약 7천 토큰, 환율 1달러=1,450원. **캐시 할인은 넣지 않았습니다.** 월 40~80건이면 회의 간격이 5분 TTL을 넘어 분류 호출끼리는 캐시가 거의 적중하지 않기 때문입니다. 캐시는 같은 회의에서 산출물을 연속 생성할 때만 효과가 있습니다(5.3절).
 
 | 모델 | 1건 | 월 40건 | 월 80건 | 비고 |
 |---|---|---|---|---|
-| Claude Haiku 4.5 | 약 $0.046 (≈65원) | $1.8 | $3.7 | 분류만 할 때 |
-| **Claude Sonnet 5.5** | **약 $0.12 (≈175원)** | $4.9 | $9.8 | **MVP 권장** |
+| Claude Haiku 4.5 | 약 $0.055 (≈80원) | $2.2 | $4.4 | 3개월 차 분류 전용. **L0~L1만**(서울 In-Region 미지원) |
+| **Claude Sonnet 5.5** | **약 $0.12 (≈175원)** | $4.9 | $9.8 | **MVP 권장**(L0~L1) |
 | Claude Opus 5.5 | 약 $0.25 (≈360원) | $10 | $20 | 필요하지 않음 |
+| L2 경로: Bedrock 서울 In-Region Claude Sonnet 5 | 확인 필요 | 확인 필요 | 확인 필요 | 1개월 차부터 L2 회의만. Bedrock 요금 적용, Message Batches 할인 없음 |
 
-급하지 않은 회의는 Batch API로 처리하면 50% 할인됩니다. 단가는 Sonnet 5.5 $2/$10, Haiku 4.5 $1/$5, Opus 5.5 $4/$20(100만 토큰당) 기준입니다([요금](https://platform.claude.com/docs/en/about-claude/pricing)). 3개월 차에는 "Haiku로 분할·분류, 확정된 구간의 산출물만 Sonnet"으로 나누면 건당 비용이 더 줄어듭니다.
+- **thinking 토큰 주석:** Sonnet 5.5와 Opus 5.5는 thinking을 기본으로 쓰고, thinking 토큰은 출력으로 과금됩니다. Opus 5.5는 thinking을 끌 수 없고, Sonnet 5.5는 `thinking: {type: "between_tools"}`로만 끌 수 있습니다. effort를 low로 낮추거나 Sonnet 5.5에서 between_tools를 쓰지 않으면 **위 단가의 1.5~2배**가 될 수 있습니다. 첫 주에 실제 `usage`로 확인합니다.
+- **배치 할인:** Claude API(L0~L1) 경로에서 급하지 않은 회의를 Message Batches로 처리하면 50% 할인됩니다. Bedrock(L2) 경로는 Message Batches를 지원하지 않으므로 할인이 없습니다. Zapier MVP에서는 배치를 쓰지 않습니다.
+- 단가는 Sonnet 5.5 $2/$10, Haiku 4.5 $1/$5, Opus 5.5 $4/$20(100만 토큰당, Anthropic API) 기준입니다([요금](https://platform.claude.com/docs/en/about-claude/pricing)). 3개월 차에는 "L0~L1 회의는 Haiku로 분할·분류, 확정된 구간의 산출물만 Sonnet"으로 나누면 건당 비용이 더 줄어듭니다.
 
-### 9.2 월 총비용 (Notion 좌석료 제외, 3.3절 표와 같은 기준)
+### 9.2 월 총 운영비 (증분이 아니라 Plaud 구독을 포함한 총액. Notion 좌석료 제외, 3.3절 표와 같은 기준)
 
 | 구성 | 3인·월 40건 | 10인·월 80건 |
 |---|---|---|
-| A. Zapier(MVP) | 약 $50 (7만 원) | $110~130 (16~19만 원) |
-| B. 에이전트 루틴 + Plaud CLI·MCP | $35~40 (5~6만 원) | 약 $105 (15만 원) |
+| A. Zapier(MVP), Plaud 개인 플랜(연간가) | 약 $50 (7만 원) | $110~130 (16~19만 원) |
+| A. Zapier(MVP), **Plaud Team**(1인당 연간 $20) | 약 $85 (Plaud $60 + Zapier $20 + LLM $5, 12만 원) | **약 $230~260 (33~38만 원)** |
+| B. 국내 서버 스크립트 + Plaud CLI·MCP | $35~40 (5~6만 원) | 약 $105 (15만 원) |
 | D. AutoFlow 메일 | 약 $28 (4만 원) | 약 $85 (12만 원) |
+| + L2 경로(1개월 차부터): Bedrock 서울 Sonnet 5 사용료, 국내 서버·정본 저장소 | 확인 필요 | 확인 필요 |
 | + Notion Business(Custom Agents를 쓸 경우) | +$60 | +$200 |
 | + 재전사(선택, 품질이 나쁜 녹음만) | RTZR 시간당 1,000원(600분 무료) ([요금](https://developers.rtzr.ai/docs/en/pricing/)) · CLOVA Speech 15초당 5원(시간당 약 1,200원) ([요금](https://www.ncloud.com/product/aiService/clovaSpeech)) | 월 80시간을 전부 재전사해도 RTZR 8만 원 |
 
-- Plaud 구독: Pro $17.99/월(연간 결제 시 $8.33, 월 1,200분), Unlimited $29.99(연간 $19.99), Team은 연간 결제 시 1인당 $20(2026-11-30까지 가입하면 첫해 출시가) ([요금](https://www.plaud.ai/pages/plaud-ai-plan-pricing)). 10인 팀이 공유 폴더와 관리 기능이 필요하면 Team 출시가를 잡는 것이 유리합니다.
+- Plaud 구독: Pro $17.99/월(연간 결제 시 $8.33, 월 1,200분), Unlimited $29.99(연간 $19.99), Team은 연간 결제 시 1인당 $20(2026-11-30까지 가입하면 첫해 출시가, 이후 연간 $25) ([요금](https://www.plaud.ai/pages/plaud-ai-plan-pricing)). Team은 10인이면 Plaud만 $200이라 개인 플랜 기준 총액($110~130)을 이미 넘습니다. 공유 공간이나 여러 계정의 녹음 수집(3.3절 TODO)에 Team이 꼭 필요하다고 확인될 때만 출시가 가입을 검토합니다.
 - 비용을 좌우하는 것은 LLM이 아니라 **좌석 요금(Plaud, Notion, Zapier)과 사람 시간**입니다. 설치에 드는 시간은 MVP 8~16시간, 1개월 구성 20~40시간(추정)입니다.
 - (제품화 참고) 이 파이프라인을 아라 모듈로 만들면 정부 AI바우처의 공급 경로를 검토할 수 있습니다. 소상공인분과는 공급기업이 소상공인 10개사 이상을 모아 신청하며 과제당 최대 2억 원입니다([NIPA](https://www.nipa.kr/home/2-2/16592)). 2026년 모집은 마감됐고, 2027년 일정은 **확인하지 못했습니다.**
 
@@ -930,12 +1071,15 @@ label: "AI 생성 초안 · CRATA 검수"
 |---|---|---|
 | Plaud 연동 제약: 읽기 전용, MCP 웹훅 없음, Zapier 출력 필드 미문서화, 재요약 때 트리거 재발동 | 누락·중복, 타임스탬프 결손 | MVP 첫날 Zapier 출력 필드를 테스트. 중복 키 사용. 1개월 차에 CLI 폴링으로 전환하고 processed_ids 기록 |
 | Plaud 정책 변화: 지식베이스가 폴더 대신 시간·Events로 바뀜, 크레딧 과금 | 폴더 기반 설계가 깨짐 | 정본은 처음부터 Plaud 밖에 둠. Events는 병행 실험용으로만 |
-| 버전·업체 변동: npm 0.x 버전, 인수·종료(Limitless, Fathom, OpenAI Agent Builder) | 갑작스러운 중단 | 버전을 0.x로 고정. 원문 전사, 구간, 산출물 3계층을 CRATA 저장소에 보관하고 입력 어댑터만 교체할 수 있게 설계 |
+| 버전·업체 변동: npm 0.x 버전, 인수·종료(Limitless 종료, Fathom 인수 발표, OpenAI Agent Builder 종료 예정) | 갑작스러운 중단 | `@plaud-ai/mcp@0.3.13`·`@plaud-ai/cli@0.3.14`로 정확히 고정하고, 올릴 때 골든셋 회귀 테스트. 원문 전사, 구간, 산출물 3계층을 CRATA 저장소에 보관하고 입력 어댑터만 교체할 수 있게 설계 |
+| 여러 사람의 Plaud 계정: MCP·CLI·Zapier는 로그인한 계정의 녹음만 봄 | 일부 녹음 누락, Zap·태스크 증가 | 3.3절 TODO: 계정별 인증, Zap 복제, Team 공유 공간 중 선택. MVP는 1~2개 계정으로 시작 |
+| Zapier Claude 액션의 JSON 출력(구조화 출력 지원 미확인) | 행 생성 실패 | 파싱 실패 시 1회 재시도 후 미분류. 실패율을 주간 기록하고, 결함이 크면 경로 D 또는 1개월 차 경로 B로 |
+| L2 경로(Bedrock 서울) 준비 지연 | 학맞통·견적 회의 자동화 지연 | MVP 기간은 수동 처리. 1개월 차 첫 주에 AWS 계정과 모델 접근 신청 |
 | 분류 품질 저하: 새 고객 증가, 표현 변화 | 잘못된 라우팅 | 닫힌 목록 + `NEW` 출구, 월간 혼동 리뷰, 골든셋 회귀 테스트 |
 | 신뢰도가 실제와 맞지 않음 | 잘못된 자동 라우팅 | 첫 2주는 전부 사람 확인. 임계값 보정. 규칙과 불일치하거나 분류기 간 불일치하면 검수 |
 | 한국어 STT 오류(고유명사, 한영 혼용) | 분류 근거가 훼손됨 | 용어집을 분류 힌트와 별칭으로 활용. 문제 녹음만 RTZR 키워드 부스팅이나 CLOVA enko 모드로 재전사([CLOVA](https://api.ncloud-docs.com/docs/en/ai-application-service-clovaspeech-longsentence)) |
 | 녹음 습관 미정착(제목 접두어 누락) | 1차 신호 약화 | 앱 제목 규칙을 1페이지로 공지. 주간 지표에 접두어 누락률 표시 |
-| 개인정보 사고(학생 정보 유입, 고지 없는 녹음) | 법적·평판 리스크 | L0~L3 등급 게이트, L3 격리, 마스킹, 고지 스크립트, 처리방침 국외이전 표 |
+| 개인정보 사고(학생 정보 유입, 고지 없는 녹음, L2 자료의 해외 전송) | 법적·평판 리스크 | 녹음 통제(L3 녹음 금지, 학맞통 기관 협의 AutoFlow 제외 TODO), LLM 호출 전 로컬 L3 탐지, L3 격리·즉시 삭제, L2는 Bedrock 서울·국내 저장, 고지 스크립트, 처리방침 국외이전 표([04 문서](./04_data-governance.md)) |
 | 과도한 자동화(고객에게 잘못된 메일 발송) | 신뢰 손상 | 외부로 나가는 것은 항상 사람 확인. 산출물에 "AI 생성 초안" 표기 |
 | 비용 증가(좌석, 크레딧) | 예산 초과 | 월 비용 대시보드. Notion Custom Agents 없이도 동작하게 설계 |
 
@@ -943,10 +1087,12 @@ label: "AI 생성 초안 · CRATA 검수"
 
 ### 부록: 이번 주에 할 일
 
-1. [ ] 대표 인터뷰로 분류 체계 v0.1 확정: 진행 중인 프로젝트 등록, 교차 규칙 확정, DX·AXC 사업부 여부 결정
-2. [ ] 사내 협업 도구 확인(Notion 사용 여부, 메신저, 티켓 도구)과 정본 저장소 결정
-3. [ ] Claude에 Plaud MCP를 연결하고 과거 회의 30건으로 골든셋을 만들고 프롬프트를 다듬기
-4. [ ] Plaud에 CRATA 요약 템플릿을 등록하고 녹음 제목 접두어 규칙을 공지
-5. [ ] Zapier에 Plaud 트리거를 연결해 **출력 필드(파일 ID, 타임스탬프, 화자) 존재 여부부터 테스트**
-6. [ ] 학맞통 L3 운영 규칙(사례회의 녹음 금지, 격리 절차)과 녹음 고지 스크립트를 내부에 공유
-7. [ ] 처리방침의 수탁자·국외이전 표 개정을 담당자 업무로 등록(**TODO: 담당자 지정**)
+1. [ ] 대표 인터뷰로 분류 체계 v0.2 확정: 진행 중인 프로젝트 등록, 교차 규칙 확정, DX·AXC 사업부 여부(후보, TODO 확인) 결정
+2. [ ] 사내 협업 도구 확인(Notion 사용 여부, 메신저, 티켓 도구)과 정본 저장소 결정. L2 정본용 국내 저장소(Supabase 서울, NAVER WORKS Drive 등) 후보 결정
+3. [ ] Claude 플랜 확인(Team/Enterprise 또는 API. 개인 플랜이면 학습 허용 설정 해제 확인) 후 Plaud MCP(`@plaud-ai/mcp@0.3.13`)를 연결하고, **[강의][아라][AX][공통] 회의만**으로 골든셋(구간 100개 이상 목표)을 만들고 프롬프트를 다듬기
+4. [ ] Plaud에 CRATA 요약 템플릿을 등록하고 녹음 제목 접두어 6종(`[강의][학맞통][아라][AX][공통][혼합]`) 규칙을 공지
+5. [ ] Zapier에 Plaud 트리거를 연결해 **출력 필드(파일 ID, 타임스탬프, 화자) 존재 여부부터 테스트**. 첫 단계 Filter(접두어 allow-list, L3·L2 키워드가 있으면 중단)와 JSON 파싱 실패 처리(재시도 1회 후 미분류) 설정
+6. [ ] 녹음 원칙 공유: CRATA가 당사자인 대화만 녹음, L3(학생 식별 정보·상담·사례) 녹음 금지, 실수 유입 시 격리·즉시 삭제 절차, 학교·교육청은 녹음 전 기관 보안담당 확인, 녹음 고지 스크립트
+7. [ ] **TODO 확인:** 학맞통 기관 협의 녹음을 AutoFlow 대상에서 빼는 방법(별도 계정·기기, 수동 동기화), Plaud 클라우드 자동 삭제 설정, 여러 사람의 Plaud 계정 수집 방식
+8. [ ] 1개월 차 준비: AWS 서울 계정과 Bedrock 모델 접근 신청(Claude Sonnet 5 / Opus 5), Bedrock 요금 확인
+9. [ ] 처리방침의 수탁자·국외이전 표 개정을 담당자 업무로 등록(**TODO: 담당자 지정**). 표의 정본은 [04 문서](./04_data-governance.md)

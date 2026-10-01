@@ -1,0 +1,442 @@
+# =====================================================================
+# Company DNA Profile  (CRATA 표준 스키마 v1.1)
+# 위치: clients/{client_slug}/company_profile.yaml
+# 사용법: 이 파일을 위 위치로 복사한 뒤 예시 값을 고객 값으로 바꾼다.
+# 정본: docs/research/03_company-dna-playbook.md §4.2
+#       데이터 등급(L0~L3) 정의와 수탁자 목록의 정본은 docs/research/04_data-governance.md
+# 작성 원칙
+#  1) 판단 항목에는 evidence(근거 ID)와 confidence(0~1)를 단다.
+#     evidence 예: DOC-012#p3 | MTG-0915#00:12:31 | INT-07#q4 | WS-tasks.csv#r14 | LOG-msg-meta
+#  2) 개인 실명 금지. 사람은 역할코드(R_*)·가명ID로만 쓴다. 매핑표는 고객사 보관.
+#  3) 규정상 값(stated)과 관찰된 값(observed)을 구분한다.
+#  4) owner / last_verified / valid_until 로 주기 재검증한다.
+#  5) 데이터 등급 L3(학생 식별 정보, 상담·사례 내용)는 어떤 섹션에도 넣지 않는다.
+#     학교·교육청 고객이라도 학생·사례 객체를 만들지 않는다(가명정보도 개인정보).
+#  6) 프로파일 레이어 L1~L10(섹션 주석)과 데이터 등급 L0~L3(data_class·sensitivity)은 다른 체계다.
+#  7) 아래 값은 모두 '예시'다. 가상의 SMB 'OO교육컨설팅(주)'
+#     (기업·기관 대상 교육 프로그램 영업·견적·운영 회사, 학생 정보 없음).
+# =====================================================================
+
+schema_version: "1.1"
+
+meta:
+  client_slug: "example-smb"              # 폴더명·DB tenant id로 재사용
+  client_name: "OO교육컨설팅(주)"         # 예시(가상)
+  client_type: smb                        # smb | midsize | school | school_office | public | nonprofit
+  industry: "기업·기관 교육 프로그램 기획·영업·운영"
+  headcount: 34
+  headcount_source: "조직도 + 국민연금 사업장 데이터 교차 확인(SMB만. 공공·학교는 학교알리미 교직원 현황 + 조직도)"
+  engagement_id: "AX-2026-017"
+  status: draft                           # draft → validated → active → archived
+  owner: "crata:R_CONSULTANT_A"           # CRATA 측 책임자
+  client_owner: "client:R_OPS_LEAD"       # 고객 측 확인 책임자
+  last_verified: 2026-10-01
+  valid_until: 2027-01-01                 # 분기 1회 재검증 권장
+  evidence_index: "./evidence/index.csv"
+
+# ---------------------------------------------------------------------
+# 0. 데이터 거버넌스 — 모든 레이어보다 먼저 확정 (§8.1 요약, 정본은 04 문서)
+# ---------------------------------------------------------------------
+data_governance:
+  default_class: L2                       # GOAL B 진단 자료는 고객이 NDA로 비밀 지정 → 기본 L2
+  class_examples:                         # L0 공개·내부 일반 | L1 일반 업무·일반 개인정보 | L2 고객 비밀·견적·계약 | L3 학생 식별·상담·사례
+    L0: ["홈페이지·블로그·보도자료", "공개 채용공고", "브랜드 토큰(brand.tokens.json)"]
+    L1: ["일반 영업 미팅(고지·동의 후)", "강의·워크샵 운영 연락", "성명·연락처 수준의 일반 개인정보"]
+    L2: ["위임전결규정·결재 양식·완결 문서", "견적·계약 조건", "그룹웨어 메타데이터·감사로그", "고객 내부 회의 녹음"]
+    L3: []                                # 이 고객에는 해당 자료 없음. 들어오면 자동 처리 중단 → 격리 → 즉시 삭제
+  routes:                                 # 등급별 저장·추론 경로(고객 서면 승인 대상)
+    L0: { storage: "CRATA 저장소(Notion/Drive 가능)", llm: "해외 LLM API 허용(학습 미사용 계약)" }
+    L1: { storage: "CRATA 저장소(Notion/Drive 가능). 처리방침에 국외이전 공개", llm: "녹음 고지·동의 후 학습 미사용 계약(상용 API 또는 Team·Enterprise)으로 해외 LLM 허용" }
+    L2: { storage: "정본은 국내(Supabase 서울, NAVER WORKS Drive 등). Notion에는 링크만", llm: "Amazon Bedrock 서울 In-Region의 Claude Sonnet 5 / Opus 5만. Message Batches 할인 없음, 요금은 Bedrock 요금(확인 필요)" }
+    L3: { storage: "보관하지 않음", llm: "처리하지 않음. 녹음·수집하지 않는 것이 원칙. 실수로 들어오면 자동 처리 중단 → 격리 → 즉시 삭제" }
+  banned_models_for_L2: ["Haiku 4.5", "Sonnet 5.5", "Opus 5.5"]   # 서울에서 Global 교차 리전 전용
+  pre_llm_gate:                           # 해외 LLM 호출 '이전'에 로컬에서 실행. LLM 프롬프트의 L3 규칙은 2차 안전망일 뿐
+    methods: ["키워드·학교/학생 사전", "Kiwi 고유명사 추출", "GLiNER 인명 인식", "Presidio KR 인식기(주민번호 등)"]
+    on_l3_hit: "자동 처리 중단 → 격리 → 책임자 알림 → 즉시 삭제"
+    on_l2_hit: "해외 경로 중단 → Bedrock 서울 In-Region 경로로만 처리"
+  contracts:
+    nda: true
+    processing_entrustment: "개인정보보호법 제26조 처리위탁 계약(체결일)"
+    subprocessors_approved:               # 재수탁 서면 동의(제26조⑥). 처리 국가·허용 등급의 정본은 04 문서 수탁자 표
+      - { id: plaud,             role: "녹음·전사·요약",                         region: "미국 등(한국 리전 없음)", max_class: L2, note: "L2 녹음은 Plaud 사본의 국외 보관을 동의서에 적고 서면 동의를 받은 경우만. L3 금지" }
+      - { id: anthropic-api,     role: "LLM(학습 미사용 API 또는 Team·Enterprise)", region: "미국",               max_class: L1 }
+      - { id: aws-bedrock-seoul, role: "LLM(Claude Sonnet 5·Opus 5 In-Region)",   region: "한국(서울 리전)",     max_class: L2 }
+      - { id: supabase-seoul,    role: "DB·파일 저장(L2 정본)",                    region: "한국(서울 리전)",     max_class: L2 }
+      - { id: upstage,           role: "문서 파싱(Document Parse)",               region: "확인 필요(미검증)",   max_class: L1, note: "API 처리 위치·보존 조건 확인 전에는 L2 문서 투입 금지(로컬 python-hwpx 우선)" }
+      - { id: firecrawl,         role: "공개 웹 크롤링·branding 추출",              region: "미국",               max_class: L0 }
+      - { id: lovable,           role: "시안 엔진",                               region: "스웨덴",             max_class: L0, note: "L0 토큰과 더미 데이터만" }
+      - { id: v0,                role: "시안 엔진",                               region: "미국",               max_class: L0, note: "L0 토큰과 더미 데이터만" }
+      - { id: vercel-hosting,    role: "포털 호스팅",                             region: "미국",               max_class: L1, note: "L2 데이터가 지나는 서버 함수·로그 처리 위치 확인 전까지(TODO). 운영 포털 배포 시 재승인" }
+    cross_border_notice_provided: true    # 제28조의8 고지 문구를 고객 처리방침용으로 제공
+    labor_council:                        # 근로자참여법 제20조①14호(근로자 감시 설비)
+      required: true                      # 상시 30인 이상 + 직원 관찰(셰도잉·화면 캡처·ONA)
+      regular_meeting_cycle: "3개월"      # 정기회의 주기(제12조, 조문 확인 TODO)
+      plan: "정기회의 일정이 맞지 않으면 임시회의 소집 요청(계약 협의 단계, D-45 전후 추정)"
+      observation_starts_after: "협의 완료 + 회의록 사본 수령"
+      consulted_on: null                  # 협의 완료일
+    behavior_test_clause:                 # CRATA 행동방식검사를 쓸 때만
+      individual_results: "본인에게만 제공"
+      company_receives: "5명 이상 팀 단위 분포만(5명 미만 팀은 인접 팀과 합쳐 집계)"
+      non_participation: "응하지 않아도 불이익 없음"
+      hr_use: "인사평가·배치·보상에 사용 금지"
+    school_approvals: "해당 없음(학교·교육청 고객이면 학교장 승인 + 기관 보안담당 확인 + 학운위 심의(학습지원SW 해당 시))"
+  recording_policy:
+    participant_only: true                # CRATA 진행자가 당사자로 참여한 대화만(통신비밀보호법)
+    small_group_discussion: "녹음하지 않음(꼭 필요하면 그룹 전원 동의 + 진행자 동석)"
+    shadowing: "녹음하지 않음, 메모만"
+    screen_capture_forbidden: ["NEIS", "K-에듀파인", "학생 업무 화면"]
+    title_prefix: "[AX]"                  # 02 문서의 6개 접두어 중 하나. 고객 진단 회의는 [AX]
+    plaud_account: "GOAL B 진단·인터뷰·워크샵 녹음(L2)은 1개월 차 L2 경로 전까지 MVP Zap에 연결하지 않은 별도 Plaud 계정·기기(AutoFlow 끔, 수동 동기화)로 녹음하거나 메모"   # config/meeting_taxonomy.yaml mvp_filter.exclude_l2_recordings
+    plaud_l2_consent: "Plaud 사본이 국외(미국 등)에 보관됨을 동의서에 명시. 부동의 시 국내 STT(RTZR·CLOVA Speech) 또는 메모"
+  pseudonymization:
+    method: "실명→역할코드. Presidio KR 인식기 + 사용자 정의 인식기(인명·고객사명)"
+    mapping_table_location: "고객사 내부"
+  reuse_policy: "개인정보·고객 식별요소 제거 + 5개사 이상 집계된 일반 패턴만 CRATA 라이브러리 재사용"
+  retention: { raw_audio_days: 30, transcripts_days: 365, after_contract: "파기 확인서 발급", note: "CRATA 보관 원본 기준. 외부 처리사의 보관 기간은 각사 정책을 따름" }
+  ai_act:                                 # 인공지능기본법(2026-01-22 시행)
+    generative_notice_required: true      # 제31조: 사전 고지·결과물 표시(과태료는 제43조)
+    high_impact_review: "강사 선발·수강생 평가처럼 개인에게 중대한 영향을 주는 판단에 쓰면 고영향 여부 검토(제2조 제4호, 해당 여부 확인 TODO)"
+
+# =====================================================================
+# STYLE — 보이는 것·말하는 방식
+# =====================================================================
+
+# 레이어 L1. 정체성·비주얼
+identity:
+  one_liner: { value: "현장에서 바로 쓰는 맞춤 교육을 설계·운영하는 회사", evidence: ["WEB-home", "INT-01#q1"], confidence: 0.7 }
+  audiences: ["기업 HR·교육 담당자", "기관 연수 담당자", "수강생"]
+  brand_personality:                      # Firecrawl branding.personality 초안 → 워크샵 검증
+    tone: "전문적·친근"
+    energy: medium
+    target_audience: "기업·기관 교육 담당자"
+    confidence: 0.6
+  tokens:                                 # 데이터 등급 L0. 시안 엔진(Lovable·v0)에 넣을 수 있는 고객 정보는 이것뿐
+    format: "dtcg-2025.10"
+    file: "./style-pack/brand.tokens.json"
+    extracted_by: ["dembrandt --dtcg --brand-guide", "firecrawl formats:[branding]"]
+    base_system: shadcn-default           # krds(공공·학교) | shadcn-default | client-ds
+    color:                                # 빈도 가중 상위값 + 의미역할은 사람이 확정
+      primary:   { value: "#1F4E9E", evidence: ["WEB-8of10pages"], confidence: 0.9 }
+      secondary: { value: "#F2A900", evidence: ["CI-guide-p2"], confidence: 0.8 }
+      surface:   { value: "#FFFFFF" }
+      text:      { value: "#1A1A1A" }
+      danger:    { value: "#C62828" }
+    typography:
+      web_heading: { family: "Pretendard", fallback: "나눔고딕, sans-serif" }
+      web_body:    { family: "Pretendard", fallback: "나눔고딕, sans-serif" }
+      hwp_body: "(HWPX 스타일 정의에서 추출한 글꼴명)"
+      pptx_heading: "(.potx 마스터에서 추출한 글꼴명)"
+    radius: { sm: "4px", md: "8px" }
+    spacing_scale: [4, 8, 12, 16, 24, 32]
+  logo: { light: "./style-pack/logo.svg", dark: "./style-pack/logo-dark.svg" }
+  accessibility: { wcag_contrast_pass: true, note: "운영 매니저가 현장에서 모바일로 확인 → 기본 본문 16px" }
+  design_md: "./style-pack/DESIGN.md"
+
+# 레이어 L2. 보이스·톤
+voice:
+  constant_voice:                         # 채널이 바뀌어도 유지되는 성격
+    - { we_are: "실무 중심", not: "이론 나열", evidence: ["DOC-004", "INT-02#q3"] }
+    - { we_are: "정중함", not: "딱딱함", evidence: ["DOC-019"] }
+  nng_tone_scores:                        # NN/g 4축. 0=왼쪽 극, 1=오른쪽 극
+    formal_to_casual: 0.35
+    serious_to_funny: 0.2
+    respectful_to_irreverent: 0.05
+    matter_of_fact_to_enthusiastic: 0.5
+  tone_by_channel:
+    proposal:       { register: "개조식", endings: ["-함", "-임"], headline_first: true }
+    client_email:   { register: "합니다체" }
+    learner_notice: { register: "해요체", max_sentence_chars: 40 }
+    messenger:      { register: "해요체", emoji_ok: true }
+  korean_metrics:                         # Kiwi 형태소 분석 통계(근거)
+    endings_dist: { hasipsio: 0.33, haeyo: 0.29, gaejoshik: 0.34, banmal: 0.04 }
+    avg_sentence_chars: 34
+    sino_korean_ratio: 0.41
+    honorifics: ["님", "담당자님", "강사님"]
+    numbering_style: "1. → 가. → 1) → 가)"
+  preferred_expressions: ["회신 부탁드립니다", "첨부 참고 부탁드립니다"]
+  banned_expressions: ["효과 100% 보장", "최저가", "타사 비방 표현"]
+  sample_rewrites:
+    - { channel: learner_notice, before: "(원문)", after: "(고객 승인된 수정문)" }
+  validated: { date: 2026-10-14, method: "검증 워크샵 '맞다/아니다' 30분", by: "client:R_OPS_LEAD" }
+  files: { json: "./style-pack/voice-card.json", md: "./style-pack/voice-card.md" }
+
+# 레이어 L3. 조직 언어·용어집
+glossary:
+  file: "./style-pack/glossary.csv"
+  highlights:
+    - term: "맞춤과정"
+      variants: ["커스텀 과정", "기업 맞춤 교육", "인하우스 과정"]
+      definition: "고객사 요구에 맞춰 커리큘럼을 새로 짜는 교육 상품"
+      owner_unit: U_CONTENT
+      stt_boost: true                     # STT 부스팅 목록 등록(CLOVA boostings / RTZR keywords)
+      goal_a_keyword: true                # GOAL A 회의 분류 키워드로도 사용
+      ui_label: "맞춤 과정"               # 포털 메뉴 표기
+      evidence: ["MTG-0915#00:03:10", "DOC-021"]
+    - term: "회차"
+      variants: ["차수", "세션"]
+      definition: "한 과정 안에서 날짜·장소가 정해진 개별 교육 진행 단위"
+      owner_unit: U_OPS
+      stt_boost: false
+      goal_a_keyword: false
+      ui_label: "회차"
+      evidence: ["DOC-033"]
+  renamed_recently: [{ old: "교육운영팀", new: "러닝운영팀", since: 2026-03-01 }]
+  external_forbidden: ["다른 고객사의 견적 단가·할인율", "강사 개인 단가"]
+
+# 레이어 L4. 문서 원형·서식
+documents:
+  archetypes:
+    - id: DA_QUOTE
+      title_pattern: "[고객사] ○○ 교육 견적서_v{n}"
+      monthly_volume: 18                  # observed: 견적 대장 집계
+      skeleton: ["1. 교육 개요", "2. 과정 구성(회차×시간)", "3. 강사 구성", "4. 비용 산출", "5. 진행 조건·유의사항"]
+      numbering: "1. 가. 1) 가)"
+      style: "개조식, -함/-임"
+      tables: ["회차별 일정표", "비용 산출 내역(강사료·교재비·운영비)"]
+      approval_block: ["담당", "팀장", "대표"]   # 레이어 L5 decision_rights와 연결
+      data_class: L2                      # 견적·계약 조건
+      template_file: "./style-pack/templates/quote.xlsx"
+      renderer: "스프레드시트 템플릿 렌더러(구현 시 선택)"   # LLM은 JSON만 채우고, 렌더는 템플릿 엔진이
+      samples: ["DOC-012", "DOC-027"]
+      confidence: 0.85
+    - id: DA_PROPOSAL
+      title_pattern: "[고객사] ○○ 교육 제안서"
+      monthly_volume: 6
+      skeleton: ["배경·니즈", "교육 목표", "커리큘럼", "운영 방안", "강사 소개", "기대 효과", "견적 요약"]
+      style: "두괄식, 슬라이드당 메시지 1개"
+      data_class: L2
+      template_file: "./style-pack/templates/master.potx"
+      renderer: "python-pptx"
+      samples: ["DOC-031"]
+      confidence: 0.8
+    - id: DA_RESULT_REPORT
+      title_pattern: "○○ 교육 결과 보고"
+      monthly_volume: 10
+      skeleton: ["1. 교육 개요", "2. 운영 결과", "3. 만족도(집계)", "4. 개선 사항", "붙임"]
+      numbering: "1. 가. 1) 가)"
+      style: "개조식, -함/-임, 두괄식"
+      data_class: L1                      # 수강생 개별 응답은 넣지 않고 집계값만
+      template_file: "./style-pack/templates/result_report.hwpx"   # 공공기관 고객 제출용
+      renderer: "python-hwpx"
+      samples: ["DOC-040"]
+      confidence: 0.75
+  slide_master: "./style-pack/templates/master.potx"   # 마스터에 테마 색·폰트 정의
+  file_naming: { observed: "YYMMDD_고객사_제목_v{n}", recommended: "YYYY-MM-DD_고객사_제목_v{n}" }
+  folder_taxonomy: { axis_1: "연도", axis_2: "고객사", axis_3: "문서유형", evidence: ["DRV-tree.csv"] }
+  versioning_habit: "'최종','최최종' 접미사 다수 → 포털에서 버전 자동 관리"
+
+# =====================================================================
+# PATTERN — 일하는 방식
+# =====================================================================
+
+# 레이어 L5. 조직·역할·의사결정권
+org:
+  units:
+    - { id: U_CEO,     name: "대표",         parent: null,  headcount: 1 }
+    - { id: U_SALES,   name: "영업팀",       parent: U_CEO, headcount: 8 }
+    - { id: U_OPS,     name: "러닝운영팀",   parent: U_CEO, headcount: 10 }
+    - { id: U_CONTENT, name: "콘텐츠개발팀", parent: U_CEO, headcount: 11 }
+    - { id: U_MGMT,    name: "경영지원팀",   parent: U_CEO, headcount: 4 }
+  roles:
+    - { id: R_CEO,          title: "대표",             count: 1 }
+    - { id: R_SALES_LEAD,   title: "영업팀장",         count: 1 }
+    - { id: R_AM,           title: "어카운트 매니저",  count: 7 }
+    - { id: R_OPS_LEAD,     title: "러닝운영팀장",     count: 1 }
+    - { id: R_OPS_MANAGER,  title: "교육 운영 매니저", count: 9 }
+    - { id: R_CONTENT_LEAD, title: "콘텐츠개발팀장",   count: 1 }
+    - { id: R_CONTENT_DEV,  title: "교육 콘텐츠 개발자", count: 10 }
+    - { id: R_MGMT,         title: "경영지원 담당",    count: 4 }
+  decision_rights:                        # stated: 위임전결규정 + 그룹웨어 위임 규정 설정 화면
+    source: "위임전결규정(개정본) DOC-001, 그룹웨어 위임 규정 설정 캡처 DOC-002"
+    rules:
+      - doc_type: "견적·계약"
+        thresholds:
+          - { up_to_krw: 10000000, final: R_SALES_LEAD }
+          - { up_to_krw: null, final: R_CEO }
+      - { doc_type: "할인 10% 초과 견적", final: R_CEO, cooperation: [U_MGMT] }
+      - { doc_type: "외부 강사 위촉", final: R_OPS_LEAD, cooperation: [U_MGMT] }
+  raci:
+    - { process: P_QUOTE_TO_CONTRACT, R: R_AM, A: R_SALES_LEAD, C: [R_OPS_LEAD, R_CONTENT_LEAD], I: [R_CEO] }
+  observed_vs_rule:                       # observed: 결재란 샘플 + 감사로그
+    approval_lead_time_days_median: 1.8
+    proxy_or_post_approval_rate: 0.22     # 대결·후결 비율
+    real_decision_maker_note: "1천만 원 이하 견적도 대표에게 메신저로 사전 확인하는 관행"
+    evidence: ["DOC-sample-30", "LOG-msg-meta"]
+  ona:                                    # 팀 단위 집계(n>=5). 개인 결과는 만들지도 제공하지도 않음
+    source: "캘린더 메타데이터 30일"
+    min_group_size: 5
+    merged_units: [{ merged: [U_CEO, U_MGMT], reason: "5명 미만이라 합쳐 집계" }]
+    hubs: [U_OPS]
+    silos: [U_CONTENT]
+  context_map:                            # DDD: upstream/downstream, conformist 등
+    - { upstream: "고객사 구매·HR 양식", downstream: U_SALES, relation: conformist }
+    - { upstream: U_SALES, downstream: U_OPS, relation: customer_supplier }
+
+# 레이어 L6. 업무 객체 온톨로지 (명사=객체·링크 / 동사=액션)
+ontology:
+  store: { engine: "postgres", location: "supabase-seoul", types_file: "./ontology/types.py" }
+  graph_memory: { enabled: false, candidate: "graphiti", note: "선택. 첫 2~3개 고객은 Postgres/YAML로 충분" }
+  excluded_l3: []                         # L3 객체·속성은 만들지 않음. 발견되면 이름만 적고 데이터는 받지 않음
+  objects:
+    - id: Opportunity
+      ui_label: "영업 기회"
+      sensitivity: L1
+      properties:
+        - { name: client_org, type: string }
+        - { name: stage, type: "enum[문의,요구사항 확인,견적,협상,수주,실주]" }
+        - { name: contact_ref, type: role_code, pii: true }   # 고객 담당자는 역할코드로만 참조
+      evidence: ["WS-eventstorming", "INT-05"]
+    - id: Quote
+      ui_label: "견적"
+      sensitivity: L2                     # 견적·계약 조건
+      properties:
+        - { name: quote_no, type: string }
+        - { name: status, type: "enum[작성중,승인대기,발송,수주,실주]" }
+        - { name: amount_krw, type: integer }
+        - { name: discount_rate, type: number }
+      evidence: ["DOC-012", "INT-03#q2"]
+    - { id: Course,     ui_label: "교육 과정", sensitivity: L1 }
+    - { id: Session,    ui_label: "회차",      sensitivity: L1 }
+    - { id: Instructor, ui_label: "강사",      sensitivity: L1 }   # 성명·연락처 수준. 강사 단가는 Quote 쪽(L2)
+    - { id: Document,   ui_label: "문서",      sensitivity: L1 }
+  links:
+    - { from: Opportunity, to: Quote,      type: has_quote, cardinality: "1:N" }
+    - { from: Quote,       to: Course,     type: includes,  cardinality: "N:M" }
+    - { from: Course,      to: Session,    type: runs_as,   cardinality: "1:N" }
+    - { from: Session,     to: Instructor, type: taught_by, cardinality: "N:M" }
+    - { from: Document,    to: Quote,      type: about,     cardinality: "N:1" }
+  actions:
+    - id: create_quote
+      ui_label: "견적 작성"
+      actors: [R_AM]
+      preconditions: ["요구사항 미팅 기록이 Opportunity에 연결됨"]
+      effects: ["Quote.status = 작성중", "R_SALES_LEAD 알림"]
+      approval: none
+    - id: request_discount
+      ui_label: "할인 승인 요청"
+      actors: [R_AM]
+      approval: { required: true, approver_rule: "decision_rights '할인 10% 초과 견적' → R_CEO" }
+      outputs: [DA_QUOTE]
+    - id: confirm_session
+      ui_label: "회차 확정"
+      actors: [R_OPS_MANAGER]
+      preconditions: ["강사 일정 확인", "Quote.status = 수주"]
+      effects: ["Session 캘린더 등록", "강사·고객 담당자 안내 발송"]
+      approval: none
+
+# 레이어 L7. 프로세스·판단 규칙 (AOP: 자연어 절차를 단일 원천으로, Git 버전관리)
+processes:
+  - id: P_QUOTE_TO_CONTRACT
+    name: "문의 → 견적 → 계약"
+    trigger: "고객 교육 문의 접수(메일·전화·홈페이지 폼)"
+    inputs: ["요구사항 미팅 메모", "과정 카탈로그", "강사 단가표(L2)"]
+    steps:
+      - { n: 1, actor: R_AM,         do: "요구사항 미팅·니즈 정리", system: "대면/화상",          output: "미팅 메모" }
+      - { n: 2, actor: R_AM,         do: "견적서·제안서 작성",      system: "엑셀·PPT",           output: DA_QUOTE }
+      - { n: 3, actor: R_SALES_LEAD, do: "조건 검토·승인",          system: "그룹웨어 전자결재",  output: "승인된 견적" }
+      - { n: 4, actor: R_MGMT,       do: "계약서 작성·체결",        system: "전자계약",           output: "계약서" }
+    judgment_rules:
+      - { if: "할인율 10% 초과 또는 신규 외부 강사 투입", then: "대표 결재 + 러닝운영팀 사전 협의", evidence: ["INT-09#q5"] }
+      - { if: "공공기관 고객", then: "기관 계약 절차를 따름(한 사업을 나눠 계약하지 않음)", evidence: ["INT-04#q2"] }
+    exceptions: ["고객이 자체 견적 양식을 요구하면 그 양식으로 작성(context_map: conformist)"]
+    sla: { quote_within_days: 3 }
+    variants_observed: 3                  # 이벤트 로그·인터뷰에서 발견한 흐름 갈래 수
+    bottlenecks: ["강사 일정 확인 대기 평균 2일"]
+    say_do_gap: "인터뷰: 견적 3일 내 회신 / 기록 중앙값: 5일"
+    bpmn: "./process/P_QUOTE_TO_CONTRACT.bpmn"
+    sop_md: "./process/aop/P_QUOTE_TO_CONTRACT.md"
+    confidence: 0.75
+
+# 레이어 L8. 리듬·의례·소통·문화
+cadences:
+  rituals:
+    - { name: "주간 영업·운영 회의", rrule: "FREQ=WEEKLY;BYDAY=MO", minutes: 60, output: "회의록(개조식)", decision_style: "대표 최종" }
+    - { name: "월간 실적 보고", due: "매월 5일", to: R_CEO, format: DA_MONTHLY }
+  annual_peaks: ["3~4월 신입·상반기 교육", "11~12월 예산 소진·차년도 계획"]   # 문서 생성량 히트맵 + 인터뷰
+  communication:
+    channels:
+      - { name: "그룹웨어 메신저",      use: "실시간 업무·사전 합의" }
+      - { name: "그룹웨어 전자결재",    use: "견적·계약 승인" }
+      - { name: "고객사별 카톡 단톡방", use: "고객 소통(섀도 채널)" }
+    first_reply_minutes_median: 22
+    after_hours_ratio: 0.18
+    meeting_style: { agenda_shared_before: false, decisions_recorded: true, source: "GOAL A 회의 분류 누적(L2 경로 개통 후)" }
+  culture:
+    culture_map:                          # Erin Meyer 8척도. 워크샵 소그룹 표시(1~10)
+      communicating: 7                    # 고맥락
+      evaluating: 6                       # 간접 피드백
+      persuading: 4
+      leading: 7                          # 위계
+      deciding: 6                         # 하향식
+      trusting: 7                         # 관계 기반
+      disagreeing: 7                      # 대립 회피
+      scheduling: 5
+    current_vs_preferred: { current: "위계형", preferred: "협력형", instrument: "OCAI형 12문항(자체)" }
+    crata_behavior_profile:               # CRATA 행동방식검사 — 자율 참여, 5명 이상 팀 단위 분포만
+      instruments: ["색채", "행동동기", "문제해결방식", "관계성장방식"]
+      participation: "자율(불참 불이익 없음, data_governance.contracts.behavior_test_clause)"
+      team_distribution_file: "./people/team_types.json"
+      portal_implications: ["알림은 하루 2회 묶음", "승인 버튼 크게, 결재선 항상 노출"]
+
+# 레이어 L9. 도구·시스템
+tools:
+  systems:
+    - { name: "그룹웨어(예: 다우오피스)", role: "전자결재·메신저·게시판", api: "엔터프라이즈형 오픈 API(서비스형이면 범위 확인 필요)", must_link: true }
+    - { name: "엑셀 견적 대장", role: "섀도 시스템", migrate: true }
+    - { name: "설문 도구", role: "만족도 설문", api: "확인 필요" }
+    - { name: "고객사별 카톡 단톡방", role: "섀도 채널", migrate: false, note: "본문 수집은 업무방·참여자 전원 동의·가명 처리 후만" }
+  double_entry: ["견적 금액을 엑셀 대장과 전자결재에 이중 입력", "회차 일정을 캘린더와 엑셀에 이중 입력"]
+  ai_tools_in_use: [{ name: "직원 개인별 생성형 AI(개인 플랜 혼재)", official: false, note: "학습 허용 설정 점검 필요" }]
+  constraints: { network_separation: none, csap_required: false, hwp_required: "공공기관 고객 제출 문서만", overseas_llm_allowed: "등급 L0·L1만(L2는 Bedrock 서울 In-Region)" }
+  integration_surface:
+    federated_mcp: ["그룹웨어 API(범위 확인 후)"]   # 실시간 조회, 데이터 이동 없음
+    synced_index: ["과정 카탈로그", "서식 모음"]    # 정적 문서만 색인
+
+# 레이어 L10. 페인포인트·KPI·AI 기회
+pain_points:
+  - id: PP1
+    statement: "견적서·제안서를 매번 이전 파일을 복사해 고치느라 건당 3시간"
+    jtbd_step: prepare                    # define|locate|prepare|confirm|execute|monitor|modify|conclude
+    importance: 9
+    satisfaction: 3
+    evidence: ["WS-tasks.csv#r14", "SHADOW-03"]
+  - id: PP2
+    statement: "교육 결과 보고서(만족도 집계 포함) 작성에 회차당 2시간"
+    jtbd_step: conclude
+    importance: 7
+    satisfaction: 4
+    evidence: ["WS-tasks.csv#r22"]
+kpis:
+  - { id: K1, name: "문의→견적 회신 일수",   baseline: "5일",     target: "2일",      measure: "포털 로그" }
+  - { id: K2, name: "결과 보고서 작성 시간", baseline: "2h/회차", target: "40분/회차", measure: "포털 로그" }
+ai_opportunities:
+  - id: AI1
+    task: "요구사항 미팅 기록 → 견적서(XLSX)·제안서(PPTX) 초안"
+    category: automate                    # eliminate | standardize | automate
+    skill: "ara.skill.quote_draft"
+    data_class: L2                        # 견적·계약 조건 → Bedrock 서울 In-Region(Sonnet 5)만, 정본은 국내 저장
+    human_in_loop: "어카운트 매니저 검토 후 영업팀장 승인"
+    ai_act: "생성형 기능. 고객에게 제출할 때 결과물 표시가 필요한지 제31조 기준으로 확인"
+    est_saving_hours_month: 30
+    priority: 1
+  - id: AI2
+    task: "만족도 설문 집계 → 결과 보고서(HWPX/DOCX) 초안"
+    category: automate
+    skill: "ara.skill.result_report"
+    data_class: L1                        # 수강생 개별 응답은 넣지 않고 집계값만
+    human_in_loop: "운영 매니저 검토"
+    est_saving_hours_month: 12
+    priority: 2
+  - { id: AI3, task: "결재선 미리보기·지연 알림", category: standardize, priority: 3 }
+
+# ---------------------------------------------------------------------
+# 업무사이트 생성 힌트 (§6 생성기 입력)
+# ---------------------------------------------------------------------
+portal_hints:
+  delivery_mode: groupware_embedded       # code_gen | nocode | oss_selfhost | groupware_embedded
+  home_widgets: ["이번 주 회차·강사 배정", "견적 승인 대기·지연", "영업 기회 단계별 건수", "KPI K1·K2"]
+  notification_channel: "그룹웨어 메신저(API 범위 확인 필요)"
+  must_have_outputs: ["XLSX", "PPTX", "HWPX(공공기관 고객용)", "PDF"]
+  mockup_inputs_allowed: ["identity.tokens", "style-pack/DESIGN.md", "더미 데이터"]   # 시안 엔진(Lovable·v0)에는 등급 L0만
+  public_sector_note: "해당 없음(공공 고객이면 CSAP SaaS 인증 전까지 oss_selfhost 또는 인증 그룹웨어 내장만)"
+  language: ko
