@@ -1,9 +1,37 @@
-# CRATA AX — 회의 자동 분류 & 고객사 스타일·패턴 추출 리서치
+# CRATA AX — 회사별 AX 업무사이트 리서치
 
-> 기준일 2026-10-01 · 국내외 16개 관점, 서비스·기술 374건 조사, 1차 출처 재검증(확인 338 · 인수 12 · 리브랜딩 11 · 종료(예정) 3 · 정정 5 · 불확실 5)
-> 두 가지 질문에 답합니다.
-> - **GOAL A**: Plaud 회의 녹음을 들으면 어느 파트(사업부·프로젝트)의 어떤 회의인지 자동으로 분류하고, 한 회의에 여러 파트 이야기가 섞이면 구간별로 나눠 분류할 수 있는가?
-> - **GOAL B**: 고객사에 들어갔을 때 그 회사의 스타일과 패턴을 어떻게 뽑아내고, 그걸로 회사 맞춤 업무사이트를 어떻게 만들 것인가?
+> 기준일 2026-10-01 · 국내외 16개 관점, 서비스·기술 374건 조사(1차 출처 재검증: 확인 338 · 인수 12 · 리브랜딩 11 · 종료(예정) 3 · 정정 5 · 불확실 5), 그리고 방향 보강 조사 4건
+
+## 0. 방향 (먼저 읽기 → [00 방향 정리](docs/research/00_direction.md))
+
+> **고객사에 들어가 그 회사가 일하는 방식을 뽑아 설정하고, 직원 각자의 AI가 그 맥락으로 일하게 연결하고, 수정이 쌓일수록 결과가 좋아지도록 운영해 주는 AX 서비스. 직원 복지로 ARA를 함께 제공한다.**
+
+"일하는 방식"은 사업·프로젝트·파트 구조, 회의 방식, 업무 배분 기준, 양식, 지식을 말합니다.
+
+- **"이미 있는데 의미가 있나?"** 기능은 대부분 이미 있습니다(Notion·Microsoft·Lark가 7개 중 5~6개). 하지만 회사마다 규칙을 정하고, 설정하고, 계속 고쳐 주는 일은 어떤 제품도 대신하지 않습니다. 그래서 구축·운영 파트너 시장이 있습니다(예: kintone 동행 월 ¥85,000~¥340,000). CRATA가 팔 것은 새 소프트웨어가 아니라 **회사 운영모델 설계 + 월 운영**입니다([07](docs/research/07_work-os-market.md)).
+- **비어 있는 곳**
+  - "수정 → 범위 분류 → 승인 → 회사 규칙 → 효과 측정"을 잇는 흐름([08](docs/research/08_correction-learning.md))
+  - 한국 메일·결재 환경과의 연결
+  - 성향 기반 협업·복지 ARA([10](docs/research/10_ara-wellbeing.md))
+  - 강의·워크샵으로 들어가는 진입 경로
+- **조정할 점**
+  - 회사마다 새로 개발하지 말고 **공통 플랫폼 + 회사별 설정**으로 합니다.
+  - "수정 0"을 약속하지 말고, **같은 수정의 재발률·검토시간 감소**를 증명합니다.
+  - Obsidian은 개념만 가져오고, 고객이 쓰는 Notion·Drive에 연결합니다.
+  - 메일 앱은 만들지 말고 커넥터만 만듭니다.
+  - ARA 복지의 개인 데이터는 회사가 볼 수 없게 분리합니다.
+- **각자의 AI 연결(ARA MCP)**
+  - 로컬판을 판매용으로 바꾸려면 OAuth 2.1 로그인, 회사별 데이터 분리, 검토자만 완료 처리하는 구조가 필요합니다([09](docs/research/09_ara-mcp-remote.md)).
+  - 첫 판매 기준: "서로 다른 두 회사가 각자의 PC에서 가입하고, 자기 업무만 조회·제출한다."
+- **순서**
+  1. CRATA 자신을 첫 고객으로 삼습니다(2주).
+  2. 교육 제안 흐름 하나를 끝까지 돌리고, ARA MCP 원격 v1을 함께 만듭니다(4~6주).
+  3. 유료 파일럿 1~2곳(2~3개월)을 진행합니다.
+  4. 패키지화합니다.
+
+아래 GOAL A·B는 이 큰 그림의 부품입니다.
+- GOAL A, 회의 자동 분류 → 모듈 ② 회의
+- GOAL B, 회사 스타일·패턴 추출 → 모듈 ① 진단·설정
 
 ---
 
@@ -77,12 +105,17 @@
 
 | 경로 | 내용 |
 |---|---|
+| [docs/research/00_direction.md](docs/research/00_direction.md) | **최상위 문서**: 사용자 방향 정리, "이미 있는데 의미가 있나"에 대한 답, 방향 검토(맞는 것·고칠 것), 모듈 지도, 실행 순서, 첫 판매 기준, 결정할 것 |
 | [docs/research/01_market-map.md](docs/research/01_market-map.md) | 국내외 유사 서비스 리서치 맵(카테고리별 표), Top 10 레퍼런스, 한국 시장 특수성, CRATA 포지셔닝·상품화·가격, 다음 액션 |
 | [docs/research/02_meeting-auto-classification.md](docs/research/02_meeting-auto-classification.md) | **GOAL A 설계 정본**: 기존 서비스 비교, 아키텍처, 입력 경로 4가지, 분류 체계, 구간 분할·멀티라벨 프롬프트, 출력 스키마, 검수 루프, 산출물 템플릿, 비용 |
 | [docs/research/03_company-dna-playbook.md](docs/research/03_company-dna-playbook.md) | **GOAL B 플레이북 정본**: 10-레이어 모델, 진단 프로세스(2~4주), 질문 뱅크, Company DNA Profile, 업무사이트 생성 파이프라인, 스택 옵션 |
 | [docs/research/04_data-governance.md](docs/research/04_data-governance.md) | **공통 부록 정본**: 데이터 등급 L0~L3, 녹음 원칙(통신비밀보호법), 수탁자·국외이전 표, L3 사전 탐지, 정보주체 권리, 고객 진단 특칙, CSAP |
 | [docs/research/05_service-catalog.md](docs/research/05_service-catalog.md) | 조사한 서비스·기술 374건 전체 카탈로그(관점별 표, 검증 상태, 출처) |
 | [docs/research/06_verification-log.md](docs/research/06_verification-log.md) | 팩트체크 로그(핵심 주장 판정, 인수·종료·정정 내역) |
+| [docs/research/07_work-os-market.md](docs/research/07_work-os-market.md) | 통합 플랫폼 커버리지 매트릭스(Notion·MS·Lark·국내 그룹웨어), 업무 배분·메일·지식 기능, 구축·운영 대행 시장, Codex 주장 검증 |
+| [docs/research/08_correction-learning.md](docs/research/08_correction-learning.md) | 수정 학습 루프: 이미 하는 곳, 연구(CIPHER·PROSE 등), 수정·규칙 데이터 모델, 충돌·만료, KPI |
+| [docs/research/09_ara-mcp-remote.md](docs/research/09_ara-mcp-remote.md) | ARA MCP 원격·멀티테넌트: MCP 인증 사양, 클라이언트별 연결, 참고 구현, 스택, 보안 체크리스트, 출시 테스트 |
+| [docs/research/10_ara-wellbeing.md](docs/research/10_ara-wellbeing.md) | ARA 복지: 국내외 EAP·AI 코칭, 성향 공유 사례, 법·개인정보 제약, 패키지 권장안 |
 | [config/meeting_taxonomy.yaml](config/meeting_taxonomy.yaml) | 회의 분류 체계 초안 v0.2 (EDU 강의·워크샵 / SSI 학맞통 / ARA 아라 / CORE 공통, DX·AXC는 후보) |
 | [prompts/meeting_segment_classify.md](prompts/meeting_segment_classify.md) | 구간 분할 + 멀티라벨 분류 프롬프트 |
 | [schemas/meeting_segments.schema.json](schemas/meeting_segments.schema.json) | 분류 결과 JSON Schema (구조화 출력용) |
@@ -90,7 +123,7 @@
 | [data/research_dataset.json](data/research_dataset.json) | 리서치 원자료(관점별 서비스·방법론·검증 결과) |
 | [scripts/build_research_appendix.py](scripts/build_research_appendix.py) | 원자료에서 05·06 문서를 다시 만드는 스크립트 (`python3 scripts/build_research_appendix.py`) |
 
-문서끼리 내용이 다르면 정본 문서를 따릅니다. GOAL A는 02, GOAL B는 03, 데이터 등급·개인정보는 04가 정본입니다.
+문서끼리 내용이 다르면 정본 문서를 따릅니다. 방향과 모듈 구성은 00, GOAL A는 02, GOAL B는 03, 데이터 등급·개인정보는 04가 정본입니다.
 
 ---
 
@@ -107,6 +140,6 @@
 - 지금 쓰는 협업 도구(Notion인지, 사내 메신저는 무엇인지)와 Plaud 플랜·계정 수(여러 사람 계정 처리 방식이 달라짐)
 - 사업부·하위 업무의 실제 구조(초안의 EDU/SSI/ARA/CORE와 후보 DX/AXC)
 - 학맞통 관련 회의에서 녹음할 수 있는 범위(기관 보안 규정, 동의)
-- ChatGPT 대화(공유 링크)의 마지막 메시지 원문. 공유 링크가 Cloudflare 봇 확인에 막혀 직접 읽지 못했습니다.
+- [00 문서 10장](docs/research/00_direction.md)의 결정 사항: 첫 타깃 고객군, 이름 정리(플랫폼 / ARA / ARA 연결), 자체 포털 여부, ARA 개인 영역의 법적 구조, 메일 범위, 원격 v1 개발 저장소
 
 > 이 리서치는 법률 자문이 아닙니다. 녹음·개인정보·조달 관련 내용은 계약·런칭 전에 전문가 검토를 받으세요([04 문서](docs/research/04_data-governance.md)).
