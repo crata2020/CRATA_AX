@@ -5,6 +5,7 @@ import { STATUS_COLORS, GOOD_FILL, SPACE, RADIUS, FONT_STACK, LAYOUT } from "./t
 export function themeCssVars(t: BrandTokens): Record<string, string> {
   const vars: Record<string, string> = {
     "--ws-brand": t.brand,
+    "--ws-brand-text": t.brandText,
     "--ws-brand-weak": t.brandWeak,
     "--ws-on-brand": t.onBrand,
     "--ws-on-brand-2": t.onBrand2,
@@ -22,10 +23,10 @@ export function themeCssVars(t: BrandTokens): Record<string, string> {
     "--ws-shadow-pop": t.shadowPop,
     "--ws-shadow-modal": t.shadowModal,
     "--ws-font": FONT_STACK,
-    // 상태색(고정) + info·neutral(테넌트 색)
-    "--ws-info-mark": t.brand,
-    "--ws-info-bg": t.brandWeak,
-    "--ws-info-fg": t.brand,
+    // 상태색(고정) + info·neutral(테넌트 색). info는 브랜드가 초록 계열이면 고정 파랑(tenants.ts · derive.ts infoOf)
+    "--ws-info-mark": t.info.mark,
+    "--ws-info-bg": t.info.bg,
+    "--ws-info-fg": t.info.fg,
     "--ws-neutral-mark": t.muted,
     "--ws-neutral-bg": t.panel,
     "--ws-neutral-fg": t.ink2,

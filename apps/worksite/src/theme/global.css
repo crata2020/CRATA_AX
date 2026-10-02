@@ -29,15 +29,18 @@ body {
 }
 h1, h2, h3, h4, p { margin: 0; }
 h1, h2, h3, h4 { line-break: strict; }
-a { color: var(--ws-brand); }
+a { color: var(--ws-brand-text); }
 button { font-family: inherit; }
 
 /* 초점: 키보드 초점만 보이게 */
 /* antd·Refine 리셋의 `a:focus { outline: 0 }`(0,1,1)보다 세게 걸리도록 html을 앞에 붙여요. 장식 테두리(outline)를 쓰는 버튼도 초점 때는 이 선으로 바뀌어요. */
 html :focus-visible, html a:focus-visible, html button:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: 2px; }
 html :focus:not(:focus-visible) { outline: none; }
-/* antd 선택 상자: 초점은 안쪽 검색 input에 가서 선이 안 보여요 → 키보드 초점일 때 상자 바깥에 같은 초점 선 */
-html .ant-select:has(input:focus-visible) .ant-select-selector { outline: 2px solid var(--ws-brand); outline-offset: 2px; }
+/* antd 선택 상자: 초점은 안쪽 검색 input에 가서 선이 안 보여요 → 키보드 초점일 때 상자 바깥에 같은 초점 선.
+   antd가 .ant-select-selector에 outline: 0을 (0,6,0)으로 걸어서, antd가 꾸미지 않는 바깥 상자(.ant-select)에 그려요 */
+html .ant-select:has(input:focus-visible) { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: 10px; }
+/* 정렬 가능한 표 머리: antd의 th.ant-table-column-has-sorters { outline: none }(0,3,1)보다 세게 */
+html .ant-table-wrapper .ant-table-thead > tr > th.ant-table-column-has-sorters:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: -2px; }
 /* 화면이 바뀔 때 코드가 옮긴 초점(제목·본문)은 선을 그리지 않아요(누를 수 있는 것이 아니라서) */
 html h1[tabindex="-1"]:focus, html main[tabindex="-1"]:focus { outline: none; }
 html .ws-on-brand :focus-visible, html [data-hero] :focus-visible,
@@ -45,7 +48,7 @@ html .ws-on-brand a:focus-visible, html [data-hero] a:focus-visible,
 html .ws-on-brand button:focus-visible, html [data-hero] button:focus-visible { outline-color: var(--ws-on-brand); }
 
 /* 본문 안 링크: 색만으로 구분하지 않게 밑줄(WCAG 1.4.1). 버튼처럼 생긴 링크(목록 줄·더보기·메뉴)는 빼요. */
-.ws-t-caption a, .as-caption a, .ws-card__caption a, .ws-page-header__desc a, p a, li > a:not([class]) {
+.ws-t-caption a, .as-caption a, .ws-card__caption a, .ws-page-header__desc a, .wk-meta-text a, p a, li > a:not([class]) {
   text-decoration: underline; text-underline-offset: 2px;
 }
 .ws-t-caption a[class^="ws-"], p a.ws-listrow, p a.ws-card__more, p a.ws-nav__link, p a.ws-nav__sub { text-decoration: none; }

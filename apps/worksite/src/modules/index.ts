@@ -83,10 +83,10 @@ export function makeT(tenant: TenantConfig, overrides?: TenantOverrides | null) 
 }
 
 // ───────── 메뉴(빌드 스펙 2.2절)
-export type NavBadgeKey = "reviewWaiting" | "inboxWaiting" | "unreadNotifications" | "fieldReportsNew";
+export type NavBadgeKey = "myUrgent" | "reviewWaiting" | "inboxWaiting" | "unreadNotifications" | "fieldReportsNew";
 /** 배지가 세는 것(툴팁·스크린리더 글자) */
 export const NAV_BADGE_LABEL: Record<NavBadgeKey, string> = {
-  reviewWaiting: "검토 대기", inboxWaiting: "분류 확인 대기", unreadNotifications: "안 읽은 알림", fieldReportsNew: "담당 미배정 현장 등록",
+  myUrgent: "급한 내 업무(기한 지남·오늘 마감·수정 요청)", reviewWaiting: "내가 검토할 제출", inboxWaiting: "분류 확인 대기", unreadNotifications: "안 읽은 알림", fieldReportsNew: "담당 미배정 현장 등록",
 };
 export interface NavChild {
   key: string; label: string; to: string; moduleId: ModuleId;
@@ -113,7 +113,7 @@ type ChildDef = Omit<NavChild, "label"> & { label: string; action?: "list" | "ap
 const CHILDREN: Record<NavGroupId, (packs: string[]) => ChildDef[]> = {
   home: () => [],
   work: () => [
-    { key: "work-list", label: "내 업무", to: "/work", moduleId: "tasks" },
+    { key: "work-list", label: "내 업무", to: "/work", moduleId: "tasks", badgeKey: "myUrgent" },
     { key: "work-board", label: "업무 보드", to: "/work/board", moduleId: "tasks" },
     { key: "work-review", label: "검토함", to: "/work/review", moduleId: "tasks", action: "approve", badgeKey: "reviewWaiting" },
     { key: "mail-inbox", label: "메일 제안", to: "/work/mail", moduleId: "mail-connector" },
@@ -256,12 +256,19 @@ export function activeNav(items: NavItem[], pathname: string): { group?: NavGrou
 }
 
 // ───────── 모바일 하단 탭(빌드 스펙 2.3절)
-export interface MobileTab { key: string; label: string; icon: RegistryIconName; to: string; badgeKey?: NavBadgeKey }
+/** badgeKeys: 더해서 보여 줄 배지(스크린리더·툴팁은 무엇을 몇 건 셌는지 나눠 읽어요) */
+export interface MobileTab { key: string; label: string; icon: RegistryIconName; to: string; badgeKeys?: NavBadgeKey[] }
 export function mobileTabs(tenant: TenantConfig): MobileTab[] {
   return MOBILE_TABS[tenant.nav.mobileTabs].map((tab) => ({
     key: tab.id, label: tab.nameKo, icon: tab.icon, to: tab.route,
-    badgeKey: tab.id === "work" ? "reviewWaiting" : tab.id === "notifications" ? "unreadNotifications" : undefined,
+    // 내 업무 탭: 급한 내 업무 + 내가 검토자인 제출(모바일에는 검토함 메뉴가 안 보여서 함께 셉니다)
+    badgeKeys: tab.id === "work" ? ["myUrgent", "reviewWaiting"] : tab.id === "notifications" ? ["unreadNotifications"] : undefined,
   }));
+}
+/** 배지 여러 개를 더한 수와 읽을 글자("급한 내 업무 2건, 내가 검토할 제출 1건") */
+export function sumBadges(keys: NavBadgeKey[] | undefined, badges: Partial<Record<NavBadgeKey, number>>): { count: number; label: string } {
+  const parts = (keys ?? []).filter((k) => (badges[k] ?? 0) > 0).map((k) => `${NAV_BADGE_LABEL[k]} ${badges[k]}건`);
+  return { count: (keys ?? []).reduce((s, k) => s + (badges[k] ?? 0), 0), label: parts.join(", ") };
 }
 
 // ───────── 홈 위젯 결정 규칙(빌드 스펙 5.3절)

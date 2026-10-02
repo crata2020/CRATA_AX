@@ -11,6 +11,9 @@ export const STATUS_COLORS = {
   critical: { mark: "#D03B3B", bg: "#FBE8E8", fg: "#A82727" },
 } as const;
 
+/** 브랜드가 good 초록과 가까운 테넌트(±60°)의 info 상태색. mark 흰 바탕 4.14:1(표시용) · fg 흰 바탕 7.34:1 · fg/bg 6.41:1 */
+export const INFO_BLUE = { mark: "#4F7BD0", bg: "#E9F0FB", fg: "#2A549E" } as const;
+
 /** 넓은 면(누적 막대의 가동·완료 같은 '평상시' 다수)에 쓰는 차분한 초록. 진한 good.mark(#0CA30C)는 아이콘·점·작은 표시에만.
  *  validate_palette.js(라이트): 설비 상태 순서 [이 색, warning, critical, neutral, chart-muted] 인접 CVD ΔE 8.7(글자 범례 필수) · 일반 20.8 */
 export const GOOD_FILL = "#5DAA6E";

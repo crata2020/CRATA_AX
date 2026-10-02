@@ -158,7 +158,7 @@ flowchart LR
 | # | 그룹 id | 이름 | 아이콘 | 그룹 경로 | 하위 항목 (경로) | 보이는 역할 |
 |---|---|---|---|---|---|---|
 | 1 | home | 홈 | HomeOutlined | `/` | — | 전원 |
-| 2 | work | 내 업무 | CheckSquareOutlined | `/work` | 내 업무 `/work` · 업무 보드 `/work/board` · 검토함 `/work/review`(검토 대기 수 배지) · 메일 제안 `/work/mail` | 검토함은 owner·admin·reviewer |
+| 2 | work | 내 업무 | CheckSquareOutlined | `/work` | 내 업무 `/work`(급한 내 업무 배지: 기한 지남·오늘 마감·수정 요청) · 업무 보드 `/work/board` · 검토함 `/work/review`(내가 검토자인 검토 대기 수 배지) · 메일 제안 `/work/mail` | 검토함은 owner·admin·reviewer. 모바일 '내 업무' 탭 배지 = 급한 내 업무 + 내가 검토할 제출(스크린리더는 둘을 나눠 읽음) |
 | 3 | projects | 프로젝트(**TR: 사업·거래처**) | ProjectOutlined | `/projects` | 사업·프로젝트 `/projects` · 거래처 `/projects/partners` · 담당자 `/projects/contacts` | 전원 |
 | 4 | meetings | 회의 | TeamOutlined | `/meetings` | 회의 목록 `/meetings` · 분류 확인 `/meetings/inbox`(확인 대기 수 배지) · 결정 모음 `/meetings/decisions` | 분류 확인은 owner·admin·reviewer |
 | 5 | docs | 문서·지식 | FileTextOutlined | `/docs` | 산출물 `/docs` · 양식 `/docs/templates` · 작성 규칙 `/docs/rules` · 지식 `/docs/knowledge` · 용어집 `/docs/glossary` | 전원 |
@@ -325,7 +325,7 @@ flowchart LR
 | (알약) 오늘 할 일   HeroCard 5열 | (알약) 프리셋 2번째 위젯      7열            |
 | 오늘 처리할 일                   |                                          |
 | 7 건                            |                                          |
-| 내 업무 4 | 오늘 마감 2 | 검토 요청 1 |                                          |
+| 기한 지남 1 | 오늘 마감 2 | 검토 요청 1 |                                        |
 | [내 업무 보기]                   |                                          |
 +------------------------------+------------------------------------------+
 | (1440 미만) 오늘 M            | (알약) 프리셋 3번째 위젯 M                    |
@@ -335,11 +335,11 @@ flowchart LR
 RightRail(≥1440): 필독 공지 · 오늘 일정 · 다가오는 회의 (2.5절)
 ```
 - **컴포넌트:** `PageHeader`(greeting, period), `HeroCard`, `WidgetSlot`×n, `RightRail`, `SectionCard`('오늘' 카드).
-- **데이터:** `custom({url:"sel:home.today"})` → `{ myOpen, dueToday, reviewWaiting, returnedToMe, meetingsToday, dueSoon, workOrdersToday?, checksPending? }`. 위젯은 3.1.1절 카탈로그.
-- **동작:** 기간 세그먼트(`?period=week|month`)는 기간을 받는 위젯 전부에 같이 적용. 히어로 행은 각각 필터된 목록으로 이동(`/work?due=today`, `/work/review`, `/work?status=changes_requested`). 위젯 제목 줄 '더보기'는 카탈로그의 링크.
-- **빈 상태:** 히어로 숫자가 0이면 "오늘 처리할 일이 없어요. 이번 주 업무를 미리 볼까요?" + [이번 주 업무 보기]. 위젯은 각자의 빈 문구(카탈로그). 위젯이 하나도 남지 않으면(모듈이 다 꺼짐) 히어로만 보여 줍니다.
-- **역할 차이:** 위젯 구성은 5.3절 결정 규칙. 히어로 행은 **큰 숫자를 이루는 줄만**(리뷰 1차): member "오늘 마감 · 수정 요청", reviewer 이상 "오늘 마감 · 검토 요청", TR 생산 작업자 "오늘 작업지시". 합에 넣지 않는 참고(“진행 중인 내 업무 n건”, 작업자의 “점검 전 내 설비 n대”·“오늘 마감 업무 n건”)는 구분선 아래 작은 링크로 둡니다.
-- **히어로 정의:** 숫자 = 그 아래 줄의 합 = `dueToday + reviewWaiting(검토자) + returnedToMe(구성원)`(작업자는 `workOrdersToday`만, 단위 '건'. 설비 '대'는 더하지 않음, '내 설비' = 오늘 작업지시가 걸린 설비). `src/pages/home/lib/heroModel.ts` + 단위 테스트 `tests/unit/hero.test.ts`. 숫자는 `figure-hero`(48/56, 비례 숫자, 흰 글자), 단위 "건" 20/600. 행 사이 1px `rgba(255,255,255,0.24)` 선. 버튼은 흰 바탕 `brand` 글자.
+- **데이터:** `custom({url:"sel:home.today"})` → `{ myOpen, dueToday, overdue, reviewWaiting, companyReviewWaiting, returnedToMe, returnedOnly, meetingsToday, dueSoon, workOrdersToday?, workOrdersByProcess?, checksPending? }`. `reviewWaiting`은 **내가 지정 검토자인** 검토 대기만 셉니다(소유자·관리자도 회사 전체를 세지 않음 — 같은 건이 두 사람의 할 일로 보이지 않게). 위젯은 3.1.1절 카탈로그.
+- **동작:** 기간 세그먼트(`?period=week|month`)는 기간을 받는 위젯 전부에 같이 적용. 히어로 행은 각각 필터된 목록으로 이동(`/work?due=overdue`, `/work?due=today`, `/work/review`, `/work?status=changes_requested`). 위젯 제목 줄 '더보기'는 카탈로그의 링크.
+- **빈 상태:** 히어로의 모든 줄이 0일 때만 "오늘 처리할 일이 없어요. 이번 주 업무를 미리 볼까요?" + [이번 주 업무 보기]. 위젯은 각자의 빈 문구(카탈로그). 위젯이 하나도 남지 않으면(모듈이 다 꺼짐) 히어로만 보여 줍니다.
+- **역할 차이:** 위젯 구성은 5.3절 결정 규칙. 히어로 행은 **큰 숫자를 이루는 줄만**(리뷰 1·3차): 모든 역할 "기한 지남 · 오늘 마감 · 수정 요청" + reviewer 이상 "검토 요청"(0인 줄은 숨김, 한 업무는 한 줄에만: 기한 지남 → 오늘 마감 → 수정 요청 순). TR 생산 작업자는 "오늘 작업지시"를 공정별(편조 · 가공)로 나누고, 한 공정뿐이면 줄 없이 큰 숫자만. 합에 넣지 않는 참고(“남은 내 업무 n건”, 소유자·관리자의 “회사 전체 검토 대기 n건” → `/work/review?scope=all`, 작업자의 “점검 전 내 설비 n대”·“오늘 마감 업무 n건”)는 구분선 아래 작은 링크로 둡니다. 인사말 요약은 “기한 지난 업무 n건”을 맨 앞에 둡니다.
+- **히어로 정의:** 숫자 = 그 아래 줄의 합 = `overdue + dueToday + returnedOnly + reviewWaiting(검토자 이상)`(작업자는 `workOrdersToday`만, 단위 '건'. 설비 '대'는 더하지 않음, '내 설비' = 오늘 작업지시가 걸린 설비). `src/pages/home/lib/heroModel.ts` + 단위 테스트 `tests/unit/hero.test.ts`. 숫자는 `figure-hero`(48/56, 비례 숫자, 흰 글자), 단위 "건" 20/600. 행 사이 1px `rgba(255,255,255,0.24)` 선. 버튼은 흰 바탕 `brand` 글자.
 
 #### 3.1.1 홈 위젯 카탈로그 (home 그룹이 전부 만듦)
 
@@ -549,7 +549,7 @@ CRATA 워크사이트 데모(h1) [예시 데이터 배지] · "모든 숫자와 
 - **배치**
 ```
 [PageHeader: 내 업무 · 보기 [목록|보드] · [+ 업무 만들기](검토자 이상)]
-[FilterBar: 범위 [내 업무|내가 검토|회사 전체] · 상태 칩 · 프로젝트 · 마감 [오늘|이번 주|지난 마감|전체] · 검색]
+[FilterBar: 범위 [내 업무|내가 검토|회사 전체] · 상태 칩 · 프로젝트 · 마감 [오늘|이번 주|기한 지남|전체] · 검색]
 진행 중 4 · 오늘 마감 2 · 수정 요청 1      ← 카드 아닌 글자 링크(누르면 필터)
 [DataTable: 업무명 | 프로젝트 | 담당 | 검토자 | 마감 | 상태 | 출처]
 ```
@@ -590,7 +590,7 @@ KanbanBoard(패널 위에 바로, 카드로 감싸지 않음)
 - **배치**
 ```
 [PageHeader: 검토함 · "AI가 제출한 결과도 여기서 사람이 확인해요."]
-[FilterBar: 상태 [검토 대기|처리함] · 제출 경로 [전체|웹|AI 연결] · 프로젝트]
+[FilterBar: (owner·admin만) 범위 [내가 검토자|회사 전체](?scope=all) · 상태 [검토 대기|처리함] · 제출 경로 [전체|웹|AI 연결] · 프로젝트]
 [DataTable: 업무 | 제출(v2) | 제출자(사람/AI 연결·Claude) | 제출 시각 | 기다린 시간 | 상태]
 행 → ReviewDrawer(480)
   업무 제목 · 프로젝트 · 마감
@@ -2002,7 +2002,7 @@ export interface TenantConfig {
 | `projects` (member) | `member_ids`·`owner_member_id`·`reviewer_member_id`에 내가 있는 것만 |
 | `sensitivity = "L2"` 행(projects·tasks·meetings·artifacts) | owner·admin과 참여자(프로젝트 구성원·담당·검토자·참석자)만. 나머지에게는 목록에서 빠지고 `getOne`은 404 |
 | `tasks` (member) | `assignee_id = 나` |
-| `submissions` approve | 역할이 approve 이상이고, (task.reviewer_id = 나 또는 owner·admin) |
+| `submissions` approve | 역할이 approve 이상이고, (task.reviewer_id = 나 또는 owner·admin). **담당자 본인(task.assignee_id = 나)은 owner·admin이어도 승인 못 함**("내 제출은 지정된 검토자가 승인해요"). owner·admin이 남의 제출을 승인하면 감사 기록에 `rpc:approve_submission_substitute`('대신 승인')로 남고 지정 검토자에게도 알림 |
 | `progress_logs` | `appendOnly`: create만, edit·delete 403 |
 | `audit_events` | `immutable`: list·show만. member는 `actor_id = 나` 또는 내 AI 연결 행만 |
 | `notifications`, `notification_preferences`, `mail_connections`, `mail_links` | **모든 역할 본인 것만**(owner·admin 포함) |

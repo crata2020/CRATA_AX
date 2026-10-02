@@ -687,6 +687,8 @@ function requireSubmission(ctx: ActionContext, id: unknown) {
   return (typeof id === "string" ? ctx.get("submissions", id) : null) ?? ctx.fail(404, "찾는 항목이 없어요");
 }
 function canReview(ctx: ActionContext, sub: RowOf<"submissions">) {
+  const task = ctx.raw.get("tasks", sub.task_id);
+  if (task?.assignee_id === me(ctx) || sub.submitted_by === me(ctx)) ctx.fail(403, "내 제출은 지정된 검토자가 승인해요");
   if (!ctx.can("submissions", "approve", sub as unknown as Record<string, unknown>)) ctx.fail(403, "이 업무의 검토자가 승인할 수 있어요");
   if (sub.status !== "submitted") ctx.fail(409, "이미 처리한 제출이에요");
 }
@@ -724,7 +726,12 @@ const rpc: Record<string, RpcHandler> = {
     ctx.update("submissions", sub.id, { status: "approved", review_comment: text(p.comment) || null, reviewed_by: me(ctx), reviewed_at: now });
     ctx.update("tasks", task.id, { status: "done" });
     ctx.notify({ recipientId: task.assignee_id, kind: "submission_approved", title: `"${task.title}" 승인됐어요`, link: `/work/tasks/${task.id}`, sourceModule: "tasks", sourceId: sub.id });
-    ctx.audit({ action: "rpc:approve_submission", resource: "submissions", resourceId: sub.id, changes: { status: ["submitted", "approved"] } });
+    // 지정 검토자가 아닌 소유자·관리자가 승인하면 '대신 승인'으로 남겨요(지정 검토자에게도 알림)
+    const substitute = task.reviewer_id !== me(ctx);
+    if (substitute) {
+      ctx.notify({ recipientId: task.reviewer_id, kind: "submission_approved", title: `"${task.title}" 대신 승인됐어요`, link: `/work/tasks/${task.id}`, sourceModule: "tasks", sourceId: sub.id });
+    }
+    ctx.audit({ action: substitute ? "rpc:approve_submission_substitute" : "rpc:approve_submission", resource: "submissions", resourceId: sub.id, changes: { status: ["submitted", "approved"] } });
     return { ok: true, taskId: task.id };
   },
 

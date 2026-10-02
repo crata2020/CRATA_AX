@@ -21,7 +21,7 @@ export function DemoDataBadge({ variant, compact }: { variant: "topbar" | "inlin
     return (
       <Tooltip title={DEMO_HINT}>
         <span className="ws-demo-badge" data-demo-badge={variant}>
-          <InfoCircleOutlined aria-hidden />예시 데이터<span className="ws-sr-only"> · {DEMO_HINT}</span>
+          <InfoCircleOutlined aria-hidden /><span className="ws-demo-badge__text">예시 데이터</span><span className="ws-sr-only"> · {DEMO_HINT}</span>
         </span>
       </Tooltip>
     );

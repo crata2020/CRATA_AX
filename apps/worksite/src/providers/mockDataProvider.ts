@@ -4,7 +4,7 @@
 import type { BaseRecord, CrudFilter, CrudSort, DataProvider } from "@refinedev/core";
 import type { TenantConfig } from "@/tenants/types";
 import type { ResourceName, Row } from "@/types/entities";
-import type { Clock } from "@/lib/clock";
+import { toKstDate, type Clock } from "@/lib/clock";
 import { keysWithPrefix, removeKey } from "@/lib/storage";
 import { resolveRelation } from "@/types/relations";
 import type { SeedRegistry } from "@/data/seed";
@@ -157,10 +157,20 @@ export function createMemoryDataProvider(o: MemoryProviderOptions): DataProvider
     },
   };
   const builtinSel: Record<string, SelectorHandler> = {
-    /** 메뉴·탭 배지: 검토 대기 · 분류 확인 대기 · 안 읽은 알림 */
+    /** 메뉴·탭 배지: 급한 내 업무 · 검토 대기(내가 검토자) · 분류 확인 대기 · 안 읽은 알림 */
     "nav.badges": (ctx) => {
+      // 검토 대기는 '내가 지정 검토자인' 제출만 셉니다. 소유자·관리자도 회사 전체를 세지 않아요(같은 건이 두 사람 할 일로 보이지 않게)
       const reviewWaiting = policy.isModuleOn("tasks") && policy.canModule("tasks", "approve").can
-        ? ctx.list("submissions", { filters: [{ field: "status", operator: "eq", value: "submitted" }] }).filter((s) => policy.can("submissions", "approve", s as unknown as Row).can).length
+        ? ctx.list("submissions", { filters: [{ field: "status", operator: "eq", value: "submitted" }] }).filter((s) => {
+          const t = store.find("tasks", s.task_id);
+          return t?.reviewer_id === me && policy.can("submissions", "approve", s as unknown as Row).can;
+        }).length
+        : 0;
+      // 급한 내 업무: 내 열린 업무 중 기한 지남 · 오늘 마감 · 수정 요청(한 업무는 한 번만)
+      const today = clock.today;
+      const myUrgent = policy.isModuleOn("tasks")
+        ? ctx.list("tasks", { filters: [{ field: "assignee_id", operator: "eq", value: me }, { field: "status", operator: "in", value: ["todo", "in_progress", "changes_requested"] }] })
+          .filter((t) => t.status === "changes_requested" || (!!t.due_at && toKstDate(t.due_at) <= today)).length
         : 0;
       // 분류 확인 배지는 사람이 확인해야 하는 구간만 셉니다(결정·액션 제안까지 더하면 다른 급한 신호보다 커 보여요)
       const inboxWaiting = policy.isModuleOn("meetings") && policy.canModule("meetings", "approve").can
@@ -173,7 +183,7 @@ export function createMemoryDataProvider(o: MemoryProviderOptions): DataProvider
       const fieldReportsNew = policy.isModuleOn("mfg-quality") && policy.canModule("mfg-quality", "approve").can
         ? ctx.list("field_reports", { filters: [{ field: "status", operator: "eq", value: "new" }] }).length
         : 0;
-      return { reviewWaiting, inboxWaiting, unreadNotifications, fieldReportsNew };
+      return { myUrgent, reviewWaiting, inboxWaiting, unreadNotifications, fieldReportsNew };
     },
     /** 상단 바 AI 연결 상태: 회사 정책 켜짐 여부 + 내 연결 수 */
     "me.ai": (ctx) => {

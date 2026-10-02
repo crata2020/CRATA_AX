@@ -16,7 +16,7 @@ export function TodayHeroBody({ data }: { data: HomeToday }) {
       ) : (
         <p className="wh-hero__empty">{data.mode === "operator" ? "오늘 작업지시가 아직 없어요." : "오늘 처리할 일이 없어요. 이번 주 업무를 미리 볼까요?"}</p>
       )}
-      {m.total > 0 && (
+      {m.total > 0 && m.rows.length > 0 && (
         <ul className="wh-hero__rows" aria-label={`${m.label} 내역`}>
           {m.rows.map((r) => (
             <li key={r.key}>
@@ -57,11 +57,13 @@ export function greetingSummary(d: HomeToday | undefined): string | undefined {
     return d.workOrdersToday > 0 ? `오늘 작업지시 ${formatNumber(d.workOrdersToday)}건이 있어요.` : "오늘 작업지시가 아직 없어요.";
   }
   const parts: string[] = [];
+  // 기한 지난 업무가 가장 먼저(히어로 줄과 같은 순서·같은 말)
+  if (d.overdue) parts.push(`기한 지난 업무 ${d.overdue}건`);
   if (d.meetingsToday) parts.push(`오늘 회의 ${d.meetingsToday}건`);
-  // 히어로 숫자와 같은 말('오늘 마감')을 써요. 오늘 마감이 없을 때만 이틀 안 마감을 알려요
+  // 오늘 마감이 없을 때만 이틀 안 마감을 알려요
   if (d.dueToday) parts.push(`오늘 마감 업무 ${d.dueToday}건`);
   else if (d.dueSoon) parts.push(`이틀 안 마감 업무 ${d.dueSoon}건`);
+  if (d.returnedOnly) parts.push(`수정 요청 ${d.returnedOnly}건`);
   if (d.mode === "reviewer" && d.reviewWaiting) parts.push(`검토 대기 ${d.reviewWaiting}건`);
-  if (d.mode === "member" && d.returnedToMe) parts.push(`수정 요청 ${d.returnedToMe}건`);
   return parts.length ? `${parts.join(", ")}이 있어요.` : "오늘은 급한 일이 없어요.";
 }

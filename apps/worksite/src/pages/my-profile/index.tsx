@@ -10,7 +10,7 @@ import { useWorksite } from "@/app/TenantBoundary";
 import { useList, useOne, useRpc } from "@/lib/refine";
 import { initialsOf } from "@/lib/format";
 import type { AuditEvent, Member } from "@/types/entities";
-import { KeyValue, actionLabel, changeSummary, resourceLabel, roleLabel } from "../admin-company/shared/lib";
+import { KeyValue, auditTitle, changeSummary, roleLabel } from "../admin-company/shared/lib";
 
 const ROLE_CAN: Record<string, string> = {
   owner: "회사 설정·구성원 관리·모든 화면을 볼 수 있어요.",
@@ -75,7 +75,7 @@ function Activity() {
     const items: TimelineItem[] = rows.map((e) => ({
       id: e.id,
       at: e.at,
-      title: `${resourceLabel(e.resource)} ${actionLabel(e.action)}`,
+      title: auditTitle(e.resource, e.action),
       description: changeSummary(e),
       tone: e.actor_type === "ai_connection" ? "info" : "neutral",
       actor: e.actor_type === "ai_connection" ? { kind: "ai", clientName: e.actor_client ?? null } : undefined,

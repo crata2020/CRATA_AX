@@ -140,6 +140,38 @@ describe("메모리 공급자", () => {
     await expect(dp.update({ resource: "audit_events", id: rows.data[0]!.id!, variables: { action: "x" } })).rejects.toMatchObject({ statusCode: 403 });
   });
 
+  it("내 제출은 관리자·소유자여도 승인할 수 없음 · 남의 제출을 대신 승인하면 '대신 승인'으로 기록", async () => {
+    // TR 총무(관리자): 본인이 담당인 '반기 점검 증빙 목록 1차 정리'(검토자 = 대표)
+    const admin = makeProvider("tr-technology", "R_ADMIN_PUR_ACC");
+    const mine = (await admin.dp.getList({ resource: "submissions", filters: [{ field: "status", operator: "eq", value: "submitted" }], pagination: { mode: "off" } })).data
+      .find((s) => admin.store.find("tasks", String(s.task_id))?.assignee_id === admin.persona.memberId)!;
+    expect(mine).toBeTruthy();
+    expect(admin.policy.can("submissions", "approve", mine as never)).toMatchObject({ can: false, reason: "내 제출은 지정된 검토자가 승인해요" });
+    await expect(admin.dp.custom!({ url: "rpc:approve_submission", method: "post", payload: { submissionId: mine.id } })).rejects.toMatchObject({ statusCode: 403 });
+    // 대표(소유자)가 자기 업무를 제출한 경우도 막힘
+    const owner = makeProvider("crata-demo", "R_CEO");
+    const ownTask = owner.store.rows("tasks").find((t) => t.assignee_id === owner.persona.memberId && t.status === "in_progress")!;
+    expect(owner.policy.can("submissions", "approve", { task_id: ownTask.id, submitted_by: owner.persona.memberId, status: "submitted" })).toMatchObject({ can: false });
+    // 소유자는 남의 제출(검토자 = 공장장)을 대신 승인할 수 있고 감사 기록에 '대신 승인'으로 남아요
+    const ceo = makeProvider("tr-technology", "R_CEO");
+    const other = (await ceo.dp.getList({ resource: "submissions", filters: [{ field: "status", operator: "eq", value: "submitted" }], pagination: { mode: "off" } })).data
+      .find((s) => ceo.store.find("tasks", String(s.task_id))?.reviewer_id !== ceo.persona.memberId)!;
+    await ceo.dp.custom!({ url: "rpc:approve_submission", method: "post", payload: { submissionId: other.id } });
+    const audit = ceo.store.rows("audit_events").filter((a) => a.resource_id === other.id);
+    expect(audit.some((a) => a.action === "rpc:approve_submission_substitute")).toBe(true);
+  });
+
+  it("검토 대기 배지·홈 숫자는 내가 지정 검토자인 것만(소유자도 회사 전체를 세지 않음)", async () => {
+    const ceo = makeProvider("tr-technology", "R_CEO");
+    const badges = (await ceo.dp.custom!({ url: "sel:nav.badges", method: "get" })).data as Record<string, number>;
+    const today = (await ceo.dp.custom!({ url: "sel:home.today", method: "get" })).data as { reviewWaiting: number; companyReviewWaiting: number | null };
+    const own = ceo.store.rows("submissions").filter((s) => s.status === "submitted" && ceo.store.find("tasks", String(s.task_id))?.reviewer_id === ceo.persona.memberId).length;
+    expect(badges.reviewWaiting).toBe(own);
+    expect(today.reviewWaiting).toBe(own);
+    expect(today.companyReviewWaiting).toBeGreaterThan(own);
+    expect(typeof badges.myUrgent).toBe("number");
+  });
+
   it("?empty=1: 기준 리소스 몇 개만 남음", async () => {
     const { dp } = makeProvider("tr-technology", "R_CEO", { emptyMode: true });
     expect((await dp.getList({ resource: "partners" })).total).toBe(0);

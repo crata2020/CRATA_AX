@@ -51,7 +51,7 @@ export function useScope() {
 // ───────── 마감 필터(오늘 · 이번 주 · 지난 마감)
 export type DueFilter = "today" | "week" | "overdue";
 export const DUE_OPTIONS: { value: DueFilter; label: string }[] = [
-  { value: "today", label: "오늘" }, { value: "week", label: "이번 주" }, { value: "overdue", label: "지난 마감" },
+  { value: "today", label: "오늘" }, { value: "week", label: "이번 주" }, { value: "overdue", label: "기한 지남" },
 ];
 
 /** 이번 주 일요일까지 남은 날(월요일 시작 주) */
@@ -86,8 +86,17 @@ export function useWorkPermissions() {
     me: persona.memberId,
     adminish,
     reviewerPlus,
-    /** 이 업무의 제출을 승인할 수 있는지 */
-    canReviewTask: (t: Pick<Task, "reviewer_id"> | null | undefined) => !!t && reviewerPlus && (adminish || t.reviewer_id === persona.memberId),
+    /** 이 업무의 제출을 승인할 수 있는지(내가 담당인 업무는 소유자·관리자여도 못 함 — 지정 검토자가 승인) */
+    canReviewTask: (t: Pick<Task, "reviewer_id" | "assignee_id"> | null | undefined) =>
+      !!t && reviewerPlus && t.assignee_id !== persona.memberId && (adminish || t.reviewer_id === persona.memberId),
+    /** 승인하지 못하는 이유(버튼 툴팁) */
+    reviewBlockReason: (t: Pick<Task, "reviewer_id" | "assignee_id"> | null | undefined): string => {
+      if (!reviewerPlus) return "완료는 검토자가 승인하면 바뀌어요";
+      if (t && t.assignee_id === persona.memberId) return "내 제출은 지정된 검토자가 승인해요";
+      return "이 업무의 검토자가 승인할 수 있어요";
+    },
+    /** 지정 검토자가 아닌 소유자·관리자의 승인(대신 승인) */
+    isSubstituteReview: (t: Pick<Task, "reviewer_id" | "assignee_id"> | null | undefined) => !!t && adminish && t.reviewer_id !== persona.memberId && t.assignee_id !== persona.memberId,
     /** 업무 만들기(검토자 이상) */
     canCreateTask: reviewerPlus && can("tasks", "create").can,
     /** 회의 분류·결정·액션 확정(검토자 이상) */

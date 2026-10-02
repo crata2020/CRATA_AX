@@ -59,7 +59,7 @@ export function AppShell() {
         {(bp === "desktop" || bp === "wide") && <SideNav collapsed={collapsed} onCollapse={onCollapse} />}
         {bp === "tablet" && <NavRail />}
         <div className="ws-main">
-          <TopBar bp={bp} onOpenNav={() => setDrawer(true)} />
+          <TopBar bp={bp} navOpen={drawer && bp !== "desktop" && bp !== "wide"} onOpenNav={() => setDrawer(true)} />
           <div className="ws-body">
             <main id="main" tabIndex={-1} className="ws-panel">
               <div className="ws-panel-inner"><Outlet /></div>
@@ -78,7 +78,7 @@ export function AppShell() {
           title={tenant.displayName}
           className="ws-drawer"
         >
-          <NavTree items={nav} mode="drawer" onNavigate={() => setDrawer(false)} />
+          <div id="ws-nav-drawer"><NavTree items={nav} mode="drawer" onNavigate={() => setDrawer(false)} /></div>
         </Drawer>
         <BootNotices />
       </div>

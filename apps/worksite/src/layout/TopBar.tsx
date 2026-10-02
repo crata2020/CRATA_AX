@@ -41,7 +41,7 @@ export function PersonaSwitcher({ block }: { block?: boolean }) {
     <Select
       aria-label="누구로 보기"
       value={persona.roleCode}
-      style={{ width: block ? "100%" : 240 }}
+      style={{ width: block ? "100%" : "clamp(180px, 18vw, 240px)" }}
       popupMatchSelectWidth={false}
       options={personas.map((p) => {
         const role = tenant.roles.find((r) => r.code === p.roleCode)!;
@@ -205,7 +205,7 @@ export function UserSheet({ open, onClose }: { open: boolean; onClose: () => voi
 }
 
 // ───────── 상단 바
-export function TopBar({ bp, onOpenNav }: { bp: Breakpoint; onOpenNav: () => void }) {
+export function TopBar({ bp, navOpen = false, onOpenNav }: { bp: Breakpoint; navOpen?: boolean; onOpenNav: () => void }) {
   const { tenant, persona } = useWorksite();
   const nav = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -229,7 +229,7 @@ export function TopBar({ bp, onOpenNav }: { bp: Breakpoint; onOpenNav: () => voi
   const mobile = bp === "mobile";
   const menuBtn = (
     <Tooltip title="전체 메뉴">
-      <button type="button" className="ws-iconbtn" aria-label="전체 메뉴 열기" onClick={onOpenNav}><MenuOutlined aria-hidden /></button>
+      <button type="button" className="ws-iconbtn" aria-label="전체 메뉴 열기" aria-haspopup="dialog" aria-expanded={navOpen} aria-controls={navOpen ? "ws-nav-drawer" : undefined} onClick={onOpenNav}><MenuOutlined aria-hidden /></button>
     </Tooltip>
   );
 

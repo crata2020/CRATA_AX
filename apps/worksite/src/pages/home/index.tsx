@@ -1,10 +1,9 @@
 // 홈 `/` · H-01 · 깊이 A · 모듈 home-dashboard · 소유: home 그룹
 // 인사말(h1) + '오늘 할 일' 히어로 1장 + 역할·소속별 위젯(homeLayout, 빌드 스펙 5.3절).
-// 배치: 히어로 5열 + 2번째 위젯 7열 → (1440 미만) '오늘' 카드 M + 3번째 위젯 → 나머지 위젯(S 4·M 6·L 12열, dense).
-// 1440 이상에서는 '오늘' 내용이 오른쪽 레일(필독 공지·오늘 일정·다가오는 회의)로 갑니다. 알약은 첫 줄(히어로·2번째 위젯)만.
-// 마지막 카드가 줄에 혼자 남으면 남은 열을 채웁니다(CardGrid fillLastRow).
+// 배치: 첫 줄 = 히어로 5열 + 2번째 위젯 7열(알약). 그 아래는 두 줄기(왼쪽·오른쪽 세로 묶음)로 나눠 짧은 카드끼리 위로 쌓아요(lib/widgetLayout.ts).
+//   L 위젯은 두 줄기 사이에 전체 폭. 1024 미만은 한 줄기(원래 순서). 1440 이상에서는 '오늘' 내용이 오른쪽 레일로 갑니다.
 import "./lib/home.css";
-import { useMemo } from "react";
+import { useMemo, type CSSProperties } from "react";
 import {
   CardGrid, Divider, HeroCard, ListRows, PageHeader, RightRail, SectionCard, WidgetSlot, useRailVisible, type ListRowProps,
 } from "@/components";
@@ -19,6 +18,7 @@ import { Skeleton } from "antd";
 import type { HomeRail, HomeToday, RailItem } from "./lib/types";
 import { TodayHeroBody, greetingSummary } from "./lib/TodayHero";
 import { WidgetError } from "./lib/widgetKit";
+import { packHome, type HomeItem } from "./lib/widgetLayout";
 
 /** 머리의 기간 세그먼트를 받는 위젯(이 위젯이 하나라도 있을 때만 세그먼트를 보여 줌) */
 const PERIOD_AWARE = new Set<WidgetId>(["upcoming-meetings", "recent-decisions", "mfg-delivery-due", "safety-status"]);
@@ -61,9 +61,18 @@ export default function HomePage() {
       .filter((id) => id !== "greeting"),
     [tenant, persona, role.homePreset, enabledModules, population],
   );
-  const [second, third, ...rest] = widgets;
+  const [second, ...below] = widgets;
   const showPeriod = widgets.some((w) => PERIOD_AWARE.has(w));
   const rail = railQ.data;
+  const todayBlocks = rail ? [rail.mustRead, rail.today, rail.upcoming].filter((b) => b.length > 0) : [];
+  const showToday = !railVisible && todayBlocks.length > 0;
+  // '오늘' 카드는 3번째 위젯 앞(1440 미만에서만)
+  const items = useMemo<HomeItem[]>(() => [...(showToday ? ["today" as const] : []), ...below], [showToday, below]);
+  const todayEst = 80 + todayBlocks.reduce((h, b) => h + 30 + b.length * 59, 0);
+  const segments = useMemo(() => packHome(items, { todayEst }), [items, todayEst]);
+  const pos = new Map(items.map((id, i) => [id, i]));
+  const orderStyle = (id: HomeItem) => ({ ["--o" as string]: pos.get(id) ?? 0 }) as CSSProperties;
+  const renderItem = (id: HomeItem) => (id === "today" ? (rail ? <TodayCard rail={rail} /> : null) : <WidgetSlot id={id} period={period} />);
 
   return (
     <>
@@ -78,15 +87,33 @@ export default function HomePage() {
           options: [{ value: "week", label: "이번 주" }, { value: "month", label: "이번 달" }],
         } : undefined}
       />
-      <CardGrid className="wh-home" fillLastRow>
+      <CardGrid className="wh-home">
         <HeroCard title="오늘 할 일" pill demo span={second ? 5 : 12}>
           {todayQ.data ? <TodayHeroBody data={todayQ.data} /> : todayQ.isError ? <WidgetError onRetry={() => void todayQ.refetch()} /> : <Skeleton active title={false} paragraph={{ rows: 4 }} />}
         </HeroCard>
         {second && <WidgetSlot id={second} pill span={7} period={period} />}
-        {!railVisible && rail && <TodayCard rail={rail} />}
-        {third && <WidgetSlot id={third} period={period} />}
-        {rest.map((id) => <WidgetSlot key={id} id={id} period={period} />)}
       </CardGrid>
+      {segments.length > 0 && (
+        <div className="wh-flow wh-home">
+          {segments.map((seg) => {
+            // 한 줄기에 카드가 하나뿐이면(옆이 비면) 전체 폭으로
+            const lone = seg.kind === "cols" && seg.cols[0].length + seg.cols[1].length === 1 ? (seg.cols[0][0] ?? seg.cols[1][0])! : null;
+            if (seg.kind === "full" || lone) {
+              const id = seg.kind === "full" ? seg.id : lone!;
+              return <div key={id} className="wh-full" style={orderStyle(id)}>{renderItem(id)}</div>;
+            }
+            return (
+              <div key={seg.cols.flat().join("|")} className="wh-cols">
+                {seg.cols.map((col, ci) => (
+                  <div key={ci} className="wh-col">
+                    {col.map((id) => <div key={id} className="wh-item" style={orderStyle(id)}>{renderItem(id)}</div>)}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
       {rail && (
         <RightRail
           blocks={[

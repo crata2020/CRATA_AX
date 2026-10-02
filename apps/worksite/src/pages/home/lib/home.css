@@ -67,14 +67,14 @@
   border-radius: var(--ws-radius-control); background: var(--ws-surface); color: var(--ws-ink); text-decoration: none; box-sizing: border-box;
   font-size: 16px; line-height: 24px; font-weight: 700; transition: background-color 120ms linear; outline: 1px solid var(--ws-line); outline-offset: -1px;
 }
-.wh-action .anticon { font-size: 24px; color: var(--ws-brand); }
+.wh-action .anticon { font-size: 24px; color: var(--ws-brand-text); }
 .wh-action span:last-child { font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ws-ink-2); }
 .wh-action:hover { background: var(--ws-brand-weak); color: var(--ws-ink); }
 html .wh-action:focus-visible, html .wh-linkbtn:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: 2px; }
 
 /* ── ARA 카드 */
 .wh-ara__lock { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 20px; color: var(--ws-ink-2); margin-bottom: 8px; }
-.wh-ara__lock .anticon { color: var(--ws-brand); }
+.wh-ara__lock .anticon { color: var(--ws-brand-text); }
 .wh-ara__quote { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--ws-ink); margin-bottom: 16px; }
 
 /* ── 버튼 모양 링크 */
@@ -83,7 +83,7 @@ html .wh-action:focus-visible, html .wh-linkbtn:focus-visible { outline: 2px sol
   font-size: 14px; font-weight: 600; text-decoration: none; box-sizing: border-box; white-space: nowrap;
   background: var(--ws-surface); color: var(--ws-ink); outline: 1px solid var(--ws-control-line); outline-offset: -1px;
 }
-.wh-linkbtn:hover { color: var(--ws-brand); outline-color: var(--ws-brand); }
+.wh-linkbtn:hover { color: var(--ws-brand-text); outline-color: var(--ws-brand); }
 .wh-linkbtn--primary { background: var(--ws-brand); color: var(--ws-on-brand); outline: 0; }
 .wh-linkbtn--primary:hover { color: var(--ws-on-brand); background: var(--ws-ink); }
 
@@ -130,7 +130,7 @@ a.wh-result:hover { background: var(--ws-brand-weak); }
 .wh-person { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 4px; min-height: var(--ws-row-h); box-sizing: border-box; }
 .wh-person__main { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 2px; }
 .wh-person__name { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; line-height: 22px; color: var(--ws-ink); text-decoration: none; }
-.wh-person__name:hover { color: var(--ws-brand); }
+.wh-person__name:hover { color: var(--ws-brand-text); }
 .wh-person__name mark { background: none; color: inherit; font-weight: 700; padding: 0; }
 .wh-person__copy { display: flex; gap: 8px; flex-wrap: wrap; }
 .wh-more { display: flex; justify-content: flex-end; margin-top: 8px; }
@@ -170,7 +170,7 @@ a.wh-result:hover { background: var(--ws-brand-weak); }
 .wh-tenant__mono { width: 44px; height: 44px; border-radius: 12px; color: var(--ws-white); display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex: none; }
 .wh-tenant__name { font-size: 18px; line-height: 26px; font-weight: 700; }
 .wh-tenant__desc { font-size: 14px; line-height: 22px; color: var(--ws-ink-2); }
-.wh-tenant__sel { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: var(--ws-brand); }
+.wh-tenant__sel { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: var(--ws-brand-text); }
 .wh-personas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
 @media (max-width: 767px) { .wh-personas { grid-template-columns: minmax(0, 1fr); } }
 .wh-persona { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 10px; border-radius: 12px; cursor: pointer; border: 1px solid var(--ws-line); box-sizing: border-box; }
@@ -181,6 +181,19 @@ a.wh-result:hover { background: var(--ws-brand-weak); }
 .wh-persona__role { font-size: 13px; line-height: 20px; color: var(--ws-muted); }
 .wh-login__go { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; align-items: center; }
 
-/* ── 홈 그리드 안 카드 머리: 제목은 한 줄로(좁은 카드에서는 예시 배지가 제목 아래로 내려가요 — SectionCard .ws-card__titles) */
-.wh-home .ws-card__title { white-space: nowrap; }
+/* ── 홈 그리드 안 카드 머리: 제목은 한 줄로(좁은 카드에서는 예시 배지가 아이콘만 남아요 — components.css 컨테이너 질의) */
+.wh-home .ws-card__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* ── 홈 두 줄기 배치(히어로 줄 아래). 짧은 카드는 위로 쌓이고, L 위젯(.wh-full)은 두 줄기 사이 전체 폭 */
+.wh-flow { display: flex; flex-direction: column; gap: 24px; margin-top: 24px; }
+.wh-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.wh-col { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.wh-item, .wh-full { min-width: 0; }
+/* 1024 미만: 한 줄기. 줄기 상자를 풀고(display: contents) 원래 위젯 순서(--o)로 다시 세워요 */
+@media (max-width: 1023px) {
+  .wh-flow { gap: 20px; margin-top: 20px; }
+  .wh-cols, .wh-col { display: contents; }
+  .wh-item, .wh-full { order: var(--o, 0); }
+}
+@media (max-width: 767px) { .wh-flow { gap: 16px; margin-top: 16px; } }
 .wh-persona input { accent-color: var(--ws-brand); width: 16px; height: 16px; flex: none; margin: 0; }

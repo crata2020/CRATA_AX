@@ -408,9 +408,13 @@ function myOpenTasks(c: Ctx): Task[] {
   if (!on(c, "tasks")) return [];
   return ls(c, "tasks", [{ field: "assignee_id", operator: "eq", value: me(c) }]).filter((t) => OPEN_TASK.has(t.status));
 }
-function reviewableSubs(c: Ctx) {
+/** 내가 지정 검토자인 검토 대기 제출. scope "company"는 소유자·관리자가 대신 승인할 수 있는 회사 전체(참고용) */
+function reviewableSubs(c: Ctx, scope: "mine" | "company" = "mine") {
   if (!on(c, "tasks") || !c.can("submissions", "approve")) return [];
-  return ls(c, "submissions", [{ field: "status", operator: "eq", value: "submitted" }]).filter((s) => c.can("submissions", "approve", s as unknown as Record<string, unknown>));
+  return ls(c, "submissions", [{ field: "status", operator: "eq", value: "submitted" }]).filter((s) => {
+    if (!c.can("submissions", "approve", s as unknown as Record<string, unknown>)) return false;
+    return scope === "company" || c.get("tasks", s.task_id)?.reviewer_id === me(c);
+  });
 }
 function myMeetings(c: Ctx, from: string, to: string) {
   if (!on(c, "meetings")) return [];
@@ -447,13 +451,22 @@ const homeToday: SelectorHandler = (c): HomeToday => {
   const open = myOpenTasks(c);
   const dueOn = (t: Task) => (t.due_at ? toKstDate(t.due_at) : null);
   const dueToday = open.filter((t) => dueOn(t) === today).length;
+  const overdue = open.filter((t) => { const d = dueOn(t); return !!d && d < today; }).length;
   const dueSoon = open.filter((t) => { const d = dueOn(t); return !!d && d >= today && daysBetween(today, d) <= 2; }).length;
-  const returnedToMe = open.filter((t) => t.status === "changes_requested").length;
+  const returned = open.filter((t) => t.status === "changes_requested");
+  // 히어로 합에서 한 업무를 두 번 세지 않게: 기한 지남·오늘 마감에 이미 든 수정 요청은 뺀 수
+  const returnedOnly = returned.filter((t) => { const d = dueOn(t); return !d || d > today; }).length;
   const operator = isOperator(c);
   let workOrdersToday: number | null = null;
   let checksPending: number | null = null;
   const todaysOrders = on(c, "mfg-production") ? ls(c, "work_orders", [{ field: "planned_date", operator: "eq", value: today }]).filter((w) => w.status !== "done") : [];
-  if (on(c, "mfg-production")) workOrdersToday = todaysOrders.length;
+  let workOrdersByProcess: HomeToday["workOrdersByProcess"] = null;
+  if (on(c, "mfg-production")) {
+    workOrdersToday = todaysOrders.length;
+    // 편조 / 가공(크림핑·프레스·스파이럴링 등) — 작업자 히어로가 '오늘 작업지시'를 공정별로 나눠 보여요
+    const knit = todaysOrders.filter((w) => w.process_step_id.endsWith("-knit") || c.get("process_steps", w.process_step_id)?.name === "편조").length;
+    workOrdersByProcess = [{ key: "knit", label: "편조", count: knit }, { key: "form", label: "가공", count: todaysOrders.length - knit }];
+  }
   if (on(c, "mfg-equipment")) {
     // 작업자는 '내 설비'(오늘 작업지시가 걸린 설비)만 셉니다. 공장 전체 수가 아니에요.
     const mine = new Set(todaysOrders.map((w) => w.equipment_id).filter((x): x is string => !!x));
@@ -467,10 +480,14 @@ const homeToday: SelectorHandler = (c): HomeToday => {
     myOpen: open.length,
     dueToday,
     reviewWaiting: reviewableSubs(c).length,
-    returnedToMe,
+    companyReviewWaiting: adminish(c) ? reviewableSubs(c, "company").length : null,
+    returnedToMe: returned.length,
+    returnedOnly,
+    overdue,
     meetingsToday: myMeetings(c, today, today).length,
     dueSoon,
     workOrdersToday,
+    workOrdersByProcess,
     checksPending,
     population: agg?.population_n ?? 0,
   };

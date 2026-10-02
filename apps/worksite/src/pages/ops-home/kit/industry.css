@@ -12,7 +12,7 @@
 .in-mb { margin-bottom: 16px; }
 .in-num { font-variant-numeric: tabular-nums; }
 .in-strong { font-weight: 700; color: var(--ws-ink); }
-.in-link { color: var(--ws-brand); font-weight: 600; text-decoration: none; }
+.in-link { color: var(--ws-brand-text); font-weight: 600; text-decoration: none; }
 .in-link:hover { text-decoration: underline; }
 .in-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .in-row--between { justify-content: space-between; }
@@ -154,7 +154,7 @@ html .in-cell[data-tone]:focus-visible, html button.in-cell:focus-visible { outl
 
 /* 칸반 카드 안 */
 .in-kcard-title { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink); text-decoration: none; overflow-wrap: anywhere; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; font-family: inherit; }
-.in-kcard-title:hover { color: var(--ws-brand); text-decoration: underline; }
+.in-kcard-title:hover { color: var(--ws-brand-text); text-decoration: underline; }
 .in-kcard-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; line-height: 20px; color: var(--ws-ink-2); font-variant-numeric: tabular-nums; }
 
 /* 작은 표(표 아닌 칸) */

@@ -12,7 +12,7 @@ import { formatDateTime } from "@/lib/format";
 import { addDays, kstIso } from "@/lib/clock";
 import { labelOf, optionsOf } from "@/lib/status";
 import type { AuditEvent, ResourceName } from "@/types/entities";
-import { AuditActor, Caption, KeyValue, actionLabel, changeSummary, fieldLabel, resourceLabel, targetPath, valueText } from "../admin-company/shared/lib";
+import { AuditActor, Caption, KeyValue, actionLabel, auditTitle, changeSummary, fieldLabel, resourceLabel, targetPath, valueText } from "../admin-company/shared/lib";
 
 const RESOURCE_FILTER: ResourceName[] = [
   "tasks", "submissions", "progress_logs", "artifacts", "notices", "meeting_segments", "kpi_values", "field_reports",
@@ -122,7 +122,7 @@ export default function Page() {
           { key: "changes", title: "바뀐 내용", flex: true, render: (e) => <span style={{ display: "block", whiteSpace: "normal" }}>{changeSummary(e)}</span> },
         ]}
         mobileRow={(e) => ({
-          title: `${resourceLabel(e.resource)} ${actionLabel(e.action)}`,
+          title: auditTitle(e.resource, e.action),
           subtitle: `${e.actor_type === "member" ? person(e.actor_id)?.displayName ?? "구성원" : e.actor_type === "ai_connection" ? `AI 연결 · ${e.actor_client ?? ""}` : labelOf("audit_events.actor_type", e.actor_type)} · ${formatDateTime(e.at)}`,
         })}
         empty={{ kind: "empty", title: "아직 남은 기록이 없어요", description: "무언가 바뀌면 여기에 쌓여요." }}

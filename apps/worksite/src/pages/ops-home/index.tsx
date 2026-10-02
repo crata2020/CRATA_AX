@@ -4,7 +4,7 @@
 // 생산 작업자(R_OPERATOR)는 숫자 대시보드 대신 '오늘 작업지시 · 점검 미완료'와 현장 등록만 봅니다. 개인별 작업량은 어디에도 없습니다.
 import { Link } from "react-router";
 import { RightOutlined } from "@ant-design/icons";
-import { BigNumber, CardGrid, HeroCard, PageHeader, WidgetSlot } from "@/components";
+import { BigNumber, CardGrid, GridCell, HeroCard, PageHeader, WidgetSlot } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
 import { useSelector } from "@/lib/refine";
@@ -86,7 +86,7 @@ export default function Page() {
         }}
       />
       {operator ? (
-        <CardGrid>
+        <CardGrid fillLastRow>
           {hero}
           <WidgetSlot id="mfg-field-report" span={7} />
           <WidgetSlot id="mfg-field-feed" size="M" />
@@ -95,11 +95,19 @@ export default function Page() {
         <CardGrid>
           {hero}
           <WidgetSlot id="mfg-quality-ppm" pill span={7} period={widgetPeriod} />
-          {/* 알약은 첫 줄(히어로·품질 지표)만. 둘째 줄은 모두 보통 제목이라 숫자 높이가 맞아요 */}
-          <WidgetSlot id="mfg-claims-8d" size="M" period={widgetPeriod} />
-          <WidgetSlot id="mfg-delivery-due" size="M" period={widgetPeriod} />
-          <WidgetSlot id="mfg-field-feed" size="M" period={widgetPeriod} />
-          <WidgetSlot id="mfg-legal-calendar" size="M" period={widgetPeriod} />
+          {/* 알약은 첫 줄(히어로·품질 지표)만. 둘째 줄부터는 왼쪽·오른쪽 두 줄기로 쌓아요(짧은 클레임 카드 아래가 패널로 비지 않게) */}
+          <GridCell span={6}>
+            <div className="ws-stack">
+              <WidgetSlot id="mfg-claims-8d" size="M" period={widgetPeriod} />
+              <WidgetSlot id="mfg-field-feed" size="M" period={widgetPeriod} />
+            </div>
+          </GridCell>
+          <GridCell span={6}>
+            <div className="ws-stack">
+              <WidgetSlot id="mfg-delivery-due" size="M" period={widgetPeriod} />
+              <WidgetSlot id="mfg-legal-calendar" size="M" period={widgetPeriod} />
+            </div>
+          </GridCell>
         </CardGrid>
       )}
     </>

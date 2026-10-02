@@ -28,20 +28,26 @@ export default function Page() {
   const st = useStructure();
   const [state] = useUrlParam("state", "submitted");
   const [project] = useUrlParam("project");
+  const [scopeParam] = useUrlParam("scope", "mine");
   const [selected, setSelected] = useSelectedParam();
   const pendingView = state !== "done";
+  // 기본은 '내가 검토자'. 소유자·관리자만 '회사 전체'를 골라 대신 승인할 수 있어요(감사 기록에 '대신 승인'으로 남음)
+  const companyScope = perms.adminish && scopeParam === "all";
 
   const fbProps: FilterBarProps = {
-    chips: [{ param: "via", field: "via", options: [{ value: "web", label: "웹" }, { value: "ai_connection", label: "AI 연결" }], ariaLabel: "제출 경로", allLabel: "모든 경로" }],
+    chips: [
+      ...(perms.adminish ? [{ param: "scope", options: [{ value: "all", label: "회사 전체" }], ariaLabel: "범위", label: "범위", allLabel: "내가 검토자" }] : []),
+      { param: "via", field: "via", options: [{ value: "web", label: "웹" }, { value: "ai_connection", label: "AI 연결" }], ariaLabel: "제출 경로", label: "경로", allLabel: "모든 경로" },
+    ],
     selects: [{ param: "project", label: "프로젝트", options: st.projects.map((p) => ({ value: p.id, label: p.name })) }],
     view: { ariaLabel: "상태", urlParam: "state", value: "submitted", onChange: () => undefined, options: [{ value: "submitted", label: "검토 대기" }, { value: "done", label: "처리함" }] },
   };
   const fb = useFilterBarState(fbProps);
 
-  // 내가 검토할 업무(owner·admin은 전체)
+  // 내가 검토할 업무(owner·admin이 '회사 전체'를 고르면 전체)
   const tasksQ = useList<Task>({
     resource: "tasks",
-    filters: [...(perms.adminish ? [] : [{ field: "reviewer_id", operator: "eq" as const, value: persona.memberId }]), ...(project ? [{ field: "project_id", operator: "eq" as const, value: project }] : [])],
+    filters: [...(companyScope ? [] : [{ field: "reviewer_id", operator: "eq" as const, value: persona.memberId }]), ...(project ? [{ field: "project_id", operator: "eq" as const, value: project }] : [])],
     pagination: { mode: "off" },
   });
   usePageReady(!tasksQ.query.isLoading);
@@ -75,7 +81,7 @@ export default function Page() {
       <PageHeader
         title="검토함"
         description="AI가 제출한 결과도 여기서 사람이 확인해요. 승인해야 업무가 완료돼요."
-        meta={<span className="wk-meta-text">검토 대기 <strong className="ws-tabular">{pendingIds.length}</strong>건{perms.adminish ? " · 회사 전체" : " · 내가 검토자인 업무"}</span>}
+        meta={<span className="wk-meta-text">검토 대기 <strong className="ws-tabular">{pendingIds.length}</strong>건{companyScope ? " · 회사 전체(내가 검토자가 아니면 대신 승인으로 기록돼요)" : " · 내가 검토자인 업무"}</span>}
       />
       <FilterBar {...fbProps} />
       <div style={{ marginTop: 16 }}>

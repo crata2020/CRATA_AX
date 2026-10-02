@@ -18,6 +18,7 @@ export const REASONS = {
   appendOnly: "추가만 할 수 있는 기록이에요",
   notOwner: "본인 것만 고칠 수 있어요",
   reviewerOnly: "검토자가 승인할 수 있어요",
+  selfApprove: "내 제출은 지정된 검토자가 승인해요",
 } as const;
 
 const ORDER: PermissionLevel[] = ["none", "aggregate", "own", "view", "edit", "approve", "manage"];
@@ -224,9 +225,11 @@ export class Policy {
         if (owner !== me && (row as Row).created_by !== me) return { can: false, reason: REASONS.notOwner };
       }
     }
-    if (resource === "submissions" && action === "approve" && row && !this.adminish) {
+    if (resource === "submissions" && action === "approve" && row) {
+      // 내 제출은 소유자·관리자여도 승인할 수 없어요('완료는 검토자가 승인해요'). 남의 제출은 소유자·관리자가 대신 승인할 수 있고 감사 기록에 '대신 승인'으로 남아요
       const t = typeof row.task_id === "string" ? this.store.find("tasks", row.task_id) : undefined;
-      if (t?.reviewer_id !== me) return { can: false, reason: REASONS.reviewerOnly };
+      if (t?.assignee_id === me || row.submitted_by === me) return { can: false, reason: REASONS.selfApprove };
+      if (!this.adminish && t?.reviewer_id !== me) return { can: false, reason: REASONS.reviewerOnly };
     }
     return { can: true };
   }

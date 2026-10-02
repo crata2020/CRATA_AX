@@ -15,7 +15,7 @@
   border: 0; background: none; padding: 4px 0; font: inherit; font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2);
   cursor: pointer; text-decoration: underline; text-decoration-color: var(--ws-line); text-underline-offset: 4px;
 }
-.wk-linkbtn:hover { color: var(--ws-brand); text-decoration-color: var(--ws-brand); }
+.wk-linkbtn:hover { color: var(--ws-brand-text); text-decoration-color: var(--ws-brand-text); }
 .wk-linkbtn[aria-pressed="true"] { color: var(--ws-ink); font-weight: 700; text-decoration-color: var(--ws-ink); }
 .wk-linkbtn strong { font-weight: 700; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
 
@@ -27,7 +27,7 @@
 /* 완료 기준 체크 목록(글자 + 아이콘) */
 .wk-crit { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .wk-crit li { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 22px; color: var(--ws-ink); }
-.wk-crit .anticon { color: var(--ws-brand); margin-top: 4px; font-size: 14px; }
+.wk-crit .anticon { color: var(--ws-brand-text); margin-top: 4px; font-size: 14px; }
 
 /* 카드 안 줄 목록(구간·결정·액션 제안·분류 확인) */
 .wk-rows { list-style: none; margin: 0; padding: 0; }
@@ -49,7 +49,7 @@
 
 /* 칸반 카드 안 */
 .wk-kcard-title { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink); text-decoration: none; overflow-wrap: anywhere; }
-.wk-kcard-title:hover { color: var(--ws-brand); text-decoration: underline; }
+.wk-kcard-title:hover { color: var(--ws-brand-text); text-decoration: underline; }
 .wk-kcard-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; line-height: 20px; color: var(--ws-ink-2); }
 .wk-board-caption { font-size: 13px; line-height: 20px; color: var(--ws-muted); margin: 0 0 12px; }
 
@@ -64,7 +64,7 @@
 .wk-dec-links { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; line-height: 20px; }
 .wk-dec-group + .wk-dec-group { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--ws-line); }
 .wk-anchor-target:focus { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: 8px; }
-.wk-textlink { border: 0; background: none; padding: 0; font: inherit; color: var(--ws-brand); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-align: left; }
+.wk-textlink { border: 0; background: none; padding: 0; font: inherit; color: var(--ws-brand-text); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-align: left; }
 
 /* 서랍 안 묶음 */
 .wk-drawer-block + .wk-drawer-block { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--ws-line); }

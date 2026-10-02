@@ -54,7 +54,8 @@ export function ReviewDrawer({ submissionId, open, onClose, onProcessed }: Revie
 
   const pending = sub?.status === "submitted";
   const canAct = !!sub && pending && perms.canReviewTask(task);
-  const reason = !sub ? "" : !pending ? "이미 처리한 제출이에요" : !perms.reviewerPlus ? "완료는 검토자가 승인하면 바뀌어요" : "이 업무의 검토자가 승인할 수 있어요";
+  const reason = !sub ? "" : !pending ? "이미 처리한 제출이에요" : perms.reviewBlockReason(task);
+  const substitute = canAct && perms.isSubstituteReview(task);
   const busy = approve.isPending || reject.isPending;
   const commentOk = comment.trim().length >= 5;
 
@@ -155,6 +156,7 @@ export function ReviewDrawer({ submissionId, open, onClose, onProcessed }: Revie
                   status={touched && !commentOk ? "error" : undefined} aria-describedby="review-comment-hint" />
                 <p id="review-comment-hint" className="wk-caption" style={{ marginTop: 6 }}>
                   {touched && !commentOk ? "수정 요청은 코멘트를 5자 이상 적어 주세요." : canAct ? "수정 요청은 코멘트를 5자 이상 적어야 보낼 수 있어요." : reason}
+                  {substitute && " 지정 검토자 대신 처리해요. 감사 기록에 '대신 승인'으로 남고 검토자에게도 알려요."}
                 </p>
               </section>
             )}

@@ -46,7 +46,7 @@
 }
 .ws-nav__link:hover { background: var(--ws-brand-weak); color: var(--ws-ink); }
 .ws-nav__link .anticon { font-size: 20px; flex: none; }
-.ws-nav__link.is-active { background: var(--ws-brand-weak); color: var(--ws-brand); font-weight: 700; }
+.ws-nav__link.is-active { background: var(--ws-brand-weak); color: var(--ws-brand-text); font-weight: 700; }
 .ws-nav__link.is-active::before, .ws-nav__sub.is-active::before {
   content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 2px; background: var(--ws-brand);
 }
@@ -66,7 +66,7 @@
 .ws-nav__sub::after { content: ""; position: absolute; left: 32px; }
 .ws-nav__dot { width: 4px; height: 4px; border-radius: 999px; background: var(--ws-muted); flex: none; margin: 0 4px 0 6px; }
 .ws-nav__sub:hover { background: var(--ws-brand-weak); color: var(--ws-ink); }
-.ws-nav__sub.is-active { color: var(--ws-brand); font-weight: 600; background: var(--ws-brand-weak); }
+.ws-nav__sub.is-active { color: var(--ws-brand-text); font-weight: 600; background: var(--ws-brand-weak); }
 .ws-nav__sub.is-active .ws-nav__dot { background: var(--ws-brand); }
 .ws-count {
   display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box;
@@ -82,7 +82,7 @@
 }
 .ws-navrail__item .anticon { font-size: 22px; }
 .ws-navrail__item:hover { background: var(--ws-brand-weak); }
-.ws-navrail__item.is-active { background: var(--ws-brand-weak); color: var(--ws-brand); font-weight: 700; }
+.ws-navrail__item.is-active { background: var(--ws-brand-weak); color: var(--ws-brand-text); font-weight: 700; }
 .ws-navrail__item.is-active::before { content: ""; position: absolute; left: -8px; top: 12px; bottom: 12px; width: 3px; border-radius: 2px; background: var(--ws-brand); }
 .ws-navrail__badge { position: absolute; top: 2px; right: 6px; }
 .ws-navrail .ws-nav__divider { width: 48px; }
@@ -93,7 +93,9 @@
   background: var(--ws-surface); border-bottom: 1px solid transparent; box-sizing: border-box;
 }
 .ws-topbar.is-scrolled { border-bottom-color: var(--ws-line); }
-.ws-topbar__left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ws-topbar__left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 0 1 auto; }
+.ws-topbar__field { min-width: 0; }
+.ws-topbar__field .ant-select { min-width: 0; }
 .ws-topbar__right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .ws-topbar__field { display: flex; align-items: center; gap: 8px; }
 .ws-topbar__label { font-size: 13px; line-height: 20px; color: var(--ws-muted); white-space: nowrap; }
@@ -112,6 +114,10 @@
 .ws-iconbtn .ws-count { position: absolute; top: 2px; right: 0; margin: 0; }
 .ws-userbtn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px 0 4px; border-radius: var(--ws-radius-control); border: 0; background: none; cursor: pointer; color: var(--ws-ink); font-size: 14px; font-weight: 600; }
 .ws-userbtn:hover { background: var(--ws-brand-weak); }
+/* 긴 인물 이름이 두 줄로 꺾여 버튼(40px) 밖으로 넘치지 않게 한 줄 말줄임. 1600 미만은 '누구로 보기'에 이름이 있으니 숨겨요 */
+.ws-userbtn__name { white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 1599px) { .ws-userbtn__name { display: none; } }
+@media (max-width: 1499px) { .ws-topbar__label { display: none; } }
 .ws-aichip {
   display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 999px; border: 0; cursor: pointer;
   font-size: 13px; line-height: 20px; font-weight: 600; white-space: nowrap;
@@ -141,7 +147,7 @@ html .ws-aichip[data-tone]:focus-visible { outline: 2px solid var(--ws-brand); o
   color: var(--ws-muted); text-decoration: none; font-size: 13px; line-height: 16px; font-weight: 400;
 }
 .ws-tabbar__item .anticon { font-size: 22px; width: 56px; height: 32px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; }
-.ws-tabbar__item.is-active { color: var(--ws-brand); font-weight: 700; }
+.ws-tabbar__item.is-active { color: var(--ws-brand-text); font-weight: 700; }
 .ws-tabbar__item.is-active .anticon { background: var(--ws-brand-weak); }
 .ws-tabbar__item.is-active::before { content: ""; position: absolute; top: 0; left: 25%; right: 25%; height: 2px; border-radius: 0 0 2px 2px; background: var(--ws-brand); }
 .ws-tabbar__badge { position: absolute; top: 6px; left: calc(50% + 6px); }
@@ -152,8 +158,6 @@ html .ws-aichip[data-tone]:focus-visible { outline: 2px solid var(--ws-brand); o
 @media (max-width: 1100px) {
   .ws-searchbtn { min-width: 0; width: 40px; padding: 0; justify-content: center; }
   .ws-searchbtn .ws-searchbtn__text, .ws-searchbtn .ws-kbd { display: none; }
-  .ws-userbtn__name { display: none; }
-  .ws-topbar__label { display: none; }
 }
 
 /* 서랍 안 메뉴(모바일·태블릿) */

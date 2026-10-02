@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { App, Button, Checkbox, Modal, Radio, Skeleton } from "antd";
 import { ApiOutlined, DisconnectOutlined, ExperimentOutlined } from "@ant-design/icons";
-import { Banner, CardGrid, CopyField, EmptyState, ListRows, PageHeader, SectionCard, SegmentedPills, useConfirm } from "@/components";
+import { Banner, CardGrid, CopyField, EmptyState, GridCell, ListRows, PageHeader, SectionCard, SegmentedPills, useConfirm } from "@/components";
 import { YesNoList } from "../ara-home/shared/ara";
 import { usePageReady } from "@/app/pageReady";
 import { useWorksite } from "@/app/TenantBoundary";
@@ -126,7 +126,10 @@ export default function Page() {
       />
       {!pol.query.isLoading && !enabled && <Banner tone="warning" title="AI 연결 꺼짐">회사에서 AI 연결을 꺼 두었어요. 관리자에게 문의해 주세요.</Banner>}
       <CardGrid>
-        <SectionCard span={5} pill title="연결된 AI" demo caption={revoked.length ? `끊은 연결 ${revoked.length}건은 목록에서 뺐어요.` : undefined}>
+        {/* 왼쪽 줄기: 연결된 AI + 국외이전 안내(오른쪽 'AI가 할 수 있는 것'이 길어서 아래가 패널로 비지 않게 쌓아요) */}
+        <GridCell span={5}>
+        <div className="ws-stack">
+        <SectionCard pill title="연결된 AI" demo caption={revoked.length ? `끊은 연결 ${revoked.length}건은 목록에서 뺐어요.` : undefined}>
           {conns.query.isLoading ? (
             <Skeleton active paragraph={{ rows: 3 }} title={false} />
           ) : conns.query.isError ? (
@@ -146,6 +149,10 @@ export default function Page() {
             <EmptyState compact kind="empty" title="아직 연결한 AI가 없어요" description="아래 방법대로 연결해 보세요." />
           )}
         </SectionCard>
+        {/* 안내 띠는 카드 밖에(카드 안 옅은 상자가 카드 안 카드처럼 보여서) */}
+        <Banner tone="info" title={`국외이전 안내 ${noticeVersionText(policy?.overseas_notice_version)}`}>{OVERSEAS_NOTICE}</Banner>
+        </div>
+        </GridCell>
         <SectionCard span={7} title="AI가 할 수 있는 것">
           <div className="as-subhead">할 수 있어요</div>
           <YesNoList kind="yes" items={can} srPrefix="할 수 있음: " />
@@ -186,8 +193,6 @@ export default function Page() {
           </div>
         </SectionCard>
       </CardGrid>
-      {/* 안내 띠는 카드 밖에(카드 안 옅은 상자가 카드 안 카드처럼 보여서) */}
-      <div style={{ marginTop: 24 }}><Banner tone="info" title={`국외이전 안내 ${noticeVersionText(policy?.overseas_notice_version)}`}>{OVERSEAS_NOTICE}</Banner></div>
       <PracticeModal open={practice} onClose={() => setPractice(false)} policy={policy} connected={new Set(active.map((c) => c.client_name))} />
     </>
   );

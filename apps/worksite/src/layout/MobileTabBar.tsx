@@ -2,8 +2,7 @@
 // 네 탭 밖의 화면은 '전체' 탭이 켜져요.
 // 기본: 홈 · 내 업무 · 회의 · 알림 · 전체 / 제조: 홈 · 내 업무 · 현장 등록 · 알림 · 전체(레지스트리 mobile_tabs)
 import { Link, useLocation } from "react-router";
-import { NAV_BADGE_LABEL, type MobileTab, type NavBadgeKey } from "@/modules";
-import { CountBadge } from "@/components/basics";
+import { sumBadges, type MobileTab } from "@/modules";
 import { NavIcon } from "./icons";
 import { useNavBadges } from "./useNavBadges";
 
@@ -31,12 +30,23 @@ export function MobileTabBar({ tabs, activeKey }: MobileTabBarProps) {
     <nav className="ws-tabbar" aria-label="하단 탭">
       {tabs.map((t) => {
         const on = current === t.key;
-        const count = t.badge ?? (t.badgeKey ? badges[t.badgeKey as NavBadgeKey] : undefined);
+        const summed = sumBadges(t.badgeKeys, badges);
+        const count = t.badge ?? summed.count;
+        const srText = t.badge != null ? `${t.label} ${t.badge}건` : summed.label;
+        // 그 탭의 첫 화면에 있을 때만 page, 아래 화면(예: '전체' 아래 생산·품질)에서는 true(현재 위치가 이 탭 안이라는 뜻)
+        const exact = t.to === "/" ? pathname === "/" : pathname === t.to;
         return (
-          <Link key={t.key} to={t.to} className={`ws-tabbar__item${on ? " is-active" : ""}`} aria-current={on ? "page" : undefined}>
+          <Link key={t.key} to={t.to} className={`ws-tabbar__item${on ? " is-active" : ""}`} aria-current={on ? (exact ? "page" : "true") : undefined}>
             <NavIcon name={t.icon} />
             <span>{t.label}</span>
-            {!!count && <span className="ws-tabbar__badge"><CountBadge count={count} label={t.badgeKey ? NAV_BADGE_LABEL[t.badgeKey as NavBadgeKey] : t.label} /></span>}
+            {!!count && (
+              <span className="ws-tabbar__badge">
+                <span className="ws-count">
+                  <span aria-hidden>{count > 99 ? "99+" : count}</span>
+                  <span className="ws-sr-only">{srText}</span>
+                </span>
+              </span>
+            )}
           </Link>
         );
       })}

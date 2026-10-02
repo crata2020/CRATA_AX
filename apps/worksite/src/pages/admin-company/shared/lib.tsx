@@ -103,7 +103,7 @@ export const OVERSEAS_NOTICE = "연결하면 내 업무 내용(업무 제목·�
 
 // ───────── 감사 기록 표기
 const RPC_LABEL: Record<string, string> = {
-  submit_task: "결과 제출", approve_submission: "제출 승인", request_changes: "수정 요청", accept_action_proposal: "업무로 만들기", confirm_segment: "회의 분류 확인",
+  submit_task: "결과 제출", approve_submission: "제출 승인", approve_submission_substitute: "대신 승인", request_changes: "수정 요청", accept_action_proposal: "업무로 만들기", confirm_segment: "회의 분류 확인",
   start_task: "업무 시작", mark_notice_read: "공지 읽음", approve_rule: "규칙 승인", reject_rule: "규칙 반려", create_field_report: "현장 등록",
   set_equipment_status: "설비 상태 기록", confirm_semiannual_review: "반기 점검 확인", revoke_mcp_connection: "AI 연결 끊기", revoke_all_mcp: "AI 연결 모두 끊기",
   register_artifact: "산출물 등록", finalize_artifact: "최종본 확정", create_notice: "공지 쓰기", publish_template: "양식 게시", verify_knowledge: "지식 검증",
@@ -122,6 +122,12 @@ export function actionLabel(action: string): string {
   return RPC_LABEL[action] ?? "기록";
 }
 export const resourceLabel = (resource: string) => (isResourceName(resource) ? RESOURCES[resource].labelKo : "기타");
+/** 활동 제목: "업무 등록" · "제출 승인"(동작 이름에 대상 이름이 이미 있으면 한 번만: '제출 제출 승인' → '제출 승인') */
+export function auditTitle(resource: string, action: string): string {
+  const r = resourceLabel(resource);
+  const a = actionLabel(action);
+  return a.includes(r) ? a : `${r} ${a}`;
+}
 
 /** 대상 리소스 → 열 수 있는 경로(없으면 null) */
 export function targetPath(resource: string, id: string | null | undefined): string | null {

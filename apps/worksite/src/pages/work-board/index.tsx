@@ -78,7 +78,7 @@ export default function Page() {
     if (to === "done") {
       if (!perms.reviewerPlus) return { ok: false, reason: "완료는 검토자가 승인하면 바뀌어요" };
       if (t.status !== "submitted") return { ok: false, reason: "검토 대기에서 승인해야 완료돼요" };
-      if (!perms.canReviewTask(t)) return { ok: false, reason: "이 업무의 검토자가 승인할 수 있어요" };
+      if (!perms.canReviewTask(t)) return { ok: false, reason: perms.reviewBlockReason(t) };
       if (!pendingByTask.has(t.id)) return { ok: false, reason: "검토할 제출을 찾지 못했어요" };
       return { ok: true };
     }

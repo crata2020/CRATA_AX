@@ -8,7 +8,8 @@ import { DemoDataBadge, PillLabel } from "./basics";
 const NestCtx = createContext(false);
 
 export type CardSize = "S" | "M" | "L";
-const SIZE_SPAN: Record<CardSize, [number, number]> = { S: [4, 4], M: [6, 8], L: [12, 8] };
+// 태블릿(8열): S·M은 반 폭(4열)이라 두 장씩 나란히, L만 한 줄 전체(M이 8열이면 태블릿 홈이 한 줄기로 3,000px 넘게 길어져요)
+const SIZE_SPAN: Record<CardSize, [number, number]> = { S: [4, 4], M: [6, 4], L: [12, 8] };
 
 /** 그리드 열 수 → CSS 변수(데스크톱 12열 / 태블릿 8열) */
 export function spanStyle(size?: CardSize, span?: number): CSSProperties | undefined {
@@ -85,7 +86,8 @@ export function HeroCard(props: Omit<SectionCardProps, "variant">) {
   return <SectionCard {...props} variant="hero" />;
 }
 
-/** 마지막 카드가 줄에 혼자 남으면(오른쪽이 비면) 그 줄을 다 차지하게 .ws-fill-row를 붙입니다(위젯 크기가 늦게 정해져도 다시 잼) */
+/** 마지막 카드 오른쪽이 비면(혼자 남았거나, S 옆에 M처럼 줄이 12열을 못 채우면) 그 카드가 줄 끝까지 차지하게 합니다.
+ *  시작 열은 그대로 두고 grid-column을 `시작 / -1`로(위젯 크기가 늦게 정해져도 다시 잼) */
 function useFillLastRow(on: boolean) {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -94,12 +96,26 @@ function useFillLastRow(on: boolean) {
     let frame = 0;
     const measure = () => {
       const kids = Array.from(grid.children) as HTMLElement[];
-      for (const k of kids) k.classList.remove("ws-fill-row");
+      for (const k of kids) { k.classList.remove("ws-fill-row"); k.style.removeProperty("grid-column"); }
       const last = kids[kids.length - 1];
       if (!last || kids.length < 2) return;
-      const alone = !kids.slice(0, -1).some((k) => Math.abs(k.offsetTop - last.offsetTop) < 4 || (k.offsetTop < last.offsetTop && k.offsetTop + k.offsetHeight > last.offsetTop + 4));
-      const gridRight = grid.getBoundingClientRect().right;
-      if (alone && last.getBoundingClientRect().right < gridRight - 8) last.classList.add("ws-fill-row");
+      const box = grid.getBoundingClientRect();
+      const lb = last.getBoundingClientRect();
+      if (lb.right >= box.right - 8) return;
+      // 같은 줄에서 이 카드 오른쪽에 다른 카드가 있으면 그대로(dense 배치로 앞 카드가 오른쪽에 놓인 경우)
+      const sameRowRight = kids.slice(0, -1).some((k) => {
+        const r = k.getBoundingClientRect();
+        return r.left > lb.left && r.top < lb.bottom - 4 && r.bottom > lb.top + 4;
+      });
+      if (sameRowRight) return;
+      const cs = getComputedStyle(grid);
+      const cols = cs.gridTemplateColumns.split(" ").filter(Boolean).length;
+      if (cols < 2) return;
+      const gap = parseFloat(cs.columnGap) || 0;
+      const colW = (box.width - gap * (cols - 1)) / cols;
+      const start = Math.max(1, Math.min(cols, Math.round((lb.left - box.left) / (colW + gap)) + 1));
+      if (start === 1) last.classList.add("ws-fill-row");
+      else last.style.gridColumn = `${start} / -1`;
     };
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
     measure();

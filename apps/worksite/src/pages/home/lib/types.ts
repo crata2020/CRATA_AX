@@ -8,12 +8,22 @@ export interface HomeToday {
   mode: "reviewer" | "member" | "operator";
   myOpen: number;
   dueToday: number;
+  /** 내 열린 업무 중 마감이 오늘 전(기한 지남) */
+  overdue: number;
+  /** 내가 지정 검토자인 검토 대기 제출 */
   reviewWaiting: number;
+  /** 소유자·관리자만: 회사 전체 검토 대기(대신 승인할 수 있는 것, 참고용). 그 밖은 null */
+  companyReviewWaiting: number | null;
+  /** 수정 요청 받은 내 업무 전체 */
   returnedToMe: number;
+  /** 수정 요청 중 기한 지남·오늘 마감에 들지 않은 것(히어로 합에서 겹치지 않게) */
+  returnedOnly: number;
   meetingsToday: number;
   /** 3일 안 마감(오늘 포함) */
   dueSoon: number;
   workOrdersToday: number | null;
+  /** 오늘 작업지시 공정별(편조 · 가공) */
+  workOrdersByProcess: { key: string; label: string; count: number }[] | null;
   checksPending: number | null;
   /** 복지 집계 모수(ara-aggregate 위젯 판단용) */
   population: number;

@@ -1,10 +1,13 @@
 // 테넌트 브랜드 토큰(빌드 스펙 4.1.1절 확정 값, 대비는 스펙에 기록된 직접 계산 값)
 // CRATA 브랜드는 딥 틸 가안(보라 아님). CI가 정해지면 씨앗만 바꿉니다.
 import type { BrandTokens } from "@/tenants/types";
-import { CATEGORICAL_TAIL } from "./tokens";
+import { CATEGORICAL_TAIL, INFO_BLUE } from "./tokens";
 
 export const TR_TOKENS: BrandTokens = {
   brand: "#2D3C67",
+  // 남색 브랜드는 ink(#1B1E25)와 1.55:1이라 글자 강조로는 검은 글자처럼 보여요 → 로고 파랑(흰 바탕 6.48:1 · ink와 2.57:1 · brand-weak 위 5.52:1)
+  brandText: "#3A5BA8",
+  info: { mark: "#2D3C67", bg: "#E7EDFB", fg: "#2D3C67" },
   brandWeak: "#E7EDFB",
   onBrand: "#FFFFFF",
   onBrand2: "#E7EDFB",
@@ -26,6 +29,9 @@ export const TR_TOKENS: BrandTokens = {
 
 export const CRATA_TOKENS: BrandTokens = {
   brand: "#0B6E69",
+  brandText: "#0B6E69",
+  // 청록 브랜드는 good 초록과 색상 거리 47°라 '진행'(info)과 '정상'(good) 알약이 같은 계열로 보여요 → info는 고정 파랑(fg 흰 바탕 7.34:1 · bg 위 6.41:1)
+  info: INFO_BLUE,
   brandWeak: "#DFF1EF",
   onBrand: "#FFFFFF",
   onBrand2: "#DFF1EF",

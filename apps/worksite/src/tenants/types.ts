@@ -16,6 +16,10 @@ export type PlatformTermKey =
 
 export interface BrandTokens {
   brand: string; brandWeak: string; onBrand: string; onBrand2: string; heroLine: string;
+  /** 글자만 쓰는 강조(링크·켜진 메뉴·탭 글자·정렬 화살표). 브랜드가 ink와 너무 가까우면(TR 남색 1.55:1) 더 밝은 단계. 흰 바탕 4.5:1 이상 */
+  brandText: string;
+  /** info 상태색(진행·검토 대기). 브랜드가 good 초록과 색상이 가까우면(±60°) 고정 파랑 묶음 — 초록 '정상' 알약과 나란히 구별되게 */
+  info: { mark: string; bg: string; fg: string };
   panel: string; surface: string; line: string; controlLine: string;
   ink: string; ink2: string; muted: string;
   chartAccent: string; chartMuted: string;

@@ -12,7 +12,7 @@ import { labelOf } from "@/lib/status";
 import { NavIcon } from "@/layout/icons";
 import { AiStatusChip, PersonaSwitcher, TenantSwitcher } from "@/layout/TopBar";
 import { useNavBadges } from "@/layout/useNavBadges";
-import type { NavItem } from "@/modules";
+import { NAV_BADGE_LABEL, type NavItem } from "@/modules";
 
 function NavGroup({ item, badges }: { item: NavItem; badges: ReturnType<typeof useNavBadges> }) {
   const rows: (ListRowProps & { key: string; section?: string })[] = item.children.length
@@ -21,7 +21,7 @@ function NavGroup({ item, badges }: { item: NavItem; badges: ReturnType<typeof u
       title: c.label,
       to: c.to,
       section: c.section,
-      trailing: <>{c.badgeKey && <CountBadge count={badges[c.badgeKey]} label={c.label} />}<RightOutlined aria-hidden style={{ fontSize: 12 }} /></>,
+      trailing: <>{c.badgeKey && <CountBadge count={badges[c.badgeKey]} label={NAV_BADGE_LABEL[c.badgeKey]} />}<RightOutlined aria-hidden style={{ fontSize: 12 }} /></>,
     }))
     : [{ key: item.key, title: item.private ? `${item.label} · ${item.caption ? `${item.caption} · ` : ""}나만 보여요` : `${item.label} 열기`, to: item.to, trailing: <RightOutlined aria-hidden style={{ fontSize: 12 }} /> }];
   // 소제목([현장] 등)마다 끊어서 그림

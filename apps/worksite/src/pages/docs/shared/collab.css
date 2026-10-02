@@ -31,7 +31,7 @@
   border: 0; background: none; padding: 4px 0; font: inherit; font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2);
   cursor: pointer; text-decoration: underline; text-decoration-color: var(--ws-line); text-underline-offset: 4px;
 }
-.cb-linkbtn:hover { color: var(--ws-brand); text-decoration-color: var(--ws-brand); }
+.cb-linkbtn:hover { color: var(--ws-brand-text); text-decoration-color: var(--ws-brand-text); }
 .cb-linkbtn[aria-pressed="true"] { color: var(--ws-ink); font-weight: 700; text-decoration-color: var(--ws-ink); }
 .cb-linkbtn strong { font-weight: 700; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
 
@@ -55,7 +55,7 @@
 .cb-diff dt { font-size: 13px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2); white-space: nowrap; }
 .cb-diff dd { margin: 0; min-width: 0; overflow-wrap: anywhere; color: var(--ws-ink); }
 .cb-del { text-decoration: line-through; text-decoration-thickness: 1px; color: var(--ws-ink-2); }
-.cb-ins { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--ws-brand); color: var(--ws-ink); }
+.cb-ins { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--ws-brand-text); color: var(--ws-ink); }
 .cb-diffmark { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; margin-left: 6px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--ws-panel); color: var(--ws-ink-2); outline: 1px solid var(--ws-line); outline-offset: -1px; vertical-align: 1px; text-decoration: none; }
 .cb-quote { margin: 0; padding: 0 0 0 12px; border-left: 2px solid var(--ws-line); font-size: 14px; line-height: 22px; color: var(--ws-ink-2); overflow-wrap: anywhere; }
 
@@ -74,7 +74,7 @@
   padding: 14px 16px 14px 20px; border-radius: 16px; background: var(--ws-surface); outline: 1px solid var(--ws-line); outline-offset: -1px;
   font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink);
 }
-.cb-stickybar .anticon { color: var(--ws-brand); margin-right: 6px; }
+.cb-stickybar .anticon { color: var(--ws-brand-text); margin-right: 6px; }
 @media (max-width: 767px) {
   .cb-stickybar { bottom: calc(72px + env(safe-area-inset-bottom)); }
   .cb-stickybar .ant-btn { min-height: 44px; flex: 1 1 100%; }
@@ -102,7 +102,7 @@
 .cb-day + .cb-day { border-top: 1px solid var(--ws-line); }
 .cb-day:first-child { padding-top: 0; }
 .cb-day__head { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 15px; line-height: 22px; font-weight: 700; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
-.cb-day__head.is-today { color: var(--ws-brand); }
+.cb-day__head.is-today { color: var(--ws-brand-text); }
 .cb-day__empty { font-size: 13px; line-height: 20px; color: var(--ws-muted); padding: 2px 0 4px; }
 .cb-time { display: inline-block; min-width: 44px; font-size: 13px; font-weight: 600; color: var(--ws-ink-2); font-variant-numeric: tabular-nums; }
 
@@ -112,7 +112,7 @@
 .cb-monthgrid td { vertical-align: top; height: 104px; padding: 6px 8px 8px; border-top: 1px solid var(--ws-line); }
 .cb-monthgrid td.is-out .cb-mday, .cb-monthgrid td.is-out .cb-cell li { color: var(--ws-muted); }
 .cb-monthgrid td.is-today { background: var(--ws-brand-weak); }
-.cb-monthgrid td.is-today .cb-mday { color: var(--ws-brand); font-weight: 700; }
+.cb-monthgrid td.is-today .cb-mday { color: var(--ws-brand-text); font-weight: 700; }
 .cb-mday { border: 0; background: none; padding: 2px 6px; margin: 0 0 4px -6px; border-radius: 8px; font: inherit; font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink); cursor: pointer; font-variant-numeric: tabular-nums; }
 .cb-mday:hover { background: var(--ws-panel); }
 .cb-cell { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
