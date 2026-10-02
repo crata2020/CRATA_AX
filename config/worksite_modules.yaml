@@ -1,0 +1,1099 @@
+# CRATA 업무사이트 모듈 레지스트리 v0.1 (초안, 2026-10-02)
+# 설계 문서(정본): docs/worksite/02_common-modules.md
+# 쓰임
+#  - 업무사이트 뼈대(Refine + Ant Design)가 이 파일을 읽어 메뉴, 라우트, 권한 기본값, 홈 위젯 카탈로그를 만든다.
+#  - 고객사별 켜기·끄기, 메뉴 이름 바꾸기, 위젯 배치는 clients/{slug}/company_profile.yaml(portal_hints)에서 덮어쓴다.
+#    고객사 때문에 이 파일을 고치지 않는다. 이 파일은 "모든 회사에 공통인 목록"이다.
+# 규칙
+#  - id는 kebab-case. 한 번 정한 id는 바꾸지 않는다(라우트·권한·감사 로그가 id를 참조).
+#  - icon은 @ant-design/icons 5.6.1에 실제로 있는 이름만 쓴다(2026-10-02 패키지 파일로 존재 확인).
+#  - entities.fields는 "핵심 필드"만 적는다. 실제 DB 스키마는 생성기가 이 목록과 Company DNA(ontology)를 합쳐 만든다.
+#  - 실존 인물 이름, 고객사 비공개 정보는 넣지 않는다. 데모 데이터는 가상의 이름만 쓴다.
+#  - 데이터 등급 L0~L3의 정의 정본은 docs/research/04_data-governance.md. L3는 어떤 모듈에도 저장하지 않는다.
+#    ARA 복지의 개인 데이터는 'P 영역'(docs/research/00_direction.md 6장)으로, 회사 업무 DB와 분리한다.
+
+meta:
+  version: "0.1"
+  updated: "2026-10-02"
+  status: draft
+  owner: "TODO: 레지스트리 관리자 1명(CRATA)"
+  doc: "docs/worksite/02_common-modules.md"
+  changelog:
+    - "0.1 (2026-10-02): 첫 초안. 공통 코어 31개(P0 14 · P1 11 · P2 6), 제조업 팩 6개, 교육·컨설팅 팩 2개, 홈 위젯 26개, 만들지 않는 것 9개"
+
+tiers:
+  P0: "지금 뼈대에 있어야 함. 화면·데이터 모델·권한이 데모 데이터로 동작"
+  P1: "다음 단계. 첫 고객 진단(2~4주) 뒤 파일럿 2~3개월 안에"
+  P2: "나중. 고객 요청이나 계약 조건에 따라"
+
+roles:
+  owner:
+    name_ko: "소유자(대표)"
+    desc: "계약·결제 주체. 회사 정책(AI 연결, 데이터 등급, 업종 팩)과 소유자 지정. 보통 대표이사 1~2명"
+    home_preset: ceo
+  admin:
+    name_ko: "관리자"
+    desc: "구성원 초대·역할, 연동, 회사 설정, 감사 로그 조회. 보통 총무·경영지원 담당"
+    home_preset: staff_admin
+  reviewer:
+    name_ko: "검토자(팀장)"
+    desc: "업무 생성·배정, 제출물 승인·반려, 회의 결정 확정, 담당 문서 유형의 규칙 승인. 보통 팀장·공장장"
+    home_preset: lead
+  member:
+    name_ko: "구성원(실무자)"
+    desc: "내 업무 진행·제출, 참여 프로젝트 조회, 산출물 작성, 본인 AI 연결"
+    home_preset: staff
+
+platform_roles:
+  crata_operator:
+    name_ko: "CRATA 운영자"
+    desc: "테넌트 밖의 역할. Company DNA 프로파일 적용, 모듈 켜기·끄기, 장애 대응. 고객 데이터 열람은 고객 승인 + 기간 한정 + 감사 로그 기록(actor_type=crata_operator)"
+
+permission_levels:
+  manage: "설정·삭제를 포함한 전체 관리"
+  approve: "작성·수정 + 승인·반려·확정"
+  edit: "작성·수정(권한 범위 안)"
+  own: "본인 것만 작성·조회"
+  view: "조회만(권한 범위 안)"
+  aggregate: "집계만. 개인을 알아볼 수 없는 형태"
+  none: "접근 불가"
+
+build_modes:
+  build: "CRATA가 직접 만든다"
+  integrate: "기존 도구에 연결만 한다(읽기 우선). 원본은 기존 도구에 남는다"
+  hybrid: "가벼운 자체 화면 + 기존 도구 연동. 고객이 해당 도구를 쓰면 연동이 우선"
+
+industries:
+  core: "모든 회사 공통"
+  manufacturing: "제조업 팩. 첫 적용 고객: (주)티알테크놀러지(경남 양산, 자동차 부품 편조 메시)"
+  education_consulting: "교육·컨설팅 팩. CRATA 자신(내부 적용)과 유사 고객"
+
+crata_modules:   # docs/research/00_direction.md 5장 모듈 지도
+  "1": "진단·설정(Company DNA Profile)"
+  "2": "회의"
+  "3": "업무·배분"
+  "4": "산출물·수정 학습"
+  "5": "메일 커넥터"
+  "6": "지식 연결"
+  "7": "ARA MCP(각자의 AI 연결)"
+  "8": "ARA 복지"
+
+# ───────────────────────── 내비게이션 그룹 (데스크톱 좌측 메뉴, 최상위 9개 이하)
+nav_groups:
+  - { id: home,     order: 1, name_ko: "홈",        icon: HomeOutlined,        route: "/",          visible_to: [owner, admin, reviewer, member] }
+  - { id: work,     order: 2, name_ko: "내 업무",   icon: CheckSquareOutlined, route: "/work",      visible_to: [owner, admin, reviewer, member] }
+  - { id: projects, order: 3, name_ko: "프로젝트",  icon: ProjectOutlined,     route: "/projects",  visible_to: [owner, admin, reviewer, member] }
+  - { id: meetings, order: 4, name_ko: "회의",      icon: TeamOutlined,        route: "/meetings",  visible_to: [owner, admin, reviewer, member] }
+  - { id: docs,     order: 5, name_ko: "문서·지식", icon: FileTextOutlined,    route: "/docs",      visible_to: [owner, admin, reviewer, member] }
+  - id: industry
+    order: 6
+    name_ko: "(업종 팩 이름)"
+    name_by_pack: { manufacturing: "생산·품질", education_consulting: "영업·교육" }
+    icon: BuildOutlined
+    route: "/ops"
+    visible_to: [owner, admin, reviewer, member]
+    visible_when: "업종 팩이 1개 이상 켜졌을 때만. 팩이 없으면 메뉴에서 빠진다"
+  - { id: company,  order: 7, name_ko: "회사",      icon: BankOutlined,        route: "/company",   visible_to: [owner, admin, reviewer, member] }
+  - id: ara
+    order: 8
+    name_ko: "ARA"
+    icon: HeartOutlined
+    route: "/ara"
+    visible_to: [owner, admin, reviewer, member]
+    note: "개인 영역. 다른 메뉴와 구분선으로 나누고 '나만 보는 공간' 표시. 관리자도 남의 ARA 화면에 들어갈 수 없다"
+  - { id: admin,    order: 9, name_ko: "관리",      icon: SettingOutlined,     route: "/admin",     visible_to: [owner, admin] }
+  - id: topbar
+    order: null
+    name_ko: "상단 바"
+    note: "좌측 메뉴에 넣지 않는 것: 검색(Ctrl/Cmd+K), 알림, 도움말, 프로필 메뉴(내 정보·내 AI 연결·알림 설정·로그아웃)"
+
+# ───────────────────────── 모바일 하단 탭 (5개)
+mobile_tabs:
+  default:
+    - { id: home,          name_ko: "홈",      icon: HomeOutlined,        route: "/" }
+    - { id: work,          name_ko: "내 업무", icon: CheckSquareOutlined, route: "/work",          note: "검토자는 '검토 대기' 배지 표시" }
+    - { id: meetings,      name_ko: "회의",    icon: TeamOutlined,        route: "/meetings" }
+    - { id: notifications, name_ko: "알림",    icon: BellOutlined,        route: "/notifications" }
+    - { id: more,          name_ko: "전체",    icon: AppstoreOutlined,    route: "/more",          note: "전체 메뉴 시트. ARA·회사·문서·관리 진입" }
+  manufacturing:   # 제조업 팩이 켜진 회사. 회의 탭 자리에 현장 등록을 둔다(회의는 '전체'에서 진입)
+    - { id: home,          name_ko: "홈",        icon: HomeOutlined,        route: "/" }
+    - { id: work,          name_ko: "내 업무",   icon: CheckSquareOutlined, route: "/work" }
+    - { id: field-report,  name_ko: "현장 등록", icon: PlusCircleOutlined,  route: "/ops/report", note: "불량·설비 이상·아차사고를 사진 1장 + 한 줄로 등록" }
+    - { id: notifications, name_ko: "알림",      icon: BellOutlined,        route: "/notifications" }
+    - { id: more,          name_ko: "전체",      icon: AppstoreOutlined,    route: "/more" }
+
+# ───────────────────────── 모듈
+modules:
+
+  # ======================= P0: 공통 코어 (뼈대에 지금 있어야 함) =======================
+
+  - id: home-dashboard
+    name_ko: "홈 대시보드"
+    tier: P0
+    group: home
+    icon: HomeOutlined
+    route: "/"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: null
+    description: "역할별 기본 위젯 묶음(대표·팀장·실무자)을 보여 주는 첫 화면. 회사 기본 배치는 Company DNA(portal_hints.home_widgets, kpis)에서 만든다"
+    entities:
+      - name: DashboardLayout
+        label_ko: "대시보드 배치"
+        fields: [id, tenant_id, preset, member_id, widgets, updated_at]
+    permissions: { owner: manage, admin: manage, reviewer: own, member: own }
+    permission_notes: "owner·admin은 회사 기본 배치를 정한다. 개인은 위젯 순서·숨김만 바꾼다(member_id가 있는 배치)"
+    depends_on: []
+
+  - id: org-members
+    name_ko: "구성원·조직도"
+    tier: P0
+    group: company
+    icon: ContactsOutlined
+    route: "/company/people"
+    industry: core
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: "1"
+    description: "사람 찾기(이름·소속·담당 업무·연락처)와 조직도. 그룹웨어·HR 시스템이 있으면 동기화하고, 없으면 직접 입력. 근로자명부·인사기록(주민번호·주소·급여)은 저장하지 않는다"
+    entities:
+      - name: OrgUnit
+        label_ko: "조직"
+        fields: [id, name, parent_id, head_member_id, sort_order, valid_from, valid_to]
+      - name: Member
+        label_ko: "구성원"
+        fields: [id, tenant_id, display_name, email, phone_work, org_unit_id, position, job_title, duties, role, status, joined_at, avatar_ref, external_ids]
+    permissions: { owner: manage, admin: manage, reviewer: view, member: view }
+    permission_notes: "본인 프로필(사진·업무 연락처·담당 업무 소개)은 본인이 수정. role 변경은 admin-members에서만"
+    integrations: ["하이웍스 조직·구성원 API", "네이버웍스 구성원", "다우오피스 조직도", "Google Workspace·M365 디렉터리"]
+    depends_on: []
+
+  - id: company-info
+    name_ko: "회사 소개"
+    tier: P0
+    group: company
+    icon: InfoCircleOutlined
+    route: "/company/about"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: "1"
+    description: "비전·방침·연혁·인증·대표 연락처를 한 화면에. Company DNA L1(정체성) 값을 그대로 보여 준다. 공개 정보 위주"
+    entities:
+      - name: CompanyInfo
+        label_ko: "회사 정보"
+        fields: [tenant_id, legal_name, display_name, address, phone, website, founded_on, vision, values, policies, history, certifications, logo_ref, updated_at]
+    permissions: { owner: manage, admin: manage, reviewer: view, member: view }
+    depends_on: []
+
+  - id: business-structure
+    name_ko: "사업·프로젝트·파트"
+    tier: P0
+    group: projects
+    icon: PartitionOutlined
+    route: "/projects"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: "1"
+    description: "모든 것의 뼈대. 사업 > 프로젝트 > 파트 계층에 업무·회의·문서·메일·결정이 붙는다. 회의 분류 체계(config/meeting_taxonomy.yaml)와 같은 코드를 쓴다"
+    entities:
+      - name: BusinessLine
+        label_ko: "사업"
+        fields: [id, code, name, description, owner_member_id, status, sort_order]
+      - name: Project
+        label_ko: "프로젝트"
+        fields: [id, business_line_id, code, name, aliases, partner_id, owner_member_id, reviewer_member_id, start_on, due_on, status, health, sensitivity, description]
+      - name: Part
+        label_ko: "파트"
+        fields: [id, project_id, name, lead_member_id, member_ids, sort_order]
+    permissions: { owner: manage, admin: manage, reviewer: edit, member: view }
+    permission_notes: "reviewer는 자기가 owner·reviewer인 사업·프로젝트만 수정. member는 참여 프로젝트만 조회하고, sensitivity=L2 프로젝트는 참여자만 본다"
+    depends_on: [org-members]
+
+  - id: tasks
+    name_ko: "업무·배분·검토"
+    tier: P0
+    group: work
+    icon: CheckSquareOutlined
+    route: "/work"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: "3"
+    description: "내 업무, 팀 배분, 제출과 검토. 각자의 AI(MCP)는 '제출'까지만 하고 '완료'는 검토자가 웹에서 한다. 배분 규칙은 Company DNA L5·L7에서 온다"
+    entities:
+      - name: Task
+        label_ko: "업무"
+        fields: [id, project_id, part_id, title, description, task_type, assignee_id, reviewer_id, due_at, priority, status, source, source_ref, estimate_hours, sensitivity, created_by, created_at]
+      - name: ProgressLog
+        label_ko: "진행 기록"
+        fields: [id, task_id, author_id, body, via, created_at]
+      - name: Submission
+        label_ko: "제출"
+        fields: [id, task_id, version, artifact_id, summary, submitted_by, via, idempotency_key, status, review_comment, reviewed_by, reviewed_at]
+      - name: AssignmentRule
+        label_ko: "배분 규칙"
+        fields: [id, name, condition, assignee_rule, reviewer_rule, source_ref, active]
+    permissions: { owner: manage, admin: manage, reviewer: approve, member: own }
+    permission_notes: "member는 본인 업무의 진행 기록·제출만. reviewer는 담당 범위 업무 생성·배정·승인·반려. 진행 기록은 추가만 가능(수정·삭제 없음)"
+    depends_on: [business-structure, org-members, notifications, audit-log]
+
+  - id: meetings
+    name_ko: "회의"
+    tier: P0
+    group: meetings
+    icon: TeamOutlined
+    route: "/meetings"
+    industry: core
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: "2"
+    description: "녹음·전사는 Plaud·클로바노트·티로 등에 맡기고, 구간 분류·결정·액션 제안과 프로젝트 연결만 한다. 원음은 저장하지 않고 링크만 둔다. 액션은 제안 카드 → 1클릭 승인으로 업무가 된다"
+    entities:
+      - name: Meeting
+        label_ko: "회의"
+        fields: [id, title, title_prefix, meeting_type, project_ids, started_at, duration_min, attendee_ids, source, transcript_ref, summary, sensitivity, status]
+      - name: MeetingSegment
+        label_ko: "회의 구간"
+        fields: [id, meeting_id, start_ts, end_ts, business_line_code, project_code, task_type, confidence, evidence_quote, review_status]
+      - name: Decision
+        label_ko: "결정"
+        fields: [id, meeting_id, project_id, statement, decided_by_role, decided_at, supersedes_id, status]
+      - name: ActionProposal
+        label_ko: "액션 제안"
+        fields: [id, meeting_id, segment_id, title, suggested_assignee_id, suggested_due_at, status, task_id]
+    permissions: { owner: manage, admin: manage, reviewer: approve, member: view }
+    permission_notes: "member는 참석했거나 공개 범위에 든 회의만 조회하고, 본인이 올린 회의는 수정. reviewer가 분류·결정·액션을 확정"
+    integrations: ["Plaud MCP·CLI(읽기)", "Zapier(Plaud 트리거)", "클로바노트(네이버웍스)", "티로 API·MCP"]
+    depends_on: [business-structure, tasks]
+
+  - id: documents
+    name_ko: "산출물·양식"
+    tier: P0
+    group: docs
+    icon: FileTextOutlined
+    route: "/docs"
+    industry: core
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: "4"
+    description: "산출물의 버전(AI 초안 → 수정 → 최종)과 회사 양식 목록. 파일 본체는 고객 저장소(Drive·SharePoint·NAS)에 두고, 메타데이터·버전·적용 규칙만 관리한다. AI 초안에는 AI 생성 표시를 붙인다"
+    entities:
+      - name: Artifact
+        label_ko: "산출물"
+        fields: [id, project_id, task_id, doc_type, template_id, title, current_version, file_ref, ai_generated, sensitivity, owner_id, status]
+      - name: ArtifactVersion
+        label_ko: "산출물 버전"
+        fields: [id, artifact_id, ver, kind, file_ref, author_id, created_at, applied_rule_ids]
+      - name: Template
+        label_ko: "양식"
+        fields: [id, doc_type, name, format, version, file_ref, owner_id, status]
+    permissions: { owner: manage, admin: manage, reviewer: approve, member: edit }
+    permission_notes: "member는 본인·참여 프로젝트 산출물 작성. reviewer가 최종본 확정과 양식 게시"
+    integrations: ["Google Drive", "SharePoint·OneDrive", "네이버웍스 드라이브", "사내 NAS(링크)"]
+    depends_on: [business-structure, tasks]
+
+  - id: notices
+    name_ko: "공지·게시판"
+    tier: P0
+    group: company
+    icon: NotificationOutlined
+    route: "/company/notices"
+    industry: core
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: null
+    description: "회사 공지, 규정 변경 안내, 행사, 안전 공지. 필독 공지는 열람 확인을 남긴다. 그룹웨어 게시판이 있으면 그 글을 함께 보여 주는 연동은 P1"
+    entities:
+      - name: Notice
+        label_ko: "공지"
+        fields: [id, category, title, body, author_id, audience, pinned, must_read, published_at, expires_at, attachments]
+      - name: ReadReceipt
+        label_ko: "열람 확인"
+        fields: [notice_id, member_id, read_at]
+    permissions: { owner: manage, admin: manage, reviewer: edit, member: view }
+    permission_notes: "reviewer는 본인 조직·프로젝트 대상 공지만 작성"
+    depends_on: [org-members, notifications]
+
+  - id: notifications
+    name_ko: "알림"
+    tier: P0
+    group: topbar
+    icon: BellOutlined
+    route: "/notifications"
+    industry: core
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: null
+    description: "사이트 안 알림함 + 알림 설정(즉시·하루 2회 묶음·하루 1회, 업무시간 외 조용히). 메신저 봇(카카오워크·네이버웍스·잔디·Slack)과 메일 발송 연동은 P1"
+    entities:
+      - name: Notification
+        label_ko: "알림"
+        fields: [id, recipient_id, kind, title, body, link, source_module, source_id, channel, batched_at, read_at, created_at]
+      - name: NotificationPreference
+        label_ko: "알림 설정"
+        fields: [member_id, kind, channels, digest, quiet_hours]
+    permissions: { owner: manage, admin: manage, reviewer: own, member: own }
+    permission_notes: "owner·admin은 회사 기본값(묶음 주기·조용한 시간)을 정하고, 개인은 자기 설정만 바꾼다"
+    depends_on: []
+
+  - id: search
+    name_ko: "검색"
+    tier: P0
+    group: topbar
+    icon: SearchOutlined
+    route: "/search"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: null
+    description: "사이트 안 검색(Ctrl/Cmd+K): 사람 → 프로젝트 → 업무 → 회의 → 문서·지식 순. 사람 결과는 사진·이름·소속·연락처를 바로 보여 준다. 외부 도구 전체를 뒤지는 사내 통합검색은 만들지 않는다"
+    entities:
+      - name: SearchIndexEntry
+        label_ko: "검색 색인"
+        fields: [id, tenant_id, object_type, object_id, title, snippet, acl_principals, sensitivity, updated_at]
+    permissions: { owner: view, admin: view, reviewer: view, member: view }
+    permission_notes: "결과는 항상 요청자의 권한으로 거른다(acl_principals). L2는 참여자에게만"
+    depends_on: [org-members, business-structure]
+
+  - id: ai-connect
+    name_ko: "내 AI 연결"
+    tier: P0
+    group: topbar
+    icon: ApiOutlined
+    route: "/me/ai"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: "7"
+    description: "직원 각자의 ChatGPT·Claude·Codex를 OAuth로 연결해 내 업무 조회·진행 기록·제출을 하게 한다(도구 6개). 개인 화면은 프로필 메뉴에, 회사 정책(끄기·읽기 전용·허용 클라이언트)은 관리 > AI 연결 정책(/admin/ai-policy)에 둔다. 연결 전 국외이전 고지"
+    entities:
+      - name: McpConnection
+        label_ko: "AI 연결"
+        fields: [id, member_id, client_name, client_id, scopes, created_at, last_used_at, revoked_at]
+      - name: McpPolicy
+        label_ko: "AI 연결 정책"
+        fields: [tenant_id, enabled, read_only, allowed_clients, allowed_scopes, overseas_notice_version, updated_by, updated_at]
+    permissions: { owner: manage, admin: manage, reviewer: own, member: own }
+    permission_notes: "개인은 본인 연결만 만들고 끊는다. owner·admin은 정책과 전체 세션 철회만 하고, 남의 AI 대화 내용은 볼 수 없다(애초에 저장하지 않음)"
+    depends_on: [tasks, audit-log]
+
+  - id: admin-members
+    name_ko: "구성원·권한 관리"
+    tier: P0
+    group: admin
+    icon: UserSwitchOutlined
+    route: "/admin/members"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: "1"
+    description: "초대, 역할 부여(owner·admin·reviewer·member), 범위 권한(사업·프로젝트 단위), 직책 → 역할 기본 매핑. 퇴사자는 비활성화(삭제 대신)"
+    entities:
+      - name: Invitation
+        label_ko: "초대"
+        fields: [id, email, role, org_unit_id, invited_by, expires_at, status]
+      - name: RoleAssignment
+        label_ko: "역할 부여"
+        fields: [member_id, role, scope_type, scope_id, granted_by, granted_at]
+      - name: PositionRoleMap
+        label_ko: "직책-역할 매핑"
+        fields: [position_or_title, default_role]
+    permissions: { owner: manage, admin: manage, reviewer: none, member: none }
+    permission_notes: "owner 지정·해제는 owner만 한다. 모든 변경은 감사 로그에 남는다"
+    integrations: ["SSO(SAML·OIDC)와 SCIM 자동 동기화는 P2 이후 검토"]
+    depends_on: [org-members, audit-log]
+
+  - id: admin-settings
+    name_ko: "회사 설정"
+    tier: P0
+    group: admin
+    icon: SettingOutlined
+    route: "/admin/settings"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: "1"
+    description: "Company DNA Profile이 적용된 결과를 보는 화면: 브랜드 색·로고, 용어(메뉴·필드 이름), 켜진 모듈·업종 팩, 데이터 등급 기본값. 프로파일 원본 수정은 CRATA 운영자가 차이(diff)로 하고, 고객은 브랜드·라벨·알림 기본값 정도만 직접 바꾼다"
+    entities:
+      - name: TenantSettings
+        label_ko: "회사 설정"
+        fields: [tenant_id, display_name, brand_tokens, logo_ref, locale, timezone, enabled_modules, enabled_packs, nav_overrides, data_class_defaults, profile_version]
+      - name: GlossaryTerm
+        label_ko: "용어"
+        fields: [id, term, ui_label, aliases, forbidden, definition]
+    permissions: { owner: manage, admin: manage, reviewer: none, member: none }
+    permission_notes: "업종 팩 추가·삭제와 데이터 등급 기본값은 계약 사항이라 owner + CRATA 운영자가 함께 바꾼다"
+    depends_on: []
+
+  - id: audit-log
+    name_ko: "감사 로그"
+    tier: P0
+    group: admin
+    icon: HistoryOutlined
+    route: "/admin/audit"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: null
+    description: "누가(사람·AI 연결·시스템·CRATA 운영자) 언제 무엇을 바꿨는지 추가만 가능한 기록. 개인정보 접속기록 요건(최소 1년)을 고려해 기본 보관 2년(제안). 변경 내용은 마스킹해서 남긴다"
+    entities:
+      - name: AuditEvent
+        label_ko: "감사 이벤트"
+        fields: [id, tenant_id, at, actor_id, actor_type, action, resource, resource_id, changes, ip, user_agent, request_id]
+    permissions: { owner: view, admin: view, reviewer: none, member: own }
+    permission_notes: "member는 '내 계정과 내 AI 연결이 한 일'만 본다. 아무도 수정·삭제할 수 없다"
+    depends_on: []
+
+  # ======================= P1: 공통 코어 (다음 단계) =======================
+
+  - id: partners
+    name_ko: "거래처·연락처"
+    tier: P1
+    group: projects
+    icon: ShopOutlined
+    route: "/projects/partners"
+    industry: core
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: "1"
+    description: "고객사·공급사·외주처·기관과 담당자 연락처. 프로젝트와 메일 분류의 기준점. 단가·계약 조건(L2)은 여기에 두지 않는다. ERP·CRM 거래처가 있으면 동기화"
+    entities:
+      - name: Partner
+        label_ko: "거래처"
+        fields: [id, kind, name, biz_reg_no, status, owner_member_id, tags, external_ids]
+      - name: PartnerContact
+        label_ko: "거래처 담당자"
+        fields: [id, partner_id, name, dept, title, email, phone, is_primary]
+    permissions: { owner: manage, admin: manage, reviewer: edit, member: view }
+    permission_notes: "담당자 연락처는 개인정보(L1). 내보내기는 owner·admin만"
+    integrations: ["더존 등 ERP 거래처", "CRM"]
+    depends_on: [business-structure]
+
+  - id: calendar
+    name_ko: "일정"
+    tier: P1
+    group: company
+    icon: CalendarOutlined
+    route: "/company/calendar"
+    industry: core
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: null
+    description: "회사가 쓰는 캘린더(Google·M365·네이버웍스·그룹웨어)를 읽어 오고, 사이트 안 일정(회의·마감·납기·교육·점검)과 합쳐 보여 준다. 캘린더 앱을 새로 만들지 않는다"
+    entities:
+      - name: CalendarEvent
+        label_ko: "일정"
+        fields: [id, source, external_id, title, kind, start_at, end_at, all_day, project_id, attendee_ids, visibility]
+    permissions: { owner: manage, admin: manage, reviewer: edit, member: own }
+    permission_notes: "member는 개인 일정과 공유 일정 조회. 외부 캘린더 원본은 그쪽 권한을 따른다"
+    integrations: ["Google Calendar", "Microsoft 365", "네이버웍스 캘린더", "다우오피스·하이웍스 일정"]
+    depends_on: [meetings, tasks]
+
+  - id: approvals
+    name_ko: "결재(연동)"
+    tier: P1
+    group: company
+    icon: FileDoneOutlined
+    route: "/company/approvals"
+    industry: core
+    default_enabled: false
+    build_mode: integrate
+    crata_module: null
+    description: "그룹웨어 전자결재의 내 결재 대기·진행 중 문서를 링크와 상태로만 보여 주고, 업무·프로젝트에 연결한다. 결재 원본과 증빙은 결재 시스템에 남긴다(상법·세법 보존기간). 결재 시스템이 없는 고객에게 결재를 새로 만들어 주지 않는다"
+    entities:
+      - name: ApprovalLink
+        label_ko: "결재 문서 링크"
+        fields: [id, system, doc_no, title, form_name, requester_id, current_approver_id, status, submitted_at, completed_at, url, related_type, related_id]
+    permissions: { owner: view, admin: manage, reviewer: view, member: own }
+    permission_notes: "reviewer는 본인이 결재선에 있는 문서만. admin은 연동 설정만 관리"
+    integrations: ["다우오피스 전자결재", "하이웍스 전자결재", "네이버웍스 결재", "두레이 결재", "카카오워크 전자결재", "더존 Amaranth 10 전자결재"]
+    depends_on: [integrations]
+
+  - id: attendance-leave
+    name_ko: "근태·휴가(연동)"
+    tier: P1
+    group: company
+    icon: FieldTimeOutlined
+    route: "/company/attendance"
+    industry: core
+    default_enabled: false
+    build_mode: integrate
+    crata_module: null
+    description: "근태 시스템의 요약만 읽어 온다: 오늘 근무·휴가 상태, 내 잔여 연차, 주간 근로시간(52시간 한도 접근 경고). 출퇴근 기록·연차 계산·사용 촉진은 전문 시스템이 한다"
+    entities:
+      - name: AttendanceSummary
+        label_ko: "근태 요약"
+        fields: [member_id, date, status, source, synced_at]
+      - name: WorkHoursWeekly
+        label_ko: "주간 근로시간"
+        fields: [member_id, week_start, regular_hours, overtime_hours, source, synced_at]
+      - name: LeaveBalance
+        label_ko: "연차 잔여"
+        fields: [member_id, year, granted_days, used_days, remaining_days, source, synced_at]
+    permissions: { owner: view, admin: view, reviewer: view, member: own }
+    permission_notes: "reviewer는 팀원의 '오늘 근무·휴가 상태'만(사유·시간 상세는 제외). 근로시간 상세는 owner·admin과 본인"
+    integrations: ["다우오피스 근태·휴가", "하이웍스 근무관리", "네이버웍스 근태", "카카오워크 근태관리", "근태 전문 SaaS"]
+    depends_on: [integrations, org-members]
+
+  - id: knowledge
+    name_ko: "지식"
+    tier: P1
+    group: docs
+    icon: BookOutlined
+    route: "/docs/knowledge"
+    industry: core
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: "6"
+    description: "결정 이력, 규정·매뉴얼, FAQ, 용어집, 참고 자료를 서로 잇고 검증 주기(검증일·재검토일)를 관리한다. 본문은 Notion·Drive·위키에 두고 링크한다. 지식 엔진·위키 에디터는 만들지 않는다"
+    entities:
+      - name: KnowledgeItem
+        label_ko: "지식 항목"
+        fields: [id, kind, title, summary, body_ref, project_id, owner_id, source_ref, verified_at, review_by, status]
+      - name: KnowledgeLink
+        label_ko: "지식 연결"
+        fields: [from_type, from_id, to_type, to_id, relation]
+    permissions: { owner: manage, admin: manage, reviewer: approve, member: edit }
+    permission_notes: "member는 초안 작성. reviewer가 '검증됨'으로 확정. 용어(GlossaryTerm)는 admin-settings와 같은 데이터를 쓴다"
+    integrations: ["Notion", "Google Drive", "Confluence", "티로 Wiki"]
+    depends_on: [business-structure, meetings, documents]
+
+  - id: correction-rules
+    name_ko: "작성 규칙(수정에서 배운 규칙)"
+    tier: P1
+    group: docs
+    icon: DiffOutlined
+    route: "/docs/rules"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: "4"
+    description: "AI 초안과 최종본의 차이를 모아 범위(템플릿·작성 규칙·일회성)로 나누고, 승인된 것만 회사 규칙이 된다. 효과는 같은 수정 재발률·편집량·검토 시간으로 보여 준다"
+    entities:
+      - name: Correction
+        label_ko: "수정 기록"
+        fields: [id, artifact_id, ai_ver, final_ver, diff_kind, before, after, reason, scope_suggested, scope_confidence, status, linked_rule_id]
+      - name: Rule
+        label_ko: "규칙"
+        fields: [id, scope_level, doc_types, statement, evidence_ids, examples, compiled_to, approver_id, status, valid_from, review_by, supersedes_id, stats]
+    permissions: { owner: manage, admin: manage, reviewer: approve, member: view }
+    permission_notes: "member는 규칙 조회와 본인 수정의 사유 입력. reviewer는 담당 문서 유형의 규칙 후보를 승인·반려"
+    depends_on: [documents]
+
+  - id: mail-connector
+    name_ko: "메일 연결"
+    tier: P1
+    group: work
+    icon: MailOutlined
+    route: "/work/mail"
+    industry: core
+    default_enabled: false
+    build_mode: integrate
+    crata_module: "5"
+    description: "직원 본인 OAuth로만 메일을 읽어 거래처·프로젝트에 분류하고 후속 업무를 제안한다. 본문은 기본 저장하지 않고 메타데이터와 링크만. 본인이 '프로젝트에 공유'한 메일만 다른 사람에게 보인다. 메일 앱은 만들지 않는다"
+    entities:
+      - name: MailConnection
+        label_ko: "메일 연결"
+        fields: [id, member_id, provider, scopes, status, connected_at, revoked_at]
+      - name: MailLink
+        label_ko: "메일 링크"
+        fields: [id, member_id, provider_message_id, thread_id, subject, from_address, partner_id, project_id, classified_by, confidence, received_at, suggested_task_id, shared_to_project]
+      - name: MailRule
+        label_ko: "메일 분류 규칙"
+        fields: [id, condition, project_id, action, active]
+    permissions: { owner: manage, admin: manage, reviewer: own, member: own }
+    permission_notes: "owner·admin은 회사 정책(허용 제공자·범위)만 관리하고, 남의 메일은 볼 수 없다"
+    integrations: ["Gmail", "Outlook(M365)", "네이버웍스 Mail API(사용자 OAuth)", "IMAP(다음·카카오 등)"]
+    depends_on: [partners, business-structure, tasks]
+
+  - id: integrations
+    name_ko: "연동 관리"
+    tier: P1
+    group: admin
+    icon: AppstoreAddOutlined
+    route: "/admin/integrations"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: null
+    description: "그룹웨어·캘린더·저장소·회의 녹음·메신저·ERP·MES 연결 상태와 동기화 이력. 실시간 조회(federated)와 색인(synced)을 구분해 표시한다"
+    entities:
+      - name: Integration
+        label_ko: "연동"
+        fields: [id, provider, kind, auth_type, scopes, data_class, sync_mode, connected_by, status, last_sync_at]
+      - name: SyncJob
+        label_ko: "동기화 작업"
+        fields: [id, integration_id, started_at, finished_at, result, counts]
+    permissions: { owner: manage, admin: manage, reviewer: none, member: none }
+    permission_notes: "개인 계정 연결(메일·AI)은 각 모듈에서 본인이 한다"
+    depends_on: [audit-log]
+
+  - id: ara-wellbeing
+    name_ko: "ARA 복지"
+    tier: P1
+    group: ara
+    icon: HeartOutlined
+    route: "/ara"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: "8"
+    description: "성향 진단·일하는 방식 카드·코칭. 개인 데이터는 P 영역(별도 DB·직원별 암호화)에 두고 회사·관리자는 접근할 수 없다. 회사에는 본인이 고른 카드 문장 사본과 10명 이상 집계만. P0 뼈대에는 메뉴 자리와 '회사가 보는 것 / 못 보는 것' 안내 화면만 둔다"
+    entities:
+      - name: WellbeingConsent
+        label_ko: "복지 동의"
+        fields: [member_id, ai_notice_at, privacy_consent_at, sensitive_consent_at, withdrawn_at]
+      - name: WorkStyleCard
+        label_ko: "일하는 방식 카드(공유 사본)"
+        fields: [id, member_id, sentence, share_scope, shared_with_ids, shared_at, revoked_at]
+      - name: WellbeingAggregate
+        label_ko: "복지 집계"
+        fields: [period_month, population_n, active_seats, assessment_completion_rate, card_share_rate, topic_distribution]
+    permissions: { owner: aggregate, admin: aggregate, reviewer: own, member: own }
+    permission_notes: "권한은 두 갈래: 내 ARA는 누구나 본인만(owner·admin도 자기 ARA를 씀), 다른 사람 것은 owner·admin이 10명 이상 집계만. 표의 aggregate는 '본인 + 집계만'으로 읽는다. 원점수·대화·요약은 이 레지스트리의 엔티티로 노출하지 않는다(P 영역). 집계는 월 단위, 모수 10명 미만이면 숨김. 인사평가·배치 사용 금지"
+    integrations: ["외부 EAP·공공 EAP(연결 안내)"]
+    depends_on: [org-members]
+
+  - id: reports
+    name_ko: "리포트"
+    tier: P1
+    group: admin
+    icon: BarChartOutlined
+    route: "/admin/reports"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: "1"
+    description: "회사 KPI(기준선·목표·추세)와 CRATA 월 운영 리포트(수정 학습 효과, AI 연결 활성, 회의 분류 정확도). 대표가 매달 받는 '운영 성과' 화면"
+    entities:
+      - name: Kpi
+        label_ko: "KPI"
+        fields: [id, name, unit, baseline, target, measure_source, owner_id, review_cycle]
+      - name: KpiValue
+        label_ko: "KPI 값"
+        fields: [kpi_id, period, value, note, recorded_at]
+      - name: OpsReport
+        label_ko: "운영 리포트"
+        fields: [id, period_month, summary, metrics, published_at, published_by]
+    permissions: { owner: view, admin: manage, reviewer: view, member: none }
+    permission_notes: "reviewer는 자기 사업·팀 범위 KPI만(리포트 화면 진입은 홈 위젯의 '더보기'로)"
+    depends_on: [tasks, correction-rules, meetings]
+
+  - id: safety-health
+    name_ko: "안전보건"
+    tier: P1
+    group: company
+    icon: SafetyCertificateOutlined
+    route: "/company/safety"
+    industry: core
+    default_enabled: false
+    enabled_by_packs: [manufacturing]
+    build_mode: hybrid
+    crata_module: null
+    description: "상시 5명 이상 사업장의 안전보건 기록을 한곳에: 위험성평가(유해·위험요인 → 조치 → 확인), 아차사고·개선 제안, 종사자 의견 청취, 반기 점검 체크리스트, 산업재해 기록. 법 준수를 보장하는 도구가 아니라 기록·점검을 놓치지 않게 돕는 도구"
+    entities:
+      - name: RiskAssessment
+        label_ko: "위험성평가"
+        fields: [id, work_area, process, hazard, risk_level_before, control_measures, owner_id, due_on, status, risk_level_after, worker_participation_note, evidence_refs, assessed_on]
+      - name: NearMissReport
+        label_ko: "아차사고·개선 제안"
+        fields: [id, reported_by, anonymous, occurred_at, location, description, photo_refs, status, linked_task_id]
+      - name: WorkerOpinion
+        label_ko: "종사자 의견"
+        fields: [id, channel, submitted_at, anonymous, content, response, status]
+      - name: SemiannualReview
+        label_ko: "반기 점검"
+        fields: [id, half, item, checked_on, checked_by, findings, actions]
+      - name: SafetyIncident
+        label_ko: "산업재해 기록"
+        fields: [id, occurred_at, location, injured_count, lost_days, summary, cause, prevention_plan, report_due_on, reported_on]
+    permissions: { owner: approve, admin: manage, reviewer: edit, member: own }
+    permission_notes: "owner(경영책임자)가 반기 점검을 확인·승인. member는 아차사고·의견 제출(익명 선택)과 공개된 위험성평가 결과 조회. 재해자 인적사항은 최소한만, owner·admin만"
+    depends_on: [org-members, notices, tasks]
+
+  # ======================= P2: 공통 코어 (나중) =======================
+
+  - id: training-records
+    name_ko: "교육·이수 기록"
+    tier: P2
+    group: company
+    icon: ReadOutlined
+    route: "/company/training"
+    industry: core
+    default_enabled: false
+    build_mode: hybrid
+    crata_module: null
+    description: "법정·사내 교육의 대상·주기·이수 기록. 교육 콘텐츠와 수강은 외부 교육 플랫폼에 두고 이수 증빙만 모은다(성희롱 예방 연 1회, 산업안전보건 정기교육 등)"
+    entities:
+      - name: TrainingCourse
+        label_ko: "교육 과정"
+        fields: [id, name, legal_basis, cycle, required_for, hours_required, provider]
+      - name: TrainingRecord
+        label_ko: "이수 기록"
+        fields: [id, course_id, member_id, completed_on, hours, evidence_ref]
+    permissions: { owner: view, admin: manage, reviewer: view, member: own }
+    depends_on: [org-members]
+
+  - id: surveys
+    name_ko: "설문·의견함"
+    tier: P2
+    group: company
+    icon: FormOutlined
+    route: "/company/surveys"
+    industry: core
+    default_enabled: false
+    build_mode: hybrid
+    crata_module: "1"
+    description: "진단 설문, 만족도, 의견 수렴(종사자 의견 청취 채널로도 사용). 익명 설문은 응답 5명 미만이면 결과를 숨긴다(제안). 그룹웨어 설문·폼이 있으면 그쪽을 연결"
+    entities:
+      - name: Survey
+        label_ko: "설문"
+        fields: [id, title, purpose, anonymous, audience, open_at, close_at, status]
+      - name: SurveyResponse
+        label_ko: "응답"
+        fields: [id, survey_id, respondent_id, answers, submitted_at]
+    permissions: { owner: manage, admin: manage, reviewer: edit, member: own }
+    permission_notes: "anonymous=true이면 respondent_id를 저장하지 않는다"
+    integrations: ["네이버웍스 설문", "두레이 폼", "Google Forms"]
+    depends_on: [org-members]
+
+  - id: resource-booking
+    name_ko: "회의실·자원 예약"
+    tier: P2
+    group: company
+    icon: ScheduleOutlined
+    route: "/company/booking"
+    industry: core
+    default_enabled: false
+    build_mode: integrate
+    crata_module: null
+    description: "회의실·차량·공용 장비 예약. 그룹웨어 예약 기능이 있으면 연결만 하고, 없을 때만 경량 화면을 검토"
+    entities:
+      - name: Resource
+        label_ko: "자원"
+        fields: [id, kind, name, location, capacity]
+      - name: Booking
+        label_ko: "예약"
+        fields: [id, resource_id, booked_by, start_at, end_at, purpose, status]
+    permissions: { owner: manage, admin: manage, reviewer: own, member: own }
+    integrations: ["하이웍스 예약", "두레이 자원예약", "카카오워크 공간·자원예약", "다우오피스 예약"]
+    depends_on: [calendar]
+
+  - id: help-updates
+    name_ko: "도움말·새 기능 안내"
+    tier: P2
+    group: topbar
+    icon: QuestionCircleOutlined
+    route: "/help"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: null
+    description: "모듈별 도움말과 변경 안내. 새 기능·규칙 변경을 역할별로 알려 정착을 돕는다(EnterpriseReady의 Change Management)"
+    entities:
+      - name: HelpArticle
+        label_ko: "도움말"
+        fields: [id, module_id, title, body, updated_at]
+      - name: ReleaseNote
+        label_ko: "변경 안내"
+        fields: [id, version, published_at, title, body, audience_roles]
+    permissions: { owner: view, admin: view, reviewer: view, member: view }
+    depends_on: []
+
+  - id: data-export
+    name_ko: "데이터 내보내기·이관"
+    tier: P2
+    group: admin
+    icon: ExportOutlined
+    route: "/admin/export"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: null
+    description: "계약 종료 시 반환, 다른 시스템 이관, 정보주체 열람 요청에 대응하는 내보내기(CSV·XLSX·JSON). 내려받기 링크는 만료 시간을 둔다"
+    entities:
+      - name: ExportJob
+        label_ko: "내보내기 작업"
+        fields: [id, requested_by, scope, format, status, file_ref, expires_at, created_at]
+    permissions: { owner: manage, admin: manage, reviewer: none, member: own }
+    permission_notes: "member는 본인 데이터(프로필·본인 업무·본인 감사 기록)만 내려받는다"
+    depends_on: [audit-log]
+
+  - id: billing
+    name_ko: "구독·좌석"
+    tier: P2
+    group: admin
+    icon: CreditCardOutlined
+    route: "/admin/billing"
+    industry: core
+    default_enabled: true
+    build_mode: build
+    crata_module: null
+    description: "요금제, 좌석 수, ARA 복지 애드온 좌석, 계약 기간. 초기에는 CRATA가 계약서로 처리하고 화면은 조회용"
+    entities:
+      - name: Subscription
+        label_ko: "구독"
+        fields: [tenant_id, plan, seats, addons, term_start, term_end, billing_contact]
+      - name: SeatUsage
+        label_ko: "좌석 사용"
+        fields: [month, active_members, ara_addon_seats]
+    permissions: { owner: manage, admin: view, reviewer: none, member: none }
+    depends_on: []
+
+  # ======================= 제조업 팩 (industry: manufacturing) =======================
+  # 개요만 정의한다. 화면·필드·순서의 상세는 제조업 팩 설계 문서가 정본이다(작성 중).
+  # 첫 적용 고객의 ERP·MES 사용 여부가 확인되지 않았으므로 build_mode는 'hybrid'(기존 시스템이 있으면 연동 우선)로 둔다.
+
+  - id: mfg-master-data
+    name_ko: "기준정보(품목·공정·재질)"
+    tier: P1
+    group: industry
+    icon: DatabaseOutlined
+    route: "/ops/master"
+    industry: manufacturing
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: "1"
+    description: "품목(원자재·반제품·완제품·고객 품번), 공정(라우팅), 재질 등급, BOM. 나머지 제조 모듈이 모두 참조한다. ERP 품목 마스터가 있으면 동기화"
+    entities:
+      - name: Item
+        label_ko: "품목"
+        fields: [id, item_no, name, kind, material_grade, spec, unit, customer_part_no, partner_id, status]
+      - name: ProcessStep
+        label_ko: "공정"
+        fields: [id, code, name, sequence, equipment_kind, std_cycle_note]
+      - name: Bom
+        label_ko: "BOM"
+        fields: [parent_item_id, child_item_id, qty_per, unit]
+    permissions: { owner: manage, admin: manage, reviewer: edit, member: view }
+    depends_on: [partners]
+
+  - id: mfg-orders
+    name_ko: "수주·납품"
+    tier: P1
+    group: industry
+    icon: ShoppingCartOutlined
+    route: "/ops/orders"
+    industry: manufacturing
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: null
+    description: "고객 발주(수주), 납기, 출하·납품, 납기 준수. 메일로 온 발주를 수주 후보로 제안하는 흐름은 메일 연결 모듈과 잇는다"
+    entities:
+      - name: SalesOrder
+        label_ko: "수주"
+        fields: [id, partner_id, customer_po_no, order_date, status, owner_id]
+      - name: SalesOrderLine
+        label_ko: "수주 품목"
+        fields: [id, order_id, item_id, qty, due_date, status]
+      - name: Shipment
+        label_ko: "출하·납품"
+        fields: [id, order_id, ship_date, qty, lot_ids, delivery_note_no, status]
+    permissions: { owner: view, admin: manage, reviewer: approve, member: edit }
+    permission_notes: "단가·금액 필드가 생기면 L2로 보고 owner·영업 담당 reviewer만"
+    depends_on: [mfg-master-data, partners]
+
+  - id: mfg-production
+    name_ko: "생산"
+    tier: P1
+    group: industry
+    icon: BuildOutlined
+    route: "/ops/production"
+    industry: manufacturing
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: null
+    description: "작업지시와 일일 생산 실적(공정·설비·품목·양품·불량·LOT), 생산 일보. 설비에서 자동 수집하는 MES 기능은 범위 밖(있으면 연동)"
+    entities:
+      - name: WorkOrder
+        label_ko: "작업지시"
+        fields: [id, order_line_id, item_id, process_step_id, planned_qty, planned_date, equipment_id, status]
+      - name: ProductionResult
+        label_ko: "생산 실적"
+        fields: [id, work_order_id, date, process_step_id, equipment_id, item_id, good_qty, defect_qty, lot_no, worker_ids, note]
+    permissions: { owner: view, admin: manage, reviewer: approve, member: edit }
+    depends_on: [mfg-master-data, mfg-equipment]
+
+  - id: mfg-quality
+    name_ko: "품질"
+    tier: P1
+    group: industry
+    icon: CheckCircleOutlined
+    route: "/ops/quality"
+    industry: manufacturing
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: null
+    description: "수입·공정·출하 검사, 부적합(불량), 고객 클레임, 시정조치(8D 등), 계측기 검교정, 품질 문서 링크. 불량률(PPM)을 대표 화면 지표로 올린다"
+    entities:
+      - name: Inspection
+        label_ko: "검사"
+        fields: [id, kind, item_id, lot_no, inspected_on, inspector_id, result, measurements_ref]
+      - name: Nonconformance
+        label_ko: "부적합"
+        fields: [id, source, item_id, lot_no, qty, defect_type, found_on, disposition, status, linked_task_id]
+      - name: CustomerClaim
+        label_ko: "고객 클레임"
+        fields: [id, partner_id, item_id, received_on, description, status, due_on]
+      - name: CorrectiveAction
+        label_ko: "시정조치"
+        fields: [id, related_type, related_id, method, root_cause, actions, owner_id, due_on, status, artifact_id]
+    permissions: { owner: view, admin: manage, reviewer: approve, member: edit }
+    depends_on: [mfg-master-data, documents, tasks]
+
+  - id: mfg-equipment
+    name_ko: "설비"
+    tier: P1
+    group: industry
+    icon: ToolOutlined
+    route: "/ops/equipment"
+    industry: manufacturing
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: null
+    description: "설비 대장, 일상·정기 점검, 고장·수리 이력, 금형·지그. 설비 안전 점검은 안전보건 모듈과 공유한다"
+    entities:
+      - name: Equipment
+        label_ko: "설비"
+        fields: [id, equipment_no, kind, name, location, status, installed_on, note]
+      - name: EquipmentCheck
+        label_ko: "설비 점검"
+        fields: [id, equipment_id, kind, checked_on, checked_by, result, findings]
+      - name: BreakdownRecord
+        label_ko: "고장·수리"
+        fields: [id, equipment_id, occurred_at, symptom, downtime_min, cause, repair, repaired_by, linked_task_id]
+    permissions: { owner: view, admin: manage, reviewer: approve, member: edit }
+    depends_on: [mfg-master-data]
+
+  - id: mfg-materials
+    name_ko: "자재·재고"
+    tier: P1
+    group: industry
+    icon: InboxOutlined
+    route: "/ops/materials"
+    industry: manufacturing
+    default_enabled: true
+    build_mode: hybrid
+    crata_module: null
+    description: "원자재 입고(공급사 LOT·성적서 링크), 재고 LOT, 입출고 이동, 협력사 발주. LOT으로 원자재 → 생산 → 출하를 거꾸로 추적할 수 있게 한다"
+    entities:
+      - name: MaterialReceipt
+        label_ko: "자재 입고"
+        fields: [id, partner_id, item_id, supplier_lot_no, qty, received_on, cert_ref, inspection_id]
+      - name: StockLot
+        label_ko: "재고 LOT"
+        fields: [id, item_id, lot_no, qty_on_hand, location, status]
+      - name: StockMovement
+        label_ko: "입출고"
+        fields: [id, lot_id, kind, qty, moved_at, ref_type, ref_id]
+      - name: PurchaseOrder
+        label_ko: "발주"
+        fields: [id, partner_id, ordered_on, lines, due_on, status]
+    permissions: { owner: view, admin: manage, reviewer: approve, member: edit }
+    depends_on: [mfg-master-data, partners]
+
+  # ======================= 교육·컨설팅 팩 (industry: education_consulting) =======================
+  # CRATA 자신(내부 적용)용. 필드 원천은 templates/company_profile.template.yaml의 ontology 예시.
+
+  - id: edu-sales
+    name_ko: "영업 기회·견적"
+    tier: P2
+    group: industry
+    icon: SolutionOutlined
+    route: "/ops/sales"
+    industry: education_consulting
+    default_enabled: true
+    build_mode: build
+    crata_module: null
+    description: "문의 → 요구사항 확인 → 견적 → 수주. 견적·할인율은 L2"
+    entities:
+      - name: Opportunity
+        label_ko: "영업 기회"
+        fields: [id, partner_id, stage, owner_id, expected_on]
+      - name: Quote
+        label_ko: "견적"
+        fields: [id, opportunity_id, quote_no, status, amount_krw, discount_rate, artifact_id]
+    permissions: { owner: approve, admin: view, reviewer: approve, member: edit }
+    depends_on: [partners, documents]
+
+  - id: edu-programs
+    name_ko: "과정·회차·강사"
+    tier: P2
+    group: industry
+    icon: ScheduleOutlined
+    route: "/ops/programs"
+    industry: education_consulting
+    default_enabled: true
+    build_mode: build
+    crata_module: null
+    description: "교육 과정, 회차 일정, 강사 배정, 결과 보고"
+    entities:
+      - name: Course
+        label_ko: "교육 과정"
+        fields: [id, name, duration_hours, owner_id, status]
+      - name: Session
+        label_ko: "회차"
+        fields: [id, course_id, partner_id, starts_at, location, instructor_ids, status]
+      - name: Instructor
+        label_ko: "강사"
+        fields: [id, display_name, expertise, contact_ref]
+    permissions: { owner: manage, admin: manage, reviewer: approve, member: edit }
+    depends_on: [partners, calendar]
+
+# ───────────────────────── 홈 위젯 카탈로그
+# suitable_for: 이 위젯이 맞는 프리셋(사용자가 직접 추가할 수 있는 범위). 기본으로 깔리는 배치는 아래 home_presets가 정한다
+# 프리셋: ceo(대표) · lead(팀장) · staff(실무자) · staff_admin(관리자 = 실무자 + 운영 점검)
+# 역할(role)과 직책은 다르다. 공장장이 reviewer여도 ceo 프리셋을 고를 수 있다(개인별 선택).
+home_widgets:
+  - { id: greeting,             name_ko: "인사·오늘",            tier: P0, module: home-dashboard, suitable_for: [ceo, lead, staff, staff_admin], data: "이름, 날짜, 오늘 회의 수, 마감 임박 업무 수, (연동 시) 근무 상태" }
+  - { id: my-tasks,             name_ko: "내 업무",              tier: P0, module: tasks,          suitable_for: [lead, staff, staff_admin],     data: "마감순 상위 5건: 제목, 프로젝트, D-day, 상태" }
+  - { id: returned-submissions, name_ko: "수정 요청 받은 제출",  tier: P0, module: tasks,          suitable_for: [staff, staff_admin],           data: "반려된 제출: 업무명, 검토자 코멘트 첫 줄, 반려일" }
+  - { id: review-queue,         name_ko: "검토 대기",            tier: P0, module: tasks,          suitable_for: [ceo, lead],                    data: "내가 검토할 제출 수, 가장 오래 기다린 건의 대기 일수, 상위 5건" }
+  - { id: team-workload,        name_ko: "팀 업무 현황",         tier: P0, module: tasks,          suitable_for: [lead],                         data: "상태별 건수(할 일·진행·검토 대기·지연), 담당자별 진행 중 건수. 평가용 아님 표시" }
+  - { id: project-health,       name_ko: "사업·프로젝트 현황",   tier: P0, module: business-structure, suitable_for: [ceo, lead],                data: "사업별 프로젝트 수, 상태 신호(정상·주의·위험) 수, 2주 안 마감 프로젝트" }
+  - { id: upcoming-meetings,    name_ko: "회의와 내 액션",       tier: P0, module: meetings,       suitable_for: [lead, staff, staff_admin],     data: "오늘·이번 주 회의, 내 액션 제안·업무, (팀장) 분류 확인 대기 수" }
+  - { id: recent-decisions,     name_ko: "최근 결정",            tier: P0, module: meetings,       suitable_for: [ceo, lead],                    data: "지난 7일 확정된 결정 문장, 프로젝트, 회의 링크" }
+  - { id: notices,              name_ko: "공지",                 tier: P0, module: notices,        suitable_for: [ceo, lead, staff, staff_admin], data: "필독 미확인 수, 고정 공지, 최신 3건" }
+  - { id: ai-connect-status,    name_ko: "내 AI 연결",           tier: P0, module: ai-connect,     suitable_for: [staff, staff_admin],           data: "연결된 AI(ChatGPT·Claude·Codex), 마지막 사용 시각, 연결 안내 버튼" }
+  - { id: company-kpi,          name_ko: "회사 KPI",             tier: P1, module: reports,        suitable_for: [ceo],                          data: "Company DNA kpis의 현재값·기준선·목표, 최근 6개월 추세" }
+  - { id: ax-effect,            name_ko: "AX 운영 효과",         tier: P1, module: reports,        suitable_for: [ceo, staff_admin],             data: "같은 수정 재발률, 1차 통과율, 평균 검토 시간, 주간 AI 연결 활성 인원" }
+  - { id: approvals-pending,    name_ko: "결재 대기",            tier: P1, module: approvals,      suitable_for: [ceo, lead, staff],             data: "연동 결재 시스템의 내 결재 대기 수, 내가 올린 진행 중 문서 수" }
+  - { id: attendance-today,     name_ko: "오늘 근무·휴가",       tier: P1, module: attendance-leave, suitable_for: [ceo, lead, staff],           data: "(팀장·대표) 오늘 휴가·외근 인원과 이름 / (실무자) 내 잔여 연차, 이번 주 근로시간과 한도 접근 경고" }
+  - { id: mail-followups,       name_ko: "메일 후속 제안",       tier: P1, module: mail-connector, suitable_for: [lead, staff],                  data: "본인 메일 중 프로젝트로 분류된 건 수, 후속 업무 제안 수" }
+  - { id: safety-status,        name_ko: "안전보건 현황",        tier: P1, module: safety-health,  suitable_for: [ceo, staff_admin],             data: "미조치 위험요인 수, 반기 점검 D-day, 이번 달 아차사고 수" }
+  - { id: ara-card,             name_ko: "나의 ARA",             tier: P1, module: ara-wellbeing,  suitable_for: [ceo, lead, staff, staff_admin], data: "본인에게만: 내 일하는 방식 카드, ARA 대화 진입" }
+  - { id: ara-aggregate,        name_ko: "복지 집계",            tier: P1, module: ara-wellbeing,  suitable_for: [ceo, staff_admin],             data: "활성 좌석, 진단 완료율, 카드 공유율(월 단위). 모수 10명 미만이면 위젯 자체를 숨김" }
+  - { id: calendar-week,        name_ko: "이번 주 일정",         tier: P1, module: calendar,       suitable_for: [lead, staff],                  data: "회의·마감·납기·교육·점검 일정" }
+  - { id: admin-health,         name_ko: "운영 점검",            tier: P1, module: integrations,   suitable_for: [staff_admin],                  data: "초대 대기, 연동 오류, 최근 권한 변경" }
+  # 제조업 팩 위젯
+  - { id: mfg-delivery-due,     name_ko: "납기 임박",            tier: P1, module: mfg-orders,     industry: manufacturing, suitable_for: [ceo, lead],  data: "7일 안 납기 수주 품목, 출하 준비 상태" }
+  - { id: mfg-production-today, name_ko: "오늘 생산",            tier: P1, module: mfg-production, industry: manufacturing, suitable_for: [ceo, lead],  data: "공정별 계획 대비 실적, 불량 수" }
+  - { id: mfg-quality-ppm,      name_ko: "품질 지표",            tier: P1, module: mfg-quality,    industry: manufacturing, suitable_for: [ceo, lead],  data: "월 불량 PPM(공정·고객), 클레임 건수, 미결 시정조치" }
+  - { id: mfg-equipment-status, name_ko: "설비 상태",            tier: P1, module: mfg-equipment,  industry: manufacturing, suitable_for: [lead],       data: "가동·정지·고장 대수, 오늘 점검 미실시 설비" }
+  - { id: mfg-field-report,     name_ko: "현장 등록",            tier: P1, module: mfg-quality,    industry: manufacturing, suitable_for: [staff],      data: "불량·설비 이상·아차사고 빠른 등록 버튼(사진 + 한 줄)" }
+  - { id: mfg-material-alert,   name_ko: "자재 부족",            tier: P1, module: mfg-materials,  industry: manufacturing, suitable_for: [lead],       data: "안전재고 미달 원자재, 입고 예정" }
+
+home_presets:   # 기본 배치(위에서부터). 데스크톱 2~3열, 모바일 1열. 6~8개를 넘기지 않는다
+  ceo:         [greeting, company-kpi, project-health, review-queue, recent-decisions, ax-effect, safety-status, notices]
+  lead:        [greeting, review-queue, team-workload, my-tasks, upcoming-meetings, project-health, approvals-pending]
+  staff:       [greeting, my-tasks, returned-submissions, upcoming-meetings, notices, ai-connect-status, ara-card]
+  staff_admin: [greeting, admin-health, my-tasks, notices, ax-effect, safety-status, ai-connect-status]
+  manufacturing_overrides:   # 제조업 팩이 켜지면 아래를 앞쪽에 끼워 넣는다
+    ceo:   { insert_after: greeting, widgets: [mfg-delivery-due, mfg-quality-ppm] }
+    lead:  { insert_after: greeting, widgets: [mfg-production-today, mfg-equipment-status] }
+    staff: { insert_after: greeting, widgets: [mfg-field-report] }
+
+# ───────────────────────── 만들지 않는 것 (연동하거나 범위 밖)
+excluded:
+  - { id: messenger,        name_ko: "메신저",               reason: "모든 그룹웨어가 이미 제공. 알림은 기존 메신저 봇으로 보낸다", instead: "카카오워크·네이버웍스·잔디·Slack 봇" }
+  - { id: mail-client,      name_ko: "메일 앱",              reason: "포화 시장. 커넥터 + 분류 규칙만", instead: "mail-connector" }
+  - { id: drive,            name_ko: "드라이브·파일 저장소", reason: "고객 저장소에 링크", instead: "documents(메타데이터·버전)" }
+  - { id: editor-wiki,      name_ko: "문서 에디터·위키 엔진", reason: "Notion·Drive·위키가 있음", instead: "knowledge(연결 구조·검증 주기)" }
+  - { id: stt,              name_ko: "음성 인식(회의록 작성)", reason: "Plaud·클로바노트·티로 사용", instead: "meetings(분류·라우팅)" }
+  - { id: e-approval-core,  name_ko: "전자결재 엔진",        reason: "증빙 보존 의무(상법·세법)가 걸린 핵심 기록이라 전문 시스템에 둔다", instead: "approvals(연동)" }
+  - { id: hr-payroll,       name_ko: "인사·급여·근태 계산", reason: "근로기준법 개정 반영과 계산 책임이 큰 전문 영역", instead: "attendance-leave(연동 요약)" }
+  - { id: accounting-erp,   name_ko: "회계·경비·ERP",        reason: "더존 등 기존 ERP 영역", instead: "integrations(ERP 연동), 업종 팩은 ERP가 없을 때만 경량" }
+  - { id: enterprise-search, name_ko: "사내 통합검색(외부 도구 전체)", reason: "Glean·Notion·Rovo 영역", instead: "search(사이트 안 검색)" }

@@ -1,0 +1,81 @@
+/* work 그룹 화면 전용 배치(소유: work 그룹). 색은 모두 --ws-* 변수만, 그림자·점선·그라데이션 없음.
+   공통 승격 후보: .wk-rows(카드 안 줄 목록), .wk-kv(정보 표), .wk-summary-links(글자 링크 요약) — notes/work.md 참고 */
+
+.wk-stack { display: flex; flex-direction: column; gap: 24px; }
+.wk-section-title { font-size: 16px; line-height: 24px; font-weight: 700; color: var(--ws-ink); margin: 0 0 12px; }
+.wk-caption { font-size: 13px; line-height: 20px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
+.wk-body { font-size: 16px; line-height: 24px; color: var(--ws-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.wk-body-2 { font-size: 14px; line-height: 22px; color: var(--ws-ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.wk-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.wk-meta-text { font-size: 14px; line-height: 22px; color: var(--ws-ink-2); font-variant-numeric: tabular-nums; }
+
+/* 글자 링크 요약: "진행 중 4 · 오늘 마감 2 · 수정 요청 1" (카드 아님) */
+.wk-summary-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0 0 16px; padding: 0; list-style: none; }
+.wk-linkbtn {
+  border: 0; background: none; padding: 4px 0; font: inherit; font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2);
+  cursor: pointer; text-decoration: underline; text-decoration-color: var(--ws-line); text-underline-offset: 4px;
+}
+.wk-linkbtn:hover { color: var(--ws-brand); text-decoration-color: var(--ws-brand); }
+.wk-linkbtn[aria-pressed="true"] { color: var(--ws-ink); font-weight: 700; text-decoration-color: var(--ws-ink); }
+.wk-linkbtn strong { font-weight: 700; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
+
+/* 정보 표(라벨 · 값) */
+.wk-kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 16px; margin: 0; align-items: center; }
+.wk-kv dt { font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2); }
+.wk-kv dd { margin: 0; font-size: 14px; line-height: 22px; color: var(--ws-ink); min-width: 0; overflow-wrap: anywhere; }
+
+/* 완료 기준 체크 목록(글자 + 아이콘) */
+.wk-crit { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.wk-crit li { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 22px; color: var(--ws-ink); }
+.wk-crit .anticon { color: var(--ws-brand); margin-top: 4px; font-size: 14px; }
+
+/* 카드 안 줄 목록(구간·결정·액션 제안·분류 확인) */
+.wk-rows { list-style: none; margin: 0; padding: 0; }
+.wk-rows > li + li { border-top: 1px solid var(--ws-line); }
+.wk-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding: 14px 0; align-items: start; transition: opacity 120ms linear; }
+.wk-row.is-fading { opacity: 0.6; }
+.wk-row__main { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.wk-row__title { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--ws-ink); overflow-wrap: anywhere; }
+.wk-row__actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; }
+.wk-quote { margin: 0; padding: 0 0 0 12px; border-left: 2px solid var(--ws-line); font-size: 15px; line-height: 22px; color: var(--ws-ink-2); overflow-wrap: anywhere; }
+.wk-path { font-size: 14px; line-height: 22px; color: var(--ws-ink); font-weight: 600; overflow-wrap: anywhere; }
+.wk-path--empty { color: var(--ws-muted); font-weight: 400; }
+.wk-time { font-size: 13px; line-height: 20px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 767px) {
+  .wk-row { grid-template-columns: minmax(0, 1fr); }
+  .wk-row__actions { justify-content: flex-start; }
+  .wk-row__actions .ant-btn { min-height: 44px; }
+}
+
+/* 칸반 카드 안 */
+.wk-kcard-title { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink); text-decoration: none; overflow-wrap: anywhere; }
+.wk-kcard-title:hover { color: var(--ws-brand); text-decoration: underline; }
+.wk-kcard-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; line-height: 20px; color: var(--ws-ink-2); }
+.wk-board-caption { font-size: 13px; line-height: 20px; color: var(--ws-muted); margin: 0 0 12px; }
+
+/* 구조 트리 */
+.wk-tree .ant-tree-treenode { padding: 2px 0; }
+.wk-tree .ant-tree-node-content-wrapper { border-radius: 8px; }
+.wk-tree-title { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 15px; line-height: 22px; }
+.wk-tree-title strong { font-weight: 700; }
+.wk-tree-code { font-size: 13px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
+
+/* 결정 모음 타임라인 안 링크 */
+.wk-dec-links { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; line-height: 20px; }
+.wk-dec-group + .wk-dec-group { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--ws-line); }
+.wk-anchor-target:focus { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: 8px; }
+.wk-textlink { border: 0; background: none; padding: 0; font: inherit; color: var(--ws-brand); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-align: left; }
+
+/* 서랍 안 묶음 */
+.wk-drawer-block + .wk-drawer-block { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--ws-line); }
+.wk-drawer-label { font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2); margin: 0 0 6px; }
+.wk-form .ant-form-item { margin-bottom: 16px; }
+.wk-form .ant-form-item-label > label { font-weight: 600; }
+.wk-inline-form { display: flex; gap: 8px; align-items: flex-start; }
+.wk-inline-form .ant-input { flex: 1; }
+@media (max-width: 767px) { .wk-inline-form { flex-direction: column; align-items: stretch; } }
+
+/* 표 이름 칸 두 줄(이름 + 보조 정보) */
+.wk-cell2 { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.wk-cell2 .ws-cell-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wk-cell2__sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }

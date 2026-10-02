@@ -1,0 +1,130 @@
+// SectionCard: 패널 위의 흰 카드(라운드 20, 그림자·테두리 없음). 카드 안에 카드를 넣지 않습니다(개발 모드에서 콘솔 오류).
+// HeroCard = SectionCard variant="hero"(브랜드 단색 면, 화면당 1장). CardGrid = 12열(태블릿 8열, 모바일 1열) 그리드.
+import { createContext, useContext, useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { Link } from "react-router";
+import { RightOutlined } from "@ant-design/icons";
+import { DemoDataBadge, PillLabel } from "./basics";
+
+const NestCtx = createContext(false);
+
+export type CardSize = "S" | "M" | "L";
+const SIZE_SPAN: Record<CardSize, [number, number]> = { S: [4, 4], M: [6, 8], L: [12, 8] };
+
+/** 그리드 열 수 → CSS 변수(데스크톱 12열 / 태블릿 8열) */
+export function spanStyle(size?: CardSize, span?: number): CSSProperties | undefined {
+  if (!size && !span) return undefined;
+  const d = span ?? SIZE_SPAN[size!][0];
+  const t = span ? (span >= 5 ? 8 : 4) : SIZE_SPAN[size!][1];
+  return { ["--span-d" as string]: d, ["--span-t" as string]: t };
+}
+
+export interface SectionCardProps {
+  title?: string;
+  /** 제목을 검정 알약으로(화면당 3개 이하) */
+  pill?: boolean;
+  /** 제목 줄 오른쪽 '예시 데이터' 배지. 수치 카드는 true */
+  demo?: boolean;
+  actions?: ReactNode;
+  more?: { label: string; to: string };
+  /** 그리드 크기: S=4·M=6·L=12열(태블릿 4·8·8, 모바일 전체) */
+  size?: CardSize;
+  /** 직접 열 수(데스크톱 12열 기준). size보다 우선 */
+  span?: number;
+  /** hero = 브랜드 단색 면(화면당 1장) */
+  variant?: "default" | "hero";
+  as?: "section" | "div";
+  /** 카드 아래 작은 설명(예: "평가용이 아니에요", "연동 미리보기") */
+  caption?: string;
+  className?: string;
+  /** 제목 대신 접근성 이름만 줄 때 */
+  ariaLabel?: string;
+  children: ReactNode;
+}
+
+export function SectionCard({ title, pill, demo, actions, more, size, span, variant = "default", as = "section", caption, className, ariaLabel, children }: SectionCardProps) {
+  const nested = useContext(NestCtx);
+  if (nested && import.meta.env.DEV) console.error("[SectionCard] 카드 안에 카드를 넣지 마세요(빌드 스펙 3.0절 2번). 구분선이나 간격으로 나눠 주세요.");
+  const Tag = as;
+  const hero = variant === "hero";
+  const head = title || actions || more || demo;
+  return (
+    <NestCtx.Provider value>
+      <Tag
+        className={`ws-card${hero ? " ws-card--hero ws-on-brand" : ""}${pill && title ? " ws-card--pill" : ""}${className ? ` ${className}` : ""}`}
+        style={spanStyle(size, span)}
+        data-card
+        {...(hero ? { "data-hero": "" } : {})}
+        aria-label={ariaLabel ?? (pill ? title : undefined)}
+      >
+        {pill && title && <h2 className="ws-card__pillhead"><PillLabel>{title}</PillLabel></h2>}
+        {head && (
+          <div className="ws-card__head">
+            {((title && !pill) || demo) && (
+              <div className="ws-card__titles">
+                {title && !pill && <h2 className="ws-card__title">{title}</h2>}
+                {demo && <DemoDataBadge variant="inline" />}
+              </div>
+            )}
+            {(actions || more) && (
+              <div className="ws-card__actions">
+                {actions}
+                {more && <Link className="ws-card__more" to={more.to}>{more.label}<RightOutlined aria-hidden style={{ fontSize: 11 }} /></Link>}
+              </div>
+            )}
+          </div>
+        )}
+        {children}
+        {caption && <p className="ws-card__caption">{caption}</p>}
+      </Tag>
+    </NestCtx.Provider>
+  );
+}
+
+/** 브랜드 단색 히어로 카드(화면당 1장: 홈 H-01, 생산·품질 홈 I-06, 안전보건 I-18) */
+export function HeroCard(props: Omit<SectionCardProps, "variant">) {
+  return <SectionCard {...props} variant="hero" />;
+}
+
+/** 마지막 카드가 줄에 혼자 남으면(오른쪽이 비면) 그 줄을 다 차지하게 .ws-fill-row를 붙입니다(위젯 크기가 늦게 정해져도 다시 잼) */
+function useFillLastRow(on: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const grid = ref.current;
+    if (!on || !grid) return;
+    let frame = 0;
+    const measure = () => {
+      const kids = Array.from(grid.children) as HTMLElement[];
+      for (const k of kids) k.classList.remove("ws-fill-row");
+      const last = kids[kids.length - 1];
+      if (!last || kids.length < 2) return;
+      const alone = !kids.slice(0, -1).some((k) => Math.abs(k.offsetTop - last.offsetTop) < 4 || (k.offsetTop < last.offsetTop && k.offsetTop + k.offsetHeight > last.offsetTop + 4));
+      const gridRight = grid.getBoundingClientRect().right;
+      if (alone && last.getBoundingClientRect().right < gridRight - 8) last.classList.add("ws-fill-row");
+    };
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
+    measure();
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    ro?.observe(grid);
+    const mo = new MutationObserver(schedule);
+    mo.observe(grid, { childList: true });
+    return () => { cancelAnimationFrame(frame); ro?.disconnect(); mo.disconnect(); };
+  }, [on]);
+  return ref;
+}
+
+/** 카드 그리드: 자식에 size/span을 주면 열을 차지합니다. fillLastRow면 줄에 혼자 남은 마지막 카드가 남은 열을 채워요 */
+export function CardGrid({ children, className, style, fillLastRow }: { children: ReactNode; className?: string; style?: CSSProperties; fillLastRow?: boolean }) {
+  const ref = useFillLastRow(!!fillLastRow);
+  return <div ref={ref} className={`ws-grid${className ? ` ${className}` : ""}`} style={style}>{children}</div>;
+}
+
+/** 그리드 칸(카드가 아닌 것을 그리드에 놓을 때) */
+export function GridCell({ size, span, children }: { size?: CardSize; span?: number; children: ReactNode }) {
+  return <div style={spanStyle(size, span)}>{children}</div>;
+}
+
+/** 카드 안 묶음 구분선(카드 안 카드 대신) */
+export const Divider = () => <hr className="ws-divider" />;
+
+/** 카드 안에 있는지(DataTable 등이 흰 바탕을 겹쳐 그리지 않게) */
+export const useInsideCard = () => useContext(NestCtx);

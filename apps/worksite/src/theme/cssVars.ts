@@ -1,0 +1,54 @@
+// BrandTokens → CSS 변수(--ws-*). TenantBoundary가 document.documentElement에 적용합니다.
+import type { BrandTokens, Density } from "@/tenants/types";
+import { STATUS_COLORS, GOOD_FILL, SPACE, RADIUS, FONT_STACK, LAYOUT } from "./tokens";
+
+export function themeCssVars(t: BrandTokens): Record<string, string> {
+  const vars: Record<string, string> = {
+    "--ws-brand": t.brand,
+    "--ws-brand-weak": t.brandWeak,
+    "--ws-on-brand": t.onBrand,
+    "--ws-on-brand-2": t.onBrand2,
+    "--ws-hero-line": t.heroLine,
+    "--ws-panel": t.panel,
+    "--ws-surface": t.surface,
+    "--ws-line": t.line,
+    "--ws-control-line": t.controlLine,
+    "--ws-ink": t.ink,
+    "--ws-ink-2": t.ink2,
+    "--ws-muted": t.muted,
+    "--ws-chart-accent": t.chartAccent,
+    "--ws-chart-muted": t.chartMuted,
+    "--ws-chart-progress": t.chartProgress,
+    "--ws-shadow-pop": t.shadowPop,
+    "--ws-shadow-modal": t.shadowModal,
+    "--ws-font": FONT_STACK,
+    // 상태색(고정) + info·neutral(테넌트 색)
+    "--ws-info-mark": t.brand,
+    "--ws-info-bg": t.brandWeak,
+    "--ws-info-fg": t.brand,
+    "--ws-neutral-mark": t.muted,
+    "--ws-neutral-bg": t.panel,
+    "--ws-neutral-fg": t.ink2,
+    "--ws-hover": t.brandWeak,
+    "--ws-good-fill": GOOD_FILL,
+    "--ws-white": "#FFFFFF",
+    "--ws-white-rgb": "255,255,255",
+  };
+  for (const [tone, c] of Object.entries(STATUS_COLORS)) {
+    vars[`--ws-${tone}-mark`] = c.mark;
+    vars[`--ws-${tone}-bg`] = c.bg;
+    vars[`--ws-${tone}-fg`] = c.fg;
+  }
+  t.chartPalette.forEach((hex, i) => { vars[`--ws-chart-${i + 1}`] = hex; });
+  for (const [k, v] of Object.entries(SPACE)) vars[`--ws-space-${k}`] = `${v}px`;
+  for (const [k, v] of Object.entries(RADIUS)) vars[`--ws-radius-${k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}`] = `${v}px`;
+  for (const [k, v] of Object.entries(LAYOUT)) vars[`--ws-w-${k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}`] = `${v}px`;
+  return vars;
+}
+
+export function applyThemeToDocument(t: BrandTokens, slug: string, density: Density) {
+  const root = document.documentElement;
+  for (const [k, v] of Object.entries(themeCssVars(t))) root.style.setProperty(k, v);
+  root.setAttribute("data-tenant", slug);
+  root.setAttribute("data-density", density);
+}

@@ -1,0 +1,44 @@
+{
+  "name": "crata-worksite",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "CRATA 공통 업무사이트 뼈대(정적 데모, 해시 라우팅 + 메모리 데이터 공급자)",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "gen": "node scripts/gen-registry.ts",
+    "predev": "npm run gen",
+    "dev": "vite",
+    "prebuild": "npm run gen",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --pretty false",
+    "test": "vitest run --environment node --dir tests/unit",
+    "check": "node scripts/check-rules.ts && node scripts/check-ownership.ts",
+    "smoke": "playwright test tests/e2e/smoke.spec.ts"
+  },
+  "dependencies": {
+    "@ant-design/icons": "5.6.1",
+    "@refinedev/antd": "6.0.3",
+    "@refinedev/core": "5.0.12",
+    "@refinedev/react-router": "2.0.4",
+    "@tanstack/react-query": "5.104.0",
+    "antd": "5.29.3",
+    "dayjs": "1.11.23",
+    "pretendard": "1.3.9",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router": "7.18.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "22.20.5",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "6.1.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.2",
+    "vitest": "5.0.3",
+    "yaml": "2.9.1"
+  }
+}
