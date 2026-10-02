@@ -1,6 +1,7 @@
 // 기준 데이터(Foundation, 빌드 스펙 6.2절). TenantConfig에서 행을 만듭니다: 조직·사람·사업 구조·거래처·회사 정보·설정·용어·배분 규칙.
 // 다른 그룹은 이 행들을 ctx.get("members") 등으로 읽고, id(m-tr-plant, prj-cr-edu-a …)를 그대로 참조해도 됩니다.
 import type { SeedContext, SeedOutput } from "./types";
+import { PUBLIC_DEMO } from "@/tenants/publicDemo";
 
 export function referenceSeed(ctx: SeedContext): SeedOutput {
   const { tenant } = ctx;
@@ -41,8 +42,8 @@ export function referenceSeed(ctx: SeedContext): SeedOutput {
       display_name: tenant.displayName,
       address: factValue("주소"),
       phone: factValue("대표 전화"),
-      website: isTr ? "http://trtechnology.co.kr/" : null,
-      founded_on: isTr ? "2011-12-08" : null,
+      website: isTr && !PUBLIC_DEMO ? "http://trtechnology.co.kr/" : null,
+      founded_on: isTr && !PUBLIC_DEMO ? "2011-12-08" : null,
       vision: facts.vision ?? null,
       values: null,
       policies: null,

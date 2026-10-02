@@ -3,16 +3,18 @@
 // 사람은 역할 표시명(예시)만, 거래처는 '예시…'만, 숫자(수량·불량·납기·가격)는 모두 예시입니다.
 import type { TenantConfig } from "./types";
 import { TR_TOKENS } from "@/theme/tenants";
+// 이름·연락처·연혁처럼 회사를 알아볼 수 있는 값은 따로 둡니다. 공유용 빌드(--mode public)는 이 모듈을 가상 값 파일로 바꿔 끼워요(vite.config.ts)
+import { trIdentity as ID } from "./tr-technology.identity";
 
 const OPS = ["m-tr-op-a", "m-tr-op-b", "m-tr-op-c", "m-tr-op-d", "m-tr-op-e", "m-tr-op-f"];
 
 export const trTechnology: TenantConfig = {
   slug: "tr-technology",
-  tenantId: "tr-technology-demo",
-  displayName: "티알테크놀러지",
-  legalName: "주식회사 티알테크놀러지",
-  monogram: "TR",
-  shortName: "티알",
+  tenantId: ID.tenantId,
+  displayName: ID.displayName,
+  legalName: ID.legalName,
+  monogram: ID.monogram,
+  shortName: ID.shortName,
   tagline: "자동차 부품 제조 · 생산·품질",
   isDemo: true,
   demoToday: "2026-09-30",
@@ -149,37 +151,9 @@ export const trTechnology: TenantConfig = {
     { id: "p-tr-cal", kind: "agency", name: "예시교정센터", status: "active", ownerMemberId: "m-tr-qa", tags: ["계측기 검교정"] },
   ],
   facts: {
-    overview: [
-      { label: "회사명", value: "주식회사 티알테크놀러지", evidence: ["WEB-TR-01"] },
-      { label: "영문명", value: "TR TECHNOLOGY CO.,LTD", evidence: ["WEB-TR-01"] },
-      { label: "설립일", value: "2011년 12월 8일", evidence: ["WEB-TR-01"] },
-      { label: "업종", value: "자동차 부품(Knitted Mesh & Parts) · 그 외 기타 금속가공업", evidence: ["WEB-TR-01", "REG-ALLCOMPANY"] },
-      { label: "주요 제품", value: "일반기계, 자동차부품", evidence: ["REG-ALLCOMPANY"] },
-      { label: "주소", value: "경상남도 양산시 산막공단북13길 38 (산막동)", evidence: ["WEB-TR-01"] },
-      { label: "대표 전화", value: "055-785-3699", evidence: ["WEB-TR-01"] },
-      { label: "팩스", value: "055-785-0125", evidence: ["WEB-TR-01"] },
-      { label: "대표 메일", value: "trtechnology@daum.net", evidence: ["WEB-TR-01"] },
-      { label: "부지·건물", value: "대지 4,032㎡ · 건물 1,902㎡(2016년 기준)", evidence: ["WEB-TR-01", "PUB-TR-INTRO-KO#p3"] },
-    ],
-    vision: {
-      mission: "혁신적이고 경쟁력 있는 KNITTED MESH SOLUTION을 제공함으로써 자동차 부품 제조 분야의 발전을 선도한다.",
-      pillars: [
-        { key: "VISION", text: "고객이 감동하는 자동차 부품 제조 전문 강소기업" },
-        { key: "QUALITY", text: "전사적인 품질 활동을 통한 Single PPM 실현" },
-        { key: "PRODUCT", text: "혁신적이고 경쟁력 있는 가치 창출을 통한 고객 만족 실현" },
-        { key: "R&D", text: "고객, 전문기관과 상호신뢰를 바탕으로 유기적인 협력 관계 구축" },
-      ],
-      evidence: ["WEB-TR-02"],
-    },
-    history: [
-      { date: "2011-12", event: "주식회사 태성엔테크 설립", evidence: ["WEB-TR-03"] },
-      { date: "2012-06", event: "H/KMC MESH(류) 공급", evidence: ["WEB-TR-03", "PUB-TR-INTRO-KO#p4"] },
-      { date: "2012-07", event: "중국(북경/염성) KD부품 공급", evidence: ["WEB-TR-03"] },
-      { date: "2015-05", event: "ISO9001 품질시스템 구축", evidence: ["WEB-TR-03"] },
-      { date: "2015-11", event: "기술보증기금 벤처기업 등록(현재 유효 여부 확인 필요)", evidence: ["PUB-TR-INTRO-KO#p4"] },
-      { date: "2015-12", event: "양산 산막공단 신축공장 확장 이전", evidence: ["WEB-TR-03"] },
-      { date: "2016-02", event: "(주)태성엔테크에서 (주)티알테크놀러지로 상호 변경", evidence: ["WEB-TR-03"] },
-    ],
+    overview: ID.overview,
+    vision: ID.vision,
+    history: ID.history,
     certifications: [
       { name: "ISO 9001", stated: "2015년 5월 품질시스템 구축(연혁)", currentStatus: "확인 필요" },
       { name: "ISO 14001", stated: "품질방침에 'ISO9001/14001 품질환경시스템' 언급", currentStatus: "확인 필요" },
@@ -229,16 +203,7 @@ export const trTechnology: TenantConfig = {
       "인증의 현재 상태는 진단에서 확인해요.",
       "ERP·그룹웨어·메일 사용 현황은 진단에서 확인해요.",
     ],
-    sources: {
-      "WEB-TR-01": { title: "홈페이지 회사소개 > 개요", url: "http://trtechnology.co.kr/ko/sub01_1.php" },
-      "WEB-TR-02": { title: "홈페이지 회사소개 > 비전", url: "http://trtechnology.co.kr/ko/sub01_2.php" },
-      "WEB-TR-03": { title: "홈페이지 회사소개 > 연혁", url: "http://trtechnology.co.kr/ko/sub01_3.php" },
-      "WEB-TR-04": { title: "홈페이지 회사소개 > 조직도", url: "http://trtechnology.co.kr/ko/sub01_4.php" },
-      "WEB-TR-05": { title: "홈페이지 사업영역 > 공정설비", url: "http://trtechnology.co.kr/ko/sub02_1.php" },
-      "WEB-TR-06": { title: "홈페이지 제품소개", url: "http://trtechnology.co.kr/ko/sub03_1.php" },
-      "PUB-TR-INTRO-KO": { title: "회사소개서(국문, 2016-06)" },
-      "REG-ALLCOMPANY": { title: "올컴퍼니 기업정보", url: "https://allcompany.co.kr/company/4ff61436-1cd1-4e1e-89c8-b4e687bea428" },
-    },
+    sources: ID.sources,
   },
   policies: { aggregateMinN: 10, teamMinN: 5, mcpEnabled: true, mailPreview: true, approvalsPreview: true },
 };

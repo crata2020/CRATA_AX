@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "CRATA 공통 업무사이트 뼈대(정적 데모, 해시 라우팅 + 메모리 데이터 공급자)",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "gen": "node scripts/gen-registry.ts",
     "predev": "npm run gen",
@@ -15,7 +17,8 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run --environment node --dir tests/unit",
     "check": "node scripts/check-rules.ts && node scripts/check-ownership.ts",
-    "smoke": "playwright test tests/e2e/smoke.spec.ts"
+    "smoke": "playwright test tests/e2e/smoke.spec.ts",
+    "build:public": "npm run gen && vite build --mode public"
   },
   "dependencies": {
     "@ant-design/icons": "5.6.1",

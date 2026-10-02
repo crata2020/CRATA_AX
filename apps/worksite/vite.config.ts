@@ -8,15 +8,25 @@ import react from "@vitejs/plugin-react";
 //   첫 화면(홈) gzip 449KB(목표 450KB, notes/INTEGRATION.md 측정법 · tests/e2e/smoke.spec.ts '첫 화면 JS 예산'이 지켜요). 표 묶음은 목록 화면에서만,
 //   서랍·폼(날짜 선택)은 처음 열 때(src/lib/lazyDrawer.tsx) 받아요.
 // 경고 기준(chunkSizeWarningLimit)은 기본값(500kB) 그대로 둡니다.
-export default defineConfig({
+// --mode public: 외부 공유용 미리보기(실존 회사 정보 가림 · 글꼴 내장 · dist-public/). npm run build:public
+export default defineConfig(({ mode }) => {
+  const isPublic = mode === "public";
+  return {
   base: "./",
   plugins: [react()],
   resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    alias: [
+      ...(isPublic ? [
+        { find: "@/theme/font.css", replacement: fileURLToPath(new URL("./src/theme/font-public.css", import.meta.url)) },
+        { find: /^\.\/tr-technology\.identity$/, replacement: fileURLToPath(new URL("./src/tenants/tr-technology.identity.public.ts", import.meta.url)) },
+      ] : []),
+      { find: "@", replacement: fileURLToPath(new URL("./src", import.meta.url)) },
+    ],
   },
   server: { port: 5173, strictPort: false },
   preview: { port: 4173, strictPort: false },
   build: {
+    ...(isPublic ? { outDir: "dist-public", assetsInlineLimit: 400 * 1024 } : {}),
     rolldownOptions: {
       // package.json에 sideEffects 표시가 없는 의존성(react-markdown·micromark·papaparse 등, Refine이 import만 하고 이 앱은 안 씀)이
       // 첫 화면 묶음에 통째로 들어가지 않게, node_modules의 JS는 부작용 없는 모듈로 봐요(CSS·dayjs 로캘처럼 import만으로 동작하는 것은 제외).
@@ -41,4 +51,5 @@ export default defineConfig({
       },
     },
   },
+};
 });

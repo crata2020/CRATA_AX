@@ -1,0 +1,4 @@
+/* 공유용 빌드 전용 글꼴: 외부 글꼴 주소를 쓸 수 없어서 Pretendard 정적 서브셋 3굵기를 CSS에 내장해요(vite.config.ts assetsInlineLimit) */
+@font-face { font-family: "Pretendard"; font-weight: 400; font-style: normal; font-display: swap; src: url("../../node_modules/pretendard/dist/web/static/woff2-subset/Pretendard-Regular.subset.woff2") format("woff2"); }
+@font-face { font-family: "Pretendard"; font-weight: 600; font-style: normal; font-display: swap; src: url("../../node_modules/pretendard/dist/web/static/woff2-subset/Pretendard-SemiBold.subset.woff2") format("woff2"); }
+@font-face { font-family: "Pretendard"; font-weight: 700; font-style: normal; font-display: swap; src: url("../../node_modules/pretendard/dist/web/static/woff2-subset/Pretendard-Bold.subset.woff2") format("woff2"); }

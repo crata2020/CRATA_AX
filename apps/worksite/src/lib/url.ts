@@ -32,21 +32,33 @@ export function useSelectedParam() {
   return useUrlParam("selected");
 }
 
+/** 공유용 빌드(.env.public)는 쿼리·새로고침을 쓸 수 없는 틀(iframe) 안에서 열려요. 그때는 바뀐 값을 메모리에 두고 앱을 다시 마운트합니다 */
+const REMOUNT = import.meta.env.VITE_PUBLIC_DEMO === "1";
+let bootOverride: Record<string, string | null> = {};
+export const REBOOT_EVENT = "ws:reboot";
+
 /** 데모 매개변수(해시 앞 쿼리): ?tenant=&as=&today=&latency=&persist=&empty= */
 export function readBootParams() {
   const q = new URLSearchParams(window.location.search);
+  const get = (k: string) => (k in bootOverride ? bootOverride[k]! : q.get(k));
   return {
-    tenant: q.get("tenant"),
-    as: q.get("as"),
-    today: q.get("today"),
-    latency: q.get("latency"),
-    persist: q.get("persist"),
-    empty: q.get("empty"),
+    tenant: get("tenant"),
+    as: get("as"),
+    today: get("today"),
+    latency: get("latency"),
+    persist: get("persist"),
+    empty: get("empty"),
   };
 }
 
 /** 해시 앞 쿼리를 바꾸고 새로고침(테넌트·인물 전환: 공급자·캐시를 새로 만듦) */
 export function reloadWithBootParams(patch: Record<string, string | null>, hash?: string) {
+  if (REMOUNT) {
+    bootOverride = { ...bootOverride, ...patch };
+    if (hash != null) window.location.hash = hash;
+    window.dispatchEvent(new Event(REBOOT_EVENT));
+    return;
+  }
   const url = new URL(window.location.href);
   for (const [k, v] of Object.entries(patch)) {
     if (v == null) url.searchParams.delete(k); else url.searchParams.set(k, v);

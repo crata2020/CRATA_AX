@@ -18,8 +18,9 @@ body {
   font-size: var(--ws-body-size);
   line-height: var(--ws-body-line);
   font-weight: 400;
-  color: var(--ws-ink);
-  background: var(--ws-surface);
+  /* 테마 변수가 붙기 전(첫 화면 로딩)에도 바탕이 비지 않게 기본값을 둬요 */
+  color: var(--ws-ink, #1d2230);
+  background: var(--ws-surface, #f6f7fa);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0;

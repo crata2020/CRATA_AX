@@ -52,6 +52,12 @@ CRATA `R_CEO` 홍길동(owner) · `R_OPS_ADMIN` 심청(admin) · `R_EDU_LEAD` �
 
 ---
 
+### 공유용 미리보기 빌드
+
+- `npm run build:public` → `dist-public/`. 실존 회사(티알테크놀러지) 식별 정보는 `src/tenants/tr-technology.identity.public.ts`의 가상 값(예시편조산업)으로 빌드 때 바뀌고, 글꼴은 CSS에 내장돼요(외부 글꼴 주소 없이 동작).
+- 이 빌드는 쿼리·새로고침 대신 앱을 다시 마운트해서 회사·사람을 바꿔요(`src/lib/url.ts`, `src/main.tsx`). claude.ai 아티팩트처럼 틀(iframe) 안에서 열리는 곳에 올릴 때 씁니다.
+- 실제 회사명이 들어간 일반 빌드(`npm run build`)는 외부 공유 링크로 올리지 않아요.
+
 ## 2. 구조
 
 ```
