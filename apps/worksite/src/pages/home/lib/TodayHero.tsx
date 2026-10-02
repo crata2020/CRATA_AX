@@ -1,5 +1,5 @@
 // 홈 히어로 '오늘 할 일' 내용(소유: home 그룹). H-01과 greeting 위젯이 함께 씁니다.
-// 숫자 = 그 아래 줄의 합(heroModel.ts). 합에 넣지 않는 참고(진행 중인 내 업무, 작업자의 점검 전 설비)는 구분선 아래 작은 링크로.
+// 숫자 = 그 아래 줄의 합(heroModel.ts). 합에 넣지 않는 참고(남은 내 업무, 회사 전체 검토 대기, 작업자의 점검 전 설비)는 구분선 아래 작은 링크로.
 import { Link } from "react-router";
 import { RightOutlined } from "@ant-design/icons";
 import { BigNumber } from "@/components";

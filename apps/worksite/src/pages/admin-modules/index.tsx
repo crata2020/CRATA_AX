@@ -2,9 +2,9 @@
 // 이 회사에서 켤 공통 코어 모듈을 정합니다. 스위치 → rpc:set_module_enabled(덮어쓰기 저장 + 감사 기록) → 메뉴가 바로 바뀜(TenantBoundary가 다시 계산).
 // 규칙: 다른 켜진 모듈이 쓰는 모듈은 끌 수 없음(이유 표시), 필요한 모듈이 꺼져 있으면 켤 수 없음, 꼭 필요한 모듈 5개는 잠금. 업종 팩은 보기만.
 import { useState } from "react";
-import { App, Switch, Tooltip } from "antd";
+import { App, Switch } from "antd";
 import { LockOutlined } from "@ant-design/icons";
-import { CardGrid, EmptyState, FilterBar, PageHeader, SectionCard, StatTile, StatRow, useConfirm, useFilterBarState, type FilterBarProps } from "@/components";
+import { CardGrid, EmptyState, FilterBar, PageHeader, SectionCard, StatTile, StatRow, useConfirm, useFilterBarState, type FilterBarProps, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { useRpc } from "@/lib/refine";
 import { LOCKED_MODULES, MODULES, MODULE_BY_ID, NAV_GROUPS, type ModuleId, type RegistryModule } from "@/modules";
@@ -83,7 +83,7 @@ export default function Page() {
     );
     return (
       <span className="as-row" style={{ flexWrap: "nowrap" }}>
-        {reason ? <Tooltip title={reason}><span tabIndex={0} aria-label={`${m.nameKo}: ${reason}`}>{sw}</span></Tooltip> : sw}
+        {reason ? <DisabledAction label={m.nameKo} reason={reason}>{sw}</DisabledAction> : sw}
         <span className="as-nowrap">{on ? "켜짐" : "꺼짐"}</span>
         {locked && <span className="ws-tag"><LockOutlined aria-hidden />꼭 필요해요</span>}
       </span>

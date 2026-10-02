@@ -2,6 +2,7 @@
 // 예시 props와 모양은 개발 모드의 #/__kit 화면에서 볼 수 있어요.
 export { PageHeader, LinkTabs, type PageHeaderProps, type LinkTab } from "./PageHeader";
 export { SectionCard, HeroCard, CardGrid, GridCell, Divider, spanStyle, useInsideCard, type SectionCardProps, type CardSize } from "./SectionCard";
+export { MasonryGrid, type MasonryItem } from "./MasonryGrid";
 export { SegmentedPills, type SegmentedPillsProps } from "./SegmentedPills";
 export { StatusTag, TONE_ICON, toneMarkVar, type StatusTagProps, type Tone } from "./StatusTag";
 export { StatTile, StatRow, BigNumber, DeltaText, type StatTileProps, type BigNumberProps, type DeltaTextProps } from "./figures";
@@ -17,7 +18,7 @@ export { DetailDrawer, ConfirmDialog, useConfirm, type DetailDrawerProps, type C
 export { CopyField, type CopyFieldProps } from "./CopyField";
 export { WidgetSlot, type WidgetDef, type WidgetContext, type WidgetSlotProps } from "./WidgetSlot";
 export {
-  PillLabel, DemoDataBadge, DdayBadge, SensitivityTag, AiTag, PriceGate, MaterialGradeTag, Banner, PrivateZone, CountBadge, DemoOnlyLink,
+  PillLabel, DemoDataBadge, DdayBadge, SensitivityTag, AiTag, PriceGate, MaterialGradeTag, Banner, PrivateZone, CountBadge, DemoOnlyLink, DisabledAction,
 } from "./basics";
 export { PageGuard, type PageGuardProps } from "@/layout/PageGuard";
 export { RightRail, useRailVisible, type RightRailProps } from "@/layout/RightRail";

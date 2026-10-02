@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Button, DatePicker, Form, Input, InputNumber, Select, Switch } from "antd";
-import { FileSearchOutlined, PlusOutlined, SendOutlined } from "@ant-design/icons";
+import { ExclamationCircleOutlined, FileSearchOutlined, PlusOutlined, SendOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import {
   AiTag, Banner, ChartFrame, DataTable, DdayBadge, DetailDrawer, Divider, EmptyState, FilterBar, LineSpark, ListRows, PageHeader, PriceGate, SectionCard, StatusTag,
@@ -81,7 +81,16 @@ function Stock() {
     const d = sd.days.get(l.item_id);
     if (!d || l.status !== "available") return "—";
     const low = d.min != null && d.days < d.min;
-    return <span className="in-row"><span className="in-num">{d.days}일</span>{low && <StatusTag tone="warning" label={`안전재고(${d.min}일) 미달`} />}</span>;
+    // 한 줄로: 숫자 + 경고 아이콘(글자는 상태 칸의 '안전재고 미달'이 맡아요)
+    return low
+      ? <span className="in-row ws-nowrap" style={{ flexWrap: "nowrap" }}><span className="in-num">{d.days}일</span><ExclamationCircleOutlined role="img" aria-label={`안전재고 ${d.min}일 미달`} style={{ color: "var(--ws-warning-fg)" }} /></span>
+      : <span className="in-num">{d.days}일</span>;
+  };
+  /** 상태 칸: 쓸 수 있는 LOT라도 안전재고에 못 미치면 '안전재고 미달'(경고)로 */
+  const statusCell = (l: StockLot) => {
+    const d = sd.days.get(l.item_id);
+    if (l.status === "available" && d && d.min != null && d.days < d.min) return <StatusTag tone="warning" label="안전재고 미달" />;
+    return <StatusTag {...statusOf("stock_lots.status", l.status)} />;
   };
   return (
     <>
@@ -112,9 +121,9 @@ function Stock() {
           { key: "qty_on_hand", title: "수량", align: "right", width: 112, render: (l) => <span className="in-num ws-nowrap">{formatQty(l.qty_on_hand, unit(l.item_id))}</span> },
           { key: "location", title: "위치", width: 136 },
           { key: "days", title: "재고일수", width: 136, render: daysCell },
-          { key: "status", title: "상태", kind: "status", statusDomain: "stock_lots.status" },
+          { key: "status", title: "상태", width: 140, render: statusCell },
         ]}
-        mobileRow={(l) => ({ title: `${lk.item.get(l.item_id)?.name ?? "자재"} · ${formatQty(l.qty_on_hand, unit(l.item_id))}`, subtitle: `${l.lot_no} · ${l.location ?? ""}`, trailing: <StatusTag {...statusOf("stock_lots.status", l.status)} /> })}
+        mobileRow={(l) => ({ title: `${lk.item.get(l.item_id)?.name ?? "자재"} · ${formatQty(l.qty_on_hand, unit(l.item_id))}`, subtitle: `${l.lot_no} · ${l.location ?? ""}`, trailing: statusCell(l) })}
         empty={{ kind: "empty", title: "재고 LOT가 없어요", description: "입고를 등록하면 원자재 LOT가 생겨요." }}
       />
     </>

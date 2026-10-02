@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import type { DataProvider } from "@refinedev/core";
 import { TENANTS, DEFAULT_TENANT, isTenantSlug, type TenantConfig, type TenantSlug } from "@/tenants";
 import type { BrandTokens, Density, PermissionBundle, PersonSeed, RoleDef } from "@/tenants/types";
+import { resolvePersona, type MemberState } from "./resolvePersona";
 import type { ModuleId } from "@/modules/registry.generated";
 import { buildNav, makeT, mobileTabs, resolveModules, type MobileTab, type NavItem } from "@/modules";
 import type { TenantOverrides, ResourceName } from "@/types/entities";
@@ -48,16 +49,6 @@ function boot(buildSeeds: (o: BuildSeedOptions) => SeedRegistry): Boot {
   const prefs = getPrefs();
   const slug: TenantSlug = isTenantSlug(params.tenant) ? params.tenant : isTenantSlug(prefs.lastTenant) ? prefs.lastTenant : DEFAULT_TENANT;
   const tenant = TENANTS[slug];
-  const personaCodes = tenant.people.filter((p) => p.persona).map((p) => p.roleCode);
-  const savedCode = prefs.personaByTenant?.[slug];
-  const roleCode = params.as && personaCodes.includes(params.as) ? params.as : savedCode && personaCodes.includes(savedCode) ? savedCode : tenant.defaultPersona;
-  setPrefs({ lastTenant: slug, personaByTenant: { ...(prefs.personaByTenant ?? {}), [slug]: roleCode } });
-
-  const person = tenant.people.find((p) => p.roleCode === roleCode && p.persona) ?? tenant.people.find((p) => p.roleCode === roleCode)!;
-  const role = tenant.roles.find((r) => r.code === roleCode)!;
-  const bundles = (Object.entries(tenant.permissionBundles) as [PermissionBundle, string[]][]).filter(([, codes]) => codes.includes(roleCode)).map(([b]) => b);
-  const persona: Persona = { memberId: person.id, roleCode, role: role.platformRole, unitId: person.unitId, displayName: person.displayName, bundles };
-
   const today = isDate(params.today) ? params.today : tenant.demoToday;
   const clock = createClock(today);
   const emptyMode = params.empty === "1";
@@ -67,6 +58,12 @@ function boot(buildSeeds: (o: BuildSeedOptions) => SeedRegistry): Boot {
 
   const seeds = buildSeeds({ tenant, today, emptyMode });
   const store = new MemoryStore(seeds, { key: opsKey(tenant.tenantId), seedVersion: tenant.seedVersion, persist });
+
+  // 누구로 보기: 구성원 관리에서 바꾼 역할·상태(members 행)를 따라요 — 비활성 구성원은 고를 수 없고, 역할은 저장된 값(리뷰 3차)
+  const persona = resolvePersona(tenant, (id) => store.find("members", id) as MemberState | undefined, { as: params.as, saved: prefs.personaByTenant?.[slug] });
+  const roleCode = persona.roleCode;
+  setPrefs({ lastTenant: slug, personaByTenant: { ...(prefs.personaByTenant ?? {}), [slug]: roleCode } });
+  const role = tenant.roles.find((r) => r.code === roleCode)!;
   const enabledRef = { current: resolveModules(tenant, readOverrides(store)).enabled };
   const policy = new Policy({ tenant, persona, enabled: () => enabledRef.current }, store);
   const dataProvider = createMemoryDataProvider({ tenant, persona, clock, seeds, store, policy, latencyMs });

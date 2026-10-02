@@ -56,12 +56,14 @@
 
 ## 남은 것 (있으면 좋음, 이번에 안 함)
 
-- **첫 화면 JS(gzip, 2026-10-02 리뷰 2차 측정):** 홈 `/` 첫 화면 **445KB**(TR 1440·390 모두 444.9KB, CRATA 444.5KB, 파일 56개)로 목표 450KB 안이에요.
+- **첫 화면 JS(gzip, 2026-10-02 리뷰 3차 측정):** 홈 `/` 첫 화면 **449KB**(TR 공장장 449.1KB, TR 대표 449.5KB, CRATA 448.8~449.3KB)로 목표 450KB 안이지만 여유가 1KB 남짓이에요. 목록 화면 깊은 링크: `/work` 549.5KB · `/docs` 550.5KB · `/ops/quality` 552.6KB · `/meetings` 549.0KB(리뷰 3차 전 580·544·593·590KB).
+  - 지키는 것: `tests/e2e/smoke.spec.ts` '첫 화면 JS 예산'(홈 450KB · 목록 560KB). 넘으면 스모크가 실패해요.
+  - 리뷰 3차에서 고친 것: 업무·프로젝트·공지·회의 추가 서랍과 품질 부적합·4M 탭, 모바일 사용자 시트·메뉴 서랍을 처음 열 때 불러와요(`src/lib/lazyDrawer.tsx`). 날짜 선택(`date-picker-*.js` 33KB)이 목록 첫 화면에서 빠졌어요.
   - 측정: `vite preview` + Playwright로 `/?latency=0` 첫 화면에서 받은 JS 응답 본문을 gzip해서 더함(`[data-page-ready]` 뒤 0.8초까지).
   - 리뷰 1차 뒤 531KB였던 까닭: 홈이 `@/components` 창구에서 카드·차트만 가져와도 창구가 표·필터·보드·서랍(rc-table, `@refinedev/antd` useTable)까지 끌고 와 `components-*.js`(96KB)를 받았어요.
   - 고친 것: `vite.config.ts`의 `treeshake.moduleSideEffects`에서 `src/components/*`를 부작용 없는 모듈로 봐요. 이제 안 쓰는 부품은 창구에서 빠지고, 표 묶음(`table-*.js` 58KB)은 목록 화면에서만 받아요.
   - 해 본 것: `codeSplitting.groups`에 표 전용 그룹을 더하면 rolldown이 그룹의 의존성(antd·refine)까지 끌어와 353KB 한 덩어리가 돼서 뺐어요.
-  - 남은 지렛대: 시드 묶음(`seed-*.js`, 89KB)은 두 테넌트 데이터를 늘 함께 받아요. 테넌트별로 나누면 40KB쯤 더 줄어요(그룹 시드 파일 구조를 바꿔야 해서 이번엔 안 함).
+  - 남은 지렛대(다음에 꼭): 시드 묶음(`seed-*.js`, 90KB)은 두 테넌트 데이터를 늘 함께 받아요. 테넌트별로 나누면 40KB쯤 더 줄어 홈 여유가 생겨요(그룹 시드 파일 5개를 데이터 모듈과 동작 모듈로 나눠야 해서 이번엔 안 함).
 - **필드 추가 요청:** `Task.done_criteria`, `Submission.link_url`(work), `ApprovalLink.approval_line`, `ArtifactVersion.via_client`(collab). 지금은 그룹이 임시 저장 방식을 쓰고 있어요(각 notes 참고).
 - **공통 승격 후보:** 같은 모양의 KeyValue가 세 그룹에 따로 있어요(work `.wk-kv`, collab `KeyValue`, ara `KeyValue`/`.as-kv`). 그 밖에 `SimpleTable`/`ResponsiveTable`, `useFadeOut`, `ListRow` 제목의 ReactNode 허용, industry `kit/labels.ts`의 상태 도메인 9개를 `status.ts`로 옮기는 일이 남았어요.
 - **`my-profile`의 `rpc:list_my_activity` 우회:** 리뷰 1차에서 지웠어요(정책의 'own' 바닥 권한으로 목록을 바로 읽어요).

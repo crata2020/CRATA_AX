@@ -16,7 +16,9 @@ import { formatDate } from "@/lib/format";
 import { optionsOf, statusOf } from "@/lib/status";
 import type { Part, Project } from "@/types/entities";
 import { STACK_STYLE, useStructure } from "../task-detail/lib";
-import { ProjectFormDrawer } from "./ProjectFormDrawer";
+import { lazyDrawer } from "@/lib/lazyDrawer";
+
+const ProjectFormDrawer = lazyDrawer(() => import("./ProjectFormDrawer").then((m) => m.ProjectFormDrawer));
 import "../task-detail/work.css";
 
 export default function Page() {

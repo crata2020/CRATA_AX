@@ -118,7 +118,7 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
   const initialSorters: CrudSort[] = urlSort && urlSort.includes(":")
     ? [{ field: urlSort.split(":")[0]!, order: urlSort.split(":")[1] === "desc" ? "desc" : "asc" }]
     : sorters ?? [];
-  const { tableProps, tableQuery, currentPage, setCurrentPage, sorters: curSorters, result, searchFormProps } = useTable<T>({
+  const { tableProps, tableQuery, currentPage, setCurrentPage, sorters: curSorters, setSorters, result, searchFormProps } = useTable<T>({
     resource,
     syncWithLocation: false,
     pagination: { pageSize, currentPage: urlPage },
@@ -158,6 +158,15 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
     wrote.current = { ...wrote.current, page: urlPage };
     setCurrentPage(urlPage);
   }, [urlPage]);
+  // URL → 정렬(같은 화면 안 링크로 ?sort=가 바뀌거나 빠진 경우. 빠지면 기본 정렬로)
+  useEffect(() => {
+    if (!syncWithLocation) return;
+    const s = urlSort ?? "";
+    if (s === wrote.current.sort) return;
+    wrote.current = { ...wrote.current, sort: s };
+    const [field, order] = s.split(":");
+    setSorters(field && order ? [{ field, order: order === "desc" ? "desc" : "asc" }] : sorters ?? []);
+  }, [urlSort]);
   // useTable이 만든 검색 폼을 화면 요소 없이 연결만 해 둡니다.
   // (연결이 없으면 syncWithLocation 첫 화면에서 antd "useForm is not connected" 콘솔 오류가 나요.)
   const wrap = (content: ReactNode) => <><Form form={searchFormProps.form} component={false} />{content}</>;

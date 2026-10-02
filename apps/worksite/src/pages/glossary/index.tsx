@@ -3,9 +3,9 @@
 // owner·admin만 [화면 표기 고치기](서랍, rpc:set_glossary_label → tenant_settings.overrides.glossary).
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Button, Input, Tooltip } from "antd";
+import { Button, Input } from "antd";
 import { EditOutlined } from "@ant-design/icons";
-import { DataTable, DetailDrawer, FilterBar, PageHeader, SectionCard, StatusTag, useFilterBarState, type FilterBarProps } from "@/components";
+import { DataTable, DetailDrawer, FilterBar, PageHeader, SectionCard, StatusTag, useFilterBarState, type FilterBarProps, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
 import { useList, useRpc, type CrudFilter } from "@/lib/refine";
@@ -121,7 +121,7 @@ export default function Page() {
                   <div className="cb-row__actions">
                     {canEdit
                       ? <Button size="small" icon={<EditOutlined aria-hidden />} onClick={() => setSelected(`key:${r.key}`)}>고치기</Button>
-                      : <Tooltip title="화면 이름은 관리자가 고칠 수 있어요"><span tabIndex={0}><Button size="small" disabled>고치기</Button></span></Tooltip>}
+                      : <DisabledAction label="고치기" reason={"화면 이름은 관리자가 고칠 수 있어요"}><Button size="small" disabled>고치기</Button></DisabledAction>}
                   </div>
                 </div>
               </li>

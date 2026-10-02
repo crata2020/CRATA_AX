@@ -44,16 +44,16 @@ export function DdayBadge({ date, noun = "마감", done }: { date: string | null
 }
 
 const SENS_LABEL = { L0: "공개", L1: "내부", L2: "고객 비밀" } as const;
-/** 데이터 등급 표시. L2(고객 비밀)만 자물쇠 + "국내에서만 처리해요" 툴팁 */
+/** 데이터 등급 표시. L2(고객 비밀)만 자물쇠 + 툴팁 "AI 꺼짐(국내 경로 개통 전)" — 국내 처리 경로가 아직 없어서 AI 기능을 쓰지 않아요 */
 export function SensitivityTag({ level }: { level: "L0" | "L1" | "L2" }) {
   const tag = (
     <span className="ws-tag">
       {level === "L2" && <LockOutlined aria-hidden />}
       {SENS_LABEL[level]}
-      {level === "L2" && <span className="ws-sr-only"> · 국내에서만 처리해요</span>}
+      {level === "L2" && <span className="ws-sr-only"> · AI 꺼짐(국내 경로 개통 전)</span>}
     </span>
   );
-  return level === "L2" ? <Tooltip title="고객 비밀 정보라 국내에서만 처리해요(해외 AI로 보내지 않아요)">{tag}</Tooltip> : tag;
+  return level === "L2" ? <Tooltip title="고객 비밀 · AI 꺼짐(국내 경로 개통 전). 해외 AI로 보내지 않아요">{tag}</Tooltip> : tag;
 }
 
 const AI_LABEL = { draft: "AI 초안", summary: "AI 요약", submitted: "AI 연결로 제출" } as const;
@@ -130,5 +130,15 @@ export function CountBadge({ count, label }: { count: number | undefined; label?
       <span aria-hidden>{count > 99 ? "99+" : count}</span>
       <span className="ws-sr-only">{label ? `${label} ${count}건` : `${count}건`}</span>
     </span>
+  );
+}
+
+/** 비활성 동작 + 이유(툴팁). 비활성 버튼은 초점을 못 받으니 감싼 span이 Tab 정지점이 되고,
+ *  스크린리더는 "{label}: {reason}"(비활성)으로 읽어요 — 이유 없이 이름 없는 정지점만 생기던 문제(리뷰 3차) */
+export function DisabledAction({ label, reason, children }: { label: string; reason: string; children: ReactNode }) {
+  return (
+    <Tooltip title={reason}>
+      <span tabIndex={0} role="button" aria-disabled="true" aria-label={`${label}: ${reason}`} className="ws-disabled-action">{children}</span>
+    </Tooltip>
   );
 }

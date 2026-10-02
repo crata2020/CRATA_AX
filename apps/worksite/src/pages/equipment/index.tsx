@@ -3,10 +3,10 @@
 // 동작: [이상 없음] → equipment_checks 생성 · [이상 있음] → 현장 등록(kind=equipment) · [수리 완료](검토자) → rpc:repair_breakdown(등록자에게 알림)
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Button, Form, Input, Tooltip } from "antd";
+import { Button, Form, Input } from "antd";
 import { CheckOutlined, ToolOutlined, WarningOutlined } from "@ant-design/icons";
 import {
-  DataTable, DdayBadge, DetailDrawer, Divider, EmptyState, FilterBar, PageHeader, PersonChip, SectionCard, StatusTag, Timeline, useFilterBarState, type FilterBarProps, type TimelineItem,
+  DataTable, DdayBadge, DetailDrawer, Divider, EmptyState, FilterBar, PageHeader, PersonChip, SectionCard, StatusTag, Timeline, useFilterBarState, type FilterBarProps, type TimelineItem, DisabledAction,
 } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
@@ -199,7 +199,7 @@ function TodayChecks({ equipment }: { equipment: Equipment[] }) {
                       <Button icon={<WarningOutlined />} onClick={() => nav(`/ops/report?kind=equipment&equipment=${e.id}`)}>이상 있음</Button>
                     </>
                   ) : (
-                    <Tooltip title={canCheck.reason}><span tabIndex={0}><Button disabled>이상 없음</Button></span></Tooltip>
+                    <DisabledAction label="이상 없음" reason={canCheck.reason ?? "지금은 기록할 수 없어요"}><Button disabled>이상 없음</Button></DisabledAction>
                   )}
                 </div>
               </li>

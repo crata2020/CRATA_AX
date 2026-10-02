@@ -83,8 +83,8 @@ function PrefsCard({ scope, title, caption, initial, kinds }: { scope: "me" | "c
           <span className="wh-prefs__head" role="columnheader">종류</span>
           <span className="wh-prefs__head" role="columnheader">사이트</span>
           {/* 연동 전 채널은 머리에 '연동 전' 태그 하나만 두고 칸은 비워요(끈 스위치 26개가 화면을 무겁게 했어요) */}
-          <span className="wh-prefs__head" role="columnheader">메신저 <span className="ws-tag wh-prefs__soon">연동 전</span></span>
-          <span className="wh-prefs__head" role="columnheader">메일 <span className="ws-tag wh-prefs__soon">연동 전</span></span>
+          <span className="wh-prefs__head wh-prefs__head--ext" role="columnheader">메신저 <span className="ws-tag wh-prefs__soon">연동 전</span></span>
+          <span className="wh-prefs__head wh-prefs__head--ext" role="columnheader">메일 <span className="ws-tag wh-prefs__soon">연동 전</span></span>
         </div>
         {kinds.map((k) => {
           const label = labelOf("notifications.kind", k);

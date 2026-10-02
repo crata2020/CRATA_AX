@@ -3,8 +3,8 @@
 // TR 양식은 모두 "진단에서 수집할 양식"(파일 링크 없음, 초안)이라 게시 버튼이 꺼져 있어요.
 import { useMemo } from "react";
 import { Link } from "react-router";
-import { Button, Tooltip } from "antd";
-import { Banner, DataTable, DetailDrawer, FilterBar, PageHeader, PersonChip, StatusTag, useFilterBarState, type FilterBarProps } from "@/components";
+import { Button } from "antd";
+import { Banner, DataTable, DetailDrawer, FilterBar, PageHeader, PersonChip, StatusTag, useFilterBarState, type FilterBarProps, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { useList, useRpc } from "@/lib/refine";
 import { useSelectedParam } from "@/lib/url";
@@ -45,9 +45,9 @@ export default function Page() {
 
   const publishBtn = current && current.status !== "active" && (
     !canPublish ? (
-      <Tooltip title="양식 게시는 검토자가 할 수 있어요"><span tabIndex={0}><Button disabled>게시하기</Button></span></Tooltip>
+      <DisabledAction label="게시하기" reason={"양식 게시는 검토자가 할 수 있어요"}><Button disabled>게시하기</Button></DisabledAction>
     ) : !current.file_ref ? (
-      <Tooltip title="양식 파일 링크가 없어요. 진단에서 양식을 받은 뒤 게시해요"><span tabIndex={0}><Button disabled>게시하기</Button></span></Tooltip>
+      <DisabledAction label="게시하기" reason={"양식 파일 링크가 없어요. 진단에서 양식을 받은 뒤 게시해요"}><Button disabled>게시하기</Button></DisabledAction>
     ) : (
       <Button type="primary" loading={publish.isPending} onClick={() => void publish.run({ templateId: current.id }).then(() => setSelected(null)).catch(() => undefined)}>게시하기</Button>
     )

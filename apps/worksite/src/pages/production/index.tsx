@@ -17,6 +17,8 @@ import "../ops-home/kit/industry.css";
 
 const DOW = ["월", "화", "수", "목", "금", "토"];
 const DEFECTS = ["치수", "찍힘", "코 빠짐", "주름", "감김", "중량", "기타"];
+/** 계획 표의 0은 칸과 같은 '—'(합계 줄에서만 0이 보이던 문제) */
+const dash = (v: number) => (v ? formatNumber(v) : "—");
 
 export default function Page() {
   const { can } = useWorksite();
@@ -60,22 +62,25 @@ function Plan() {
   const table = (rows: typeof groups.knit, unit: string, label: string) => {
     const totals = days.map((_, i) => rows.reduce((t, r) => t + (r.vals[i] ?? 0), 0));
     return (
-      <div className="in-scroll">
+      // 좁은 화면에서 옆으로 밀어 볼 수 있게 키보드 초점을 받는 영역(axe scrollable-region-focusable)
+      <div className="in-scroll" tabIndex={0} role="region" aria-label={`${label} 이번 주 계획(${unit}), 옆으로 밀어 보기`}>
         <table className="in-plan" aria-label={`${label} 이번 주 계획(${unit})`}>
+          {/* 두 표(편조·가공)의 요일 칸이 위아래로 맞게 같은 칸 너비 */}
+          <colgroup><col className="in-plan__item" />{days.map((d) => <col key={d} className="in-plan__day" />)}<col className="in-plan__sum" /></colgroup>
           <thead>
             <tr><th scope="col">품목</th>{days.map((d, i) => <th key={d} scope="col">{DOW[i]} {formatDate(d, false).replace("월 ", "/").replace("일", "")}</th>)}<th scope="col">합계</th></tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.item}>
-                <td><span className="ws-cell-name">{lk.item.get(r.item)?.item_no ?? "—"}</span> <span className="in-caption">{lk.item.get(r.item)?.name}</span></td>
-                {r.vals.map((v, i) => <td key={i}>{v ? formatNumber(v) : "—"}</td>)}
-                <td className="in-strong">{formatNumber(r.total)}</td>
+                <td title={`${lk.item.get(r.item)?.item_no ?? ""} ${lk.item.get(r.item)?.name ?? ""}`}><span className="ws-cell-name">{lk.item.get(r.item)?.item_no ?? "—"}</span> <span className="in-caption">{lk.item.get(r.item)?.name}</span></td>
+                {r.vals.map((v, i) => <td key={i}>{dash(v)}</td>)}
+                <td className="in-strong">{dash(r.total)}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
-            <tr><td>합계({unit})</td>{totals.map((t, i) => <td key={i}>{formatNumber(t)}</td>)}<td>{formatNumber(totals.reduce((a, b) => a + b, 0))}</td></tr>
+            <tr><td>합계({unit})</td>{totals.map((t, i) => <td key={i}>{dash(t)}</td>)}<td>{dash(totals.reduce((a, b) => a + b, 0))}</td></tr>
           </tfoot>
         </table>
       </div>

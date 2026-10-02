@@ -42,6 +42,7 @@ export default function Page() {
   const editing = mode === "edit" && !!current;
   const partnerName = (id: string) => partnerById.get(id)?.name ?? "—";
 
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
   return (
     <>
       <PageHeader
@@ -69,8 +70,9 @@ export default function Page() {
           { key: "partner_id", title: "거래처", render: (c) => <Link className="in-link" to={`/projects/partners/${c.partner_id}`}>{partnerName(c.partner_id)}</Link> },
           { key: "dept", title: "부서" },
           { key: "title", title: "직함" },
-          { key: "email", title: "메일", render: (c) => <CopyField value={c.email} label="메일 주소" />, width: 260 },
-          { key: "phone", title: "전화", render: (c) => (c.phone ? <CopyField value={c.phone} label="전화번호" /> : "—"), width: 180 },
+          // 구성원 화면과 같은 아이콘 복사 버튼(칸 오른쪽 끝에 맞춰 줄마다 같은 자리) · 줄 클릭(상세)과 겹치지 않게 전파를 막아요
+          { key: "email", title: "메일", render: (c) => <span onClick={stop} onKeyDown={stop}><CopyField value={c.email} label="메일 주소" iconOnly /></span>, width: 260 },
+          { key: "phone", title: "전화", render: (c) => (c.phone ? <span onClick={stop} onKeyDown={stop}><CopyField value={c.phone} label="전화번호" iconOnly /></span> : "—"), width: 168 },
           { key: "is_primary", title: "주 담당", render: (c) => (c.is_primary ? <span className="ws-tag ws-tag--brand">주 담당</span> : "—") },
         ]}
         mobileRow={(c) => ({

@@ -54,6 +54,8 @@ export default function Page() {
   const pendingSegs = segList.filter((s) => s.review_status === "pending" || s.review_status === "unclassified").length;
   const canAct = perms.canReviewMeetings;
   const supersededBy = (d: Decision) => decList.find((x) => x.supersedes_id === d.id);
+  /** 고객 비밀(L2) 회의: 국내 처리 경로가 열리기 전까지 AI 요약·분류 꺼짐 */
+  const l2 = m.sensitivity === "L2";
 
   const tabs = [
     { key: "summary", label: "요약", to: "?tab=summary" },
@@ -82,7 +84,7 @@ export default function Page() {
       />
 
       {tab === "summary" && (
-        <SectionCard title="요약" actions={m.summary ? <AiTag kind="summary" /> : undefined}>
+        <SectionCard title="요약" actions={m.summary ? (l2 ? <span className="ws-tag">사람이 쓴 요약</span> : <AiTag kind="summary" />) : undefined}>
           {m.status === "scheduled" ? <p className="wk-body-2">아직 열리지 않은 회의예요. 회의가 끝나면 요약과 구간 분류가 여기에 모여요.</p>
             : m.summary ? <p className="wk-body">{m.summary}</p> : <p className="wk-caption">요약이 없어요.</p>}
           <dl className="wk-kv" style={{ marginTop: 20 }}>
@@ -102,16 +104,16 @@ export default function Page() {
             <dt>확인 대기</dt>
             <dd className="ws-tabular">구간 {pendingSegs} · 결정 {decList.filter((d) => d.status === "proposed").length} · 액션 {apList.filter((a) => a.status === "proposed").length}</dd>
           </dl>
-          {m.sensitivity === "L2" && <p className="wk-caption" style={{ marginTop: 12 }}>L2 회의예요. 참석자와 프로젝트 참여자만 볼 수 있고, 국내 경로에서만 처리해요.</p>}
+          {l2 && <p className="wk-caption" style={{ marginTop: 12 }}>고객 비밀(L2) 회의예요. 참석자와 프로젝트 참여자만 볼 수 있어요. 국내 처리 경로가 열리기 전까지 AI 요약·분류는 꺼져 있어서 사람이 정리했어요.</p>}
         </SectionCard>
       )}
 
       {tab === "segments" && (
-        <SectionCard title="구간 분류" caption={canAct ? "신뢰도 85% 이상은 자동 분류, 60~84%는 확인 필요, 그 아래는 미분류예요." : "검토자가 분류를 확인해요. 구성원은 읽기만 해요."}>
+        <SectionCard title="구간 분류" caption={l2 ? "고객 비밀(L2) 회의라 AI 분류가 꺼져 있어요(국내 경로 개통 전). 사람이 분류했어요." : canAct ? "신뢰도 85% 이상은 자동 분류, 60~84%는 확인 필요, 그 아래는 미분류예요." : "검토자가 분류를 확인해요. 구성원은 읽기만 해요."}>
           {segs.query.isLoading ? <Skeleton active paragraph={{ rows: 4 }} title={false} />
             : segList.length ? (
               <ul className="wk-rows" aria-label="구간">
-                {segList.map((s) => <SegmentRow key={s.id} seg={s} st={st} canAct={canAct} onCorrect={setCorrecting} />)}
+                {segList.map((s) => <SegmentRow key={s.id} seg={s} st={st} canAct={canAct} onCorrect={setCorrecting} aiOff={l2} />)}
               </ul>
             ) : <EmptyState kind="empty" compact headingLevel={3} title="구간 분류가 아직 없어요" description={m.status === "scheduled" ? "회의가 끝나면 분류돼요." : undefined} />}
         </SectionCard>

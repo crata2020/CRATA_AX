@@ -3,9 +3,9 @@
 // 탭 ?tab=: classified(분류됨) · suggestions(후속 업무 제안) · unclassified(미분류). 모든 역할이 본인 메일만 봅니다(공급자가 거름).
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { Button, Select, Switch, Tooltip } from "antd";
+import { Button, Select, Switch } from "antd";
 import { ApiOutlined, LockOutlined } from "@ant-design/icons";
-import { Banner, CardGrid, DataTable, EmptyState, PageHeader, SectionCard, StatusTag } from "@/components";
+import { Banner, CardGrid, DataTable, EmptyState, PageHeader, SectionCard, StatusTag, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
 import { useList, useRpc, useUpdate } from "@/lib/refine";
@@ -90,7 +90,7 @@ export default function Page() {
               secondaryAction={demoMailPersona ? { label: `예시 메일 보기: ${demoMailPersona.displayName}로 바꾸기`, onClick: () => switchPersona(demoMailPersona.roleCode) } : undefined}
             />
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <Tooltip title="메일 연결은 2단계에서 열려요"><span tabIndex={0}><Button disabled icon={<ApiOutlined aria-hidden />}>메일 연결하기</Button></span></Tooltip>
+              <DisabledAction label="}>메일 연결하기" reason={"메일 연결은 2단계에서 열려요"}><Button disabled icon={<ApiOutlined aria-hidden />}>메일 연결하기</Button></DisabledAction>
             </div>
           </SectionCard>
           {policyCard}
@@ -129,7 +129,7 @@ export default function Page() {
               </span>
             </div>
             <div className="cb-row__actions">
-              <Tooltip title="데모에서는 연결을 끊지 않아요"><span tabIndex={0}><Button disabled>연결 끊기</Button></span></Tooltip>
+              <DisabledAction label="연결 끊기" reason={"데모에서는 연결을 끊지 않아요"}><Button disabled>연결 끊기</Button></DisabledAction>
             </div>
           </div>
         </SectionCard>
@@ -156,7 +156,7 @@ export default function Page() {
                         <Button disabled={!!busy} onClick={() => void dismiss(l)}>건너뛰기</Button>
                         {l.project_id
                           ? <Button type="primary" disabled={!!busy} loading={busy === l.id && createTask.isPending} onClick={() => void accept(l)}>업무로 만들기</Button>
-                          : <Tooltip title="먼저 미분류 탭에서 프로젝트를 골라 주세요"><span tabIndex={0}><Button type="primary" disabled>업무로 만들기</Button></span></Tooltip>}
+                          : <DisabledAction label="업무로 만들기" reason={"먼저 미분류 탭에서 프로젝트를 골라 주세요"}><Button type="primary" disabled>업무로 만들기</Button></DisabledAction>}
                       </div>
                     </div>
                   </li>

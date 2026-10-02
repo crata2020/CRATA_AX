@@ -2,10 +2,10 @@
 // CRM 라이트의 Quotes: 견적 목록과 발송 처리(검토자 이상: 작성 중 → 발송). 견적서는 산출물이라 고친 내용이 작성 규칙 후보로 쌓여요.
 import { useMemo } from "react";
 import { Link } from "react-router";
-import { Button, Tooltip } from "antd";
+import { Button } from "antd";
 import { FileTextOutlined, SendOutlined } from "@ant-design/icons";
 import {
-  AiTag, DataTable, DdayBadge, DetailDrawer, Divider, EmptyState, FilterBar, PageHeader, PriceGate, StatusTag, useFilterBarState, type FilterBarProps,
+  AiTag, DataTable, DdayBadge, DetailDrawer, Divider, EmptyState, FilterBar, PageHeader, PriceGate, StatusTag, useFilterBarState, type FilterBarProps, DisabledAction,
 } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { useUpdate, type CrudFilter } from "@/lib/refine";
@@ -100,7 +100,7 @@ export default function Page() {
         footer={current?.status === "draft" ? (
           approve.can
             ? <Button type="primary" icon={<SendOutlined />} loading={mutation.isPending} onClick={() => void send(current)}>발송 처리하기</Button>
-            : <Tooltip title="발송 처리는 검토자 이상이 해요"><span tabIndex={0}><Button type="primary" icon={<SendOutlined />} disabled>발송 처리하기</Button></span></Tooltip>
+            : <DisabledAction label="} disabled>발송 처리하기" reason={"발송 처리는 검토자 이상이 해요"}><Button type="primary" icon={<SendOutlined />} disabled>발송 처리하기</Button></DisabledAction>
         ) : undefined}
       >
         {quotes.isLoading ? null : current ? (

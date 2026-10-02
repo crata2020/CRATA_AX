@@ -29,8 +29,17 @@ export function ClassPath({ seg, st }: { seg: Pick<MeetingSegment, "business_lin
 }
 
 /** 신뢰도 표시: 확인을 마친 구간은 확인됨·고침, 아니면 자동 분류·확인 필요·미분류 + 숫자 */
-export function ConfidenceTag({ seg }: { seg: Pick<MeetingSegment, "confidence" | "review_status"> }) {
+export function ConfidenceTag({ seg, aiOff }: { seg: Pick<MeetingSegment, "confidence" | "review_status">; aiOff?: boolean }) {
   const reviewed = seg.review_status === "confirmed" || seg.review_status === "corrected";
+  // L2(고객 비밀) 회의는 국내 처리 경로가 열리기 전까지 AI 분류가 꺼져 있어요 → 사람이 분류한 것으로만 보여 줘요(신뢰도 없음)
+  if (aiOff) {
+    return (
+      <span className="ws-row" style={{ gap: 6 }}>
+        <StatusTag {...(reviewed ? statusOf("meeting_segments.review_status", seg.review_status) : { tone: "neutral" as const, label: "사람이 분류" })} />
+        <span className="wk-time">AI 분류 꺼짐(L2)</span>
+      </span>
+    );
+  }
   const info = reviewed ? statusOf("meeting_segments.review_status", seg.review_status) : confidenceInfo(seg.confidence, seg.review_status);
   return (
     <span className="ws-row" style={{ gap: 6 }}>
@@ -130,7 +139,7 @@ export interface RowCommon {
   meetingLabel?: ReactNode;
 }
 
-export function SegmentRow({ seg, st, canAct, onDone, fading, meetingLabel, onCorrect }: RowCommon & { seg: MeetingSegment; st: Structure; onCorrect: (s: MeetingSegment) => void }) {
+export function SegmentRow({ seg, st, canAct, onDone, fading, meetingLabel, onCorrect, aiOff }: RowCommon & { seg: MeetingSegment; st: Structure; onCorrect: (s: MeetingSegment) => void; aiOff?: boolean }) {
   const { run, isPending } = useRpc("confirm_segment", { successMessage: "분류를 확인했어요" });
   const reviewed = seg.review_status === "confirmed" || seg.review_status === "corrected";
   const open = !reviewed && seg.review_status !== "auto";
@@ -145,7 +154,7 @@ export function SegmentRow({ seg, st, canAct, onDone, fading, meetingLabel, onCo
         <blockquote className="wk-quote">{seg.evidence_quote}</blockquote>
       </div>
       <div className="wk-row__actions">
-        <ConfidenceTag seg={seg} />
+        <ConfidenceTag seg={seg} aiOff={aiOff} />
         {canAct && !fading && (open || seg.review_status === "auto") && (
           <>
             <Button size="small" onClick={() => onCorrect(seg)}>고치기</Button>

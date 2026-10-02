@@ -158,7 +158,13 @@ html .in-cell[data-tone]:focus-visible, html button.in-cell:focus-visible { outl
 .in-kcard-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; line-height: 20px; color: var(--ws-ink-2); font-variant-numeric: tabular-nums; }
 
 /* 작은 표(표 아닌 칸) */
-.in-plan { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 22px; font-variant-numeric: tabular-nums; }
+.in-plan { width: 100%; min-width: 860px; table-layout: fixed; border-collapse: collapse; font-size: 14px; line-height: 22px; font-variant-numeric: tabular-nums; }
+.in-plan__item { width: 380px; }
+.in-plan__day { width: 88px; }
+.in-plan__sum { width: 96px; }
+.in-plan td:first-child { overflow: hidden; text-overflow: ellipsis; }
+html .in-scroll:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: 8px; }
+@media (max-width: 767px) { .in-plan { min-width: 760px; } .in-plan__item { width: 220px; } }
 .in-plan th { text-align: right; font-weight: 600; color: var(--ws-ink-2); border-bottom: 1px solid var(--ws-line); padding: 8px; white-space: nowrap; }
 .in-plan th:first-child, .in-plan td:first-child { text-align: left; }
 .in-plan td { text-align: right; padding: 8px; border-bottom: 1px solid var(--ws-line); white-space: nowrap; }

@@ -16,7 +16,7 @@ import type { McpConnection, Member, RowOf, SeedRow, TenantOverrides } from "@/t
 import type { PlatformRole } from "@/tenants/types";
 import type { ModuleId } from "@/modules/registry.generated";
 import { LOCKED_MODULES, MODULE_BY_ID, resolveModules } from "@/modules";
-import { addDays, kstIso } from "@/lib/clock";
+import { addDays, isOffDay, kstIso, toKstDate } from "@/lib/clock";
 import { checkBrand, deriveTenantTheme } from "@/theme/derive";
 import { CHART_ACCENT_CHOICES } from "@/theme/tokens";
 
@@ -114,8 +114,8 @@ function seed(ctx: SeedContext): SeedOutput {
       ["mcp-cr-02", "m-cr-edu-lead", "ChatGPT", -28, 3],
       ["mcp-cr-03", "m-cr-edu-1", "Claude", -36, 3],
       ["mcp-cr-04", "m-cr-ara-1", "Codex", -21, 3],
-      ["mcp-cr-05", "m-cr-ara-lead", "ChatGPT", -25, 3],
-      ["mcp-cr-06", "m-cr-edu-1", "ChatGPT", -52, 3, -29],
+      ["mcp-cr-05", "m-cr-ara-lead", "ChatGPT", -23, 3],
+      ["mcp-cr-06", "m-cr-edu-1", "ChatGPT", -51, 3, -29],
     ]
     : [
       ["mcp-tr-01", "m-tr-qa", "Claude", -22, 3],
@@ -125,7 +125,7 @@ function seed(ctx: SeedContext): SeedOutput {
     ];
   const FALLBACK_USE: Record<string, [number, string]> = {
     "mcp-cr-01": [0, "08:12"], "mcp-cr-02": [-3, "16:20"], "mcp-cr-03": [0, "08:40"], "mcp-cr-04": [-1, "21:05"], "mcp-cr-05": [-2, "11:30"], "mcp-cr-06": [-31, "15:10"],
-    "mcp-tr-01": [0, "07:55"], "mcp-tr-02": [-1, "17:40"], "mcp-tr-03": [-2, "10:05"], "mcp-tr-04": [-1, "07:30"],
+    "mcp-tr-01": [-1, "17:30"], "mcp-tr-02": [-1, "17:40"], "mcp-tr-03": [-2, "10:05"], "mcp-tr-04": [-1, "07:30"],
   };
   const mcp_connections = (): Row<"mcp_connections">[] => {
     const uses = aiUses(ctx);
@@ -148,15 +148,16 @@ function seed(ctx: SeedContext): SeedOutput {
   const invitations: Row<"invitations">[] = cr
     ? [{ id: "inv-cr-01", email: "new.edu.staff@example.com", role: "member", org_unit_id: "U_EDU", invited_by: "m-cr-ops", expires_at: ctx.at(5, "23:59"), status: "pending", created_by: "m-cr-ops", created_at: ctx.at(-2, "14:20") }]
     : [
-      { id: "inv-tr-01", email: "tr.op.g@example.com", role: "member", org_unit_id: "U_SALES_PROD", invited_by: "m-tr-admin", expires_at: ctx.at(4, "23:59"), status: "pending", created_by: "m-tr-admin", created_at: ctx.at(-3, "11:05") },
+      { id: "inv-tr-01", email: "tr.op.g@example.com", role: "member", org_unit_id: "U_SALES_PROD", invited_by: "m-tr-admin", expires_at: ctx.at(5, "23:59"), status: "pending", created_by: "m-tr-admin", created_at: ctx.at(-2, "11:05") },
       { id: "inv-tr-02", email: "tr.op.h@example.com", role: "member", org_unit_id: "U_SALES_PROD", invited_by: "m-tr-admin", expires_at: ctx.at(6, "23:59"), status: "pending", created_by: "m-tr-admin", created_at: ctx.at(-1, "15:40") },
     ];
 
   // 역할 부여: 사람마다 1(입사·시작 시) + 최근 7일 변경 2(이전 역할 → 지금 역할)
   const roleOf = (code: string): PlatformRole => ctx.tenant.roles.find((r) => r.code === code)?.platformRole ?? "member";
   const CHANGES: Record<string, { member: string; from: PlatformRole; day: number; time: string }[]> = {
-    "crata-demo": [{ member: "m-cr-ops", from: "member", day: -6, time: "10:30" }, { member: "m-cr-ara-lead", from: "member", day: -4, time: "16:10" }],
-    "tr-technology": [{ member: "m-tr-admin", from: "member", day: -6, time: "09:40" }, { member: "m-tr-qa", from: "member", day: -3, time: "13:20" }],
+    // 일하는 날만(추석 9/24~26·일요일 피함)
+    "crata-demo": [{ member: "m-cr-ops", from: "member", day: -7, time: "10:30" }, { member: "m-cr-ara-lead", from: "member", day: -2, time: "16:10" }],
+    "tr-technology": [{ member: "m-tr-admin", from: "member", day: -7, time: "09:40" }, { member: "m-tr-qa", from: "member", day: -2, time: "13:20" }],
   };
   const changes = CHANGES[ctx.tenant.slug] ?? [];
   const role_assignments: Row<"role_assignments">[] = [];
@@ -241,6 +242,8 @@ function makeAudit(
   const owner = ctx.memberOf("R_CEO");
   const from = ctx.at(-60, "00:00");
   const inWindow = (at: string | null | undefined): at is string => !!at && at >= from && at <= now;
+  // 사람·AI 연결 기록은 일하는 날만 고릅니다(일요일·공휴일, CRATA는 토요일도 쉬어요). 시스템 기록은 날을 가리지 않아요
+  const workday = (at: string) => !isOffDay(toKstDate(at), { saturday: cr });
   const ev = (o: Omit<Ev, "id" | "ip" | "user_agent" | "request_id" | "changes" | "resource_id"> & { resource_id?: string | null; changes?: Ev["changes"] }): Ev => ({
     ip: null, user_agent: null, request_id: null, resource_id: null, changes: null, ...o, id: "",
   });
@@ -279,10 +282,10 @@ function makeAudit(
       pool.push(ev({ at: f.reported_at, actor_id: f.reported_by, actor_type: "member", action: "rpc:create_field_report", resource: "field_reports", resource_id: f.id, changes: { kind: [null, f.kind] } }));
     }
   }
-  const memberEvents = [...must, ...pickSpread(rng, pool.filter((e) => ctx.people.some((p) => p.id === e.actor_id)), Math.max(0, memberQuota - must.length))];
+  const memberEvents = [...must, ...pickSpread(rng, pool.filter((e) => workday(e.at) && ctx.people.some((p) => p.id === e.actor_id)), Math.max(0, memberQuota - must.length))];
 
   // AI 연결 기록: 진행 기록·제출(AI 연결) + 모자라면 업무 시작(start_task)
-  const aiPool: Ev[] = aiUses(ctx).filter((u) => inWindow(u.at)).map((u) => ev({
+  const aiPool: Ev[] = aiUses(ctx).filter((u) => inWindow(u.at) && workday(u.at)).map((u) => ev({
     at: u.at, actor_id: u.member, actor_type: "ai_connection", actor_client: u.client,
     action: u.kind === "log" ? "create" : "rpc:submit_task", resource: u.kind === "log" ? "progress_logs" : "tasks", resource_id: u.kind === "log" ? u.id : u.taskId,
     changes: u.kind === "log" ? { body: [null, clip(u.body)] } : { status: ["in_progress", "submitted"] },
@@ -295,7 +298,7 @@ function makeAudit(
       const conn = active.find((c) => c[1] === t.assignee_id);
       if (!conn || t.status === "todo" || !inWindow(t.created_at)) continue;
       const at = new Date(Date.parse(t.created_at) + 26 * 3_600_000).toISOString();
-      if (!inWindow(at) || at < ctx.at(conn[3], "10:00")) continue;
+      if (!inWindow(at) || !workday(at) || at < ctx.at(conn[3], "10:00")) continue;
       extra.push(ev({ at, actor_id: t.assignee_id, actor_type: "ai_connection", actor_client: conn[2], action: "rpc:start_task", resource: "tasks", resource_id: t.id, changes: { status: ["todo", "in_progress"] } }));
     }
     aiEvents = [...aiEvents, ...pickSpread(rng, extra, quota.ai - aiEvents.length)];
@@ -306,7 +309,8 @@ function makeAudit(
   const meetings = new Map(ctx.get("meetings").map((m) => [m.id, m]));
   for (const s of ctx.get("meeting_segments")) {
     const m = meetings.get(s.meeting_id);
-    if (!m) continue;
+    // L2(고객 비밀) 회의는 AI 자동 분류가 꺼져 있어 시스템 분류 기록이 없어요(사람이 분류)
+    if (!m || m.sensitivity === "L2") continue;
     const at = new Date(Date.parse(m.started_at) + (m.duration_min + 12) * 60_000).toISOString();
     if (inWindow(at)) sysPool.push(ev({ at, actor_id: null, actor_type: "system", action: "create", resource: "meeting_segments", resource_id: s.id, changes: { review_status: [null, "auto"] } }));
   }

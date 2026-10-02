@@ -5,11 +5,11 @@
 // 규칙: owner 지정·해제는 owner만, 마지막 owner는 바꿀 수 없음, admin은 owner를 만들 수 없음(동작 안에서도 다시 확인).
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
-import { App, Button, Form, Input, Select, Tooltip } from "antd";
+import { App, Button, Form, Input, Select } from "antd";
 import { UserAddOutlined } from "@ant-design/icons";
 import {
   CopyField, DataTable, DetailDrawer, EmptyState, FilterBar, PageHeader, PersonChip, StatusTag, Timeline, useConfirm, useFilterBarState,
-  type FilterBarProps,
+  type FilterBarProps, DisabledAction,
 } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { useCreate, useList, useOne, useRpc, useUpdate } from "@/lib/refine";
@@ -64,7 +64,7 @@ function RoleSelect({ m, guard }: { m: Member; guard: (m: Member) => string | nu
       aria-label={`${m.display_name} 플랫폼 역할`}
     />
   );
-  return <span onClick={stop} onKeyDown={stop}>{reason ? <Tooltip title={reason}><span tabIndex={0}>{el}</span></Tooltip> : el}</span>;
+  return <span onClick={stop} onKeyDown={stop}>{reason ? <DisabledAction label={`${m.display_name} 플랫폼 역할`} reason={reason}>{el}</DisabledAction> : el}</span>;
 }
 
 function StatusButton({ m, size = "small" }: { m: Member; size?: "small" | "middle" }) {
@@ -86,7 +86,7 @@ function StatusButton({ m, size = "small" }: { m: Member; size?: "small" | "midd
   };
   const reason = self ? "내 계정은 비활성화할 수 없어요" : ownerBlocked ? "소유자는 소유자만 바꿀 수 있어요" : null;
   const btn = <Button size={size} disabled={!!reason} loading={isPending} onClick={(e) => { e.stopPropagation(); void toggle(); }}>{m.status === "active" ? "비활성화" : "다시 활성화"}</Button>;
-  return <span onClick={stop} onKeyDown={stop}>{reason ? <Tooltip title={reason}><span tabIndex={0}>{btn}</span></Tooltip> : btn}</span>;
+  return <span onClick={stop} onKeyDown={stop}>{reason ? <DisabledAction label={`${m.display_name} ${m.status === "active" ? "비활성화" : "다시 활성화"}`} reason={reason}>{btn}</DisabledAction> : btn}</span>;
 }
 
 function MemberDrawer({ id, onClose }: { id: string | null; onClose: () => void }) {
@@ -305,7 +305,7 @@ function MappingTab() {
             key: "default_role", title: "기본 역할", render: (p) => {
               const lock = p.default_role === "owner" && persona.role !== "owner";
               const el = <Select<PlatformRole> size="small" value={p.default_role} disabled={lock} options={roleOptions(persona.role)} onChange={(v) => void change(p, v)} style={{ minWidth: 104 }} aria-label={`${p.position_or_title} 기본 역할`} />;
-              return lock ? <Tooltip title="소유자 매핑은 소유자만 바꿀 수 있어요"><span tabIndex={0}>{el}</span></Tooltip> : el;
+              return lock ? <DisabledAction label={`${p.position_or_title} 기본 역할`} reason="소유자 매핑은 소유자만 바꿀 수 있어요">{el}</DisabledAction> : el;
             },
           },
           { key: "updated_at", title: "마지막 변경", render: (p) => formatDateTime(p.updated_at) },

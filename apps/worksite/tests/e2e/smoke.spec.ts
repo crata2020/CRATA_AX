@@ -2,6 +2,7 @@
 // 라우트 스모크(빌드 스펙 8.2절): 두 테넌트 × 기본 페르소나 × 매니페스트 63개 경로 × 데스크톱·모바일.
 // 각 화면: console.error·pageerror 0, h1 정확히 1개, [data-demo-badge] 보임, 가로 넘침 없음, 3초 안에 [data-page-ready], 카드 중첩 없음.
 // 다른 페르소나: AS=R_OPERATOR npm run smoke
+import { gzipSync } from "node:zlib";
 import { test, expect } from "@playwright/test";
 import { MANIFEST, samplePath } from "../../src/routes/manifest";
 
@@ -78,4 +79,53 @@ test.describe("키보드 초점 선", () => {
       expect(s.style, `${sel} 초점 선`).not.toBe("none");
     }
   });
+
+  // 리뷰 3차: 정렬 가능한 표 머리(th)·선택 상자·검색칸은 antd 규칙이 초점 선을 지워서 따로 그려요 → Tab으로 차례로 지나며 모두 보이는지
+  test("목록 화면을 Tab으로 지나도 모든 초점에 선이 보임(표 머리·선택 상자·검색칸 포함)", async ({ page }) => {
+    for (const path of ["/work", "/docs"]) {
+      await page.goto(`./?tenant=tr-technology&latency=0&persist=0#${path}`);
+      await page.waitForSelector("[data-page-ready]", { timeout: 3000 });
+      const misses: string[] = [];
+      let sawTh = false;
+      for (let i = 0; i < 45; i += 1) {
+        await page.keyboard.press("Tab");
+        await page.waitForTimeout(220); // antd 표 머리의 transition이 끝난 뒤
+        const r = await page.evaluate(() => {
+          const a = document.activeElement as HTMLElement | null;
+          if (!a || a === document.body) return null;
+          const vis = (el: Element | null) => {
+            if (!el) return false;
+            const st = getComputedStyle(el);
+            return (st.outlineStyle !== "none" && parseFloat(st.outlineWidth) > 0) || (!!st.boxShadow && st.boxShadow !== "none");
+          };
+          return { th: a.tagName === "TH", ok: vis(a) || vis(a.closest(".ant-select, .ant-input-affix-wrapper, .ant-input-number, .ant-picker")), desc: `${a.tagName}.${String(a.className).slice(0, 40)}` };
+        });
+        if (!r) continue;
+        if (r.th) sawTh = true;
+        if (!r.ok) misses.push(r.desc);
+      }
+      expect(sawTh, `${path} 정렬 머리에 Tab이 감`).toBe(true);
+      expect(misses, `${path} 초점 선이 안 보이는 요소`).toEqual([]);
+    }
+  });
+});
+
+// 첫 화면 JS 예산(리뷰 3차): 홈 gzip 450KB, 목록 화면 깊은 링크(서랍·폼은 열 때 불러와요) 560KB.
+// 브라우저가 실제로 받은 .js를 gzip -9로 다시 재서 더해요(notes/INTEGRATION.md 측정법과 같음).
+test.describe("첫 화면 JS 예산", () => {
+  test.use({ viewport: viewports.desktop });
+  for (const [path, limit] of [["/", 450], ["/work", 560], ["/docs", 560], ["/ops/quality", 560]] as const) {
+    test(`${path} gzip ${limit}KB 이하`, async ({ page }) => {
+      const pending: Promise<number>[] = [];
+      page.on("response", (r) => {
+        if (!/\.js($|\?)/.test(r.url())) return;
+        pending.push(r.body().then((b) => gzipSync(b, { level: 9 }).length).catch(() => 0));
+      });
+      await page.goto(`./?tenant=tr-technology&as=R_PLANT_MGR&latency=0&persist=0#${path}`);
+      await page.waitForSelector("[data-page-ready]", { timeout: 5000 });
+      await page.waitForTimeout(800);
+      const kb = (await Promise.all(pending)).reduce((a, b) => a + b, 0) / 1024;
+      expect(kb, `${path} 첫 화면 JS ${kb.toFixed(1)}KB`).toBeLessThanOrEqual(limit);
+    });
+  }
 });

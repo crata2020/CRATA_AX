@@ -99,7 +99,7 @@ export interface Rule extends RowBase {
   scope_level: S<"corrections.scope">; doc_types: S<"artifacts.doc_type">[]; statement: string; evidence_ids: string[]; examples: string[]; compiled_to: string | null;
   approver_id: string | null; status: S<"rules.status">; valid_from: DateStr | null; review_by: DateStr | null; supersedes_id: string | null; stats: { applied: number; overridden: number };
 }
-export interface KnowledgeItem extends RowBase { kind: S<"knowledge_items.kind">; title: string; summary: string; body_ref: string | null; project_id: string | null; owner_id: string; source_ref: string | null; verified_at: DateStr | null; review_by: DateStr | null; status: S<"knowledge_items.status"> }
+export interface KnowledgeItem extends RowBase { kind: S<"knowledge_items.kind">; title: string; summary: string; body_ref: string | null; project_id: string | null; owner_id: string; source_ref: string | null; verified_at: DateStr | null; review_by: DateStr | null; status: S<"knowledge_items.status">; sensitivity: Sensitivity }
 export interface KnowledgeLink extends RowBase { from_type: string; from_id: string; to_type: string; to_id: string; relation: string }
 export interface Notice extends RowBase {
   category: S<"notices.category">; title: string; body: string; author_id: string; audience: { type: "all" | "unit" | "role" | "project"; ids?: string[] };

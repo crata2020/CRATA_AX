@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { Button, Checkbox, Form, Input, Radio, Tooltip } from "antd";
 import { CheckOutlined, PaperClipOutlined, SafetyCertificateOutlined } from "@ant-design/icons";
-import { DdayBadge, DetailDrawer, Divider, EmptyState, Meter, PageHeader, PersonChip, SectionCard, StatusTag } from "@/components";
+import { DdayBadge, DetailDrawer, Divider, EmptyState, Meter, PageHeader, PersonChip, SectionCard, StatusTag, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
 import { useRpc, useUpdate } from "@/lib/refine";
@@ -123,7 +123,7 @@ export default function Page() {
               <span className="in-note">{confirmed ? "이 반기는 대표 확인을 마쳤어요." : checked === rows.rows.length ? "모든 항목을 확인했어요." : `확인 전 항목이 ${rows.rows.length - checked}개 남았어요.`}</span>
               {!confirmed && (checked === rows.rows.length
                 ? <Button type="primary" icon={<SafetyCertificateOutlined />} loading={confirm.isPending} onClick={() => void confirm.run({ half })}>대표 확인하기</Button>
-                : <Tooltip title="모든 항목을 확인하면 켜져요"><span tabIndex={0}><Button type="primary" icon={<SafetyCertificateOutlined />} disabled>대표 확인하기</Button></span></Tooltip>)}
+                : <DisabledAction label="} disabled>대표 확인하기" reason={"모든 항목을 확인하면 켜져요"}><Button type="primary" icon={<SafetyCertificateOutlined />} disabled>대표 확인하기</Button></DisabledAction>)}
             </div>
           ) : (
             <p className="in-caption in-mt">{confirmed ? "대표 확인을 마친 반기예요." : "모든 항목을 확인하면 대표가 최종 확인해요."}{persona.role === "member" ? " 구성원은 읽기만 할 수 있어요." : ""}</p>

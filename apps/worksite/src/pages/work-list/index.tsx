@@ -12,7 +12,9 @@ import { formatDate } from "@/lib/format";
 import { labelOf, optionsOf, statusOf } from "@/lib/status";
 import type { Project, Task } from "@/types/entities";
 import { DUE_OPTIONS, SCOPE_LABEL, STACK_STYLE, dueFilters, isDueToday, useScope, useStructure, useWorkPermissions } from "../task-detail/lib";
-import { TaskFormDrawer } from "../task-detail/TaskFormDrawer";
+import { lazyDrawer } from "@/lib/lazyDrawer";
+
+const TaskFormDrawer = lazyDrawer(() => import("../task-detail/TaskFormDrawer").then((m) => m.TaskFormDrawer));
 import { ViewSwitch } from "../task-detail/ViewSwitch";
 import "../task-detail/work.css";
 

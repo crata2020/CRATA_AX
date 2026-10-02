@@ -127,7 +127,8 @@ function buildNotifications(ctx: SeedContext): SeedRow<Notification>[] {
       add({
         id: `ntf-ds-${t.id}`, recipient: t.assignee_id, kind: "due_soon", title: `"${t.title}" ${diff === 0 ? "오늘" : "내일"} 마감`,
         body: `${projects.get(t.project_id)?.name ?? "프로젝트"} · ${formatTime(t.due_at)}까지`, link: `/work/tasks/${t.id}`, module: "tasks", sourceId: t.id,
-        at: kstIso(today, "08:00"),
+        // 아침 8시 알림. 오늘 만든 업무(예: 08:45 현장 등록에서 온 업무)는 만든 뒤에 알려요
+        at: t.created_at > kstIso(today, "08:00") ? addMinutes(t.created_at, 1) : kstIso(today, "08:00"),
       });
     } else if (diff < 0 && diff >= -14) {
       add({
@@ -813,7 +814,7 @@ W["safety-status"] = (c, q): SafetyStatus | null => {
   const from = month ? `${c.today.slice(0, 7)}-01` : weekStart(c.today);
   const nm = ls(c, "near_miss_reports").filter((n) => toKstDate(n.occurred_at) >= from && toKstDate(n.occurred_at) <= c.today).length;
   const stats: WStat[] = [
-    { label: "개선 필요 위험성평가", value: risks.length, unit: "건", tone: overdue ? "critical" : null, toneLabel: overdue ? `기한 지남 ${overdue}건` : null },
+    { label: "이행 확인 전 위험요인", value: risks.length, unit: "건", tone: overdue ? "critical" : null, toneLabel: overdue ? `기한 지남 ${overdue}건` : null },
   ];
   if (next) {
     const d = daysBetween(c.today, next.due_on);

@@ -11,8 +11,11 @@ import { labelOf, optionsOf, statusOf } from "@/lib/status";
 import type { CorrectiveAction, Gauge, Inspection, Item, Kpi, KpiValue } from "@/types/entities";
 import { useIndex, useModuleRows } from "../ops-home/kit/data";
 import { gaugeStatus } from "../ops-home/kit/labels";
-import { NcTab } from "./NcTab";
-import { FourMTab } from "./FourMTab";
+import { lazyPart } from "@/lib/lazyDrawer";
+
+// 탭을 열 때만 불러와요(폼·날짜 선택 부품이 품질 첫 화면 묶음에 들어가지 않게)
+const NcTab = lazyPart(() => import("./NcTab").then((m) => m.NcTab));
+const FourMTab = lazyPart(() => import("./FourMTab").then((m) => m.FourMTab));
 import "../ops-home/kit/industry.css";
 
 const KPI_IDS = ["K06", "K03", "K04"];

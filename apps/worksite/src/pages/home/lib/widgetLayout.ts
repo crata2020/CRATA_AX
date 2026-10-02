@@ -1,6 +1,6 @@
-// 홈 위젯 배치(소유: home 그룹). 히어로 줄 아래 위젯을 '두 줄기'(왼쪽·오른쪽 세로 묶음)로 나눠요.
+// 홈 위젯 배치(소유: home 그룹). 히어로 줄 아래 위젯을 '두 줄기'(왼쪽·오른쪽 세로 묶음, components/MasonryGrid)로 쌓아요.
 // 카드 높이가 서로 달라도 짧은 카드는 위로 쌓이고(줄 사이 패널 구멍 없음), L 위젯은 두 줄기 사이에 전체 폭으로 끼워요(리뷰 3차).
-// 위젯 파일은 늦게 불러오므로(lazy) 크기·높이 어림값을 여기에 둡니다. 크기는 위젯 파일의 def.size와 같아야 해요(tests/unit/widget-layout.test.ts).
+// 위젯 파일은 늦게 불러오므로(lazy) 크기·첫 그림용 높이 어림값을 여기에 둡니다. 크기는 위젯 파일의 def.size와 같아야 해요(tests/unit/widget-layout.test.ts).
 import type { WidgetId } from "@/modules/registry.generated";
 import type { CardSize } from "@/components";
 
@@ -49,26 +49,9 @@ export const WIDGET_LAYOUT: Record<WidgetId, { size: CardSize; est: number }> = 
 
 /** 배치 한 칸: 위젯 id 또는 '오늘' 카드(레일이 없을 때) */
 export type HomeItem = WidgetId | "today";
-export type HomeSegment = { kind: "cols"; cols: [HomeItem[], HomeItem[]] } | { kind: "full"; id: HomeItem };
 
-const sizeOf = (id: HomeItem): CardSize => (id === "today" ? "M" : WIDGET_LAYOUT[id]?.size ?? "M");
-const estOf = (id: HomeItem, todayEst: number): number => (id === "today" ? todayEst : WIDGET_LAYOUT[id]?.est ?? 300);
-
-/** 위젯을 순서대로 보면서 L은 전체 폭 칸으로, 나머지는 어림 높이가 더 낮은 줄기에 넣어요(같으면 왼쪽) */
-export function packHome(items: HomeItem[], opts: { todayEst?: number } = {}): HomeSegment[] {
-  const out: HomeSegment[] = [];
-  let cur: { cols: [HomeItem[], HomeItem[]]; h: [number, number] } | null = null;
-  for (const id of items) {
-    if (sizeOf(id) === "L") {
-      if (cur) { out.push({ kind: "cols", cols: cur.cols }); cur = null; }
-      out.push({ kind: "full", id });
-      continue;
-    }
-    cur ??= { cols: [[], []], h: [0, 0] };
-    const side = cur.h[1] < cur.h[0] ? 1 : 0;
-    cur.cols[side].push(id);
-    cur.h[side] += estOf(id, opts.todayEst ?? 300) + 24;
-  }
-  if (cur) out.push({ kind: "cols", cols: cur.cols });
-  return out;
-}
+export const sizeOf = (id: HomeItem): CardSize => (id === "today" ? "M" : WIDGET_LAYOUT[id]?.size ?? "M");
+/** 재기 전 어림 높이(MasonryGrid 첫 그림용. 그린 뒤에는 실제 높이로 쌓아요) */
+export const estOf = (id: HomeItem, todayEst = 300): number => (id === "today" ? todayEst : WIDGET_LAYOUT[id]?.est ?? 300);
+/** L 위젯은 두 줄기 사이 전체 폭 */
+export const isFull = (id: HomeItem): boolean => sizeOf(id) === "L";

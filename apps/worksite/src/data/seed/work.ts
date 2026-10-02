@@ -10,6 +10,7 @@
 import type { RowOf, SeedRow } from "@/types/entities";
 import type { StatusValue } from "@/lib/status";
 import type { Rng } from "@/lib/rng";
+import { isOffDay } from "@/lib/clock";
 import { defineGroup, type ActionContext, type SeedContext, type SeedOutput, type RpcHandler, type SelectorHandler } from "./types";
 
 type TaskStatus = StatusValue<"tasks.status">;
@@ -30,6 +31,10 @@ interface TaskOpts {
   crit?: string;
   /** 만든 날(오늘+n일) */
   c?: number;
+  /** 만든 시각(기본 09:00) */
+  ct?: string;
+  /** 만든 사람(기본 검토자) — 현장 등록에서 온 업무는 그 등록을 맡은 사람 */
+  cby?: string;
   /** 완료·취소된 날(오늘+n일) */
   end?: number;
   time?: string;
@@ -154,7 +159,8 @@ const CR_TASKS: TaskDef[] = [
 ];
 
 const CR_SUBS: SubDef[] = [
-  { id: "sub-cr-001", task: 1, v: 1, status: "rejected", at: [-4, "10:20"], summary: "제안서 초안 1차예요. 과정 구성과 일정을 담았어요.", comment: "첫 장에 교육 목표를 3줄로 요약해 주세요", reviewedAt: [-4, "15:40"], artifact: "art-cr-001" },
+  // v1은 추석 연휴(9/24~26) 전 9/23에 제출 → 연휴 뒤 9/28 아침에 수정 요청(산출물 v1 9/23 17:30 · v2 9/28 10:10과 같은 흐름)
+  { id: "sub-cr-001", task: 1, v: 1, status: "rejected", at: [-7, "17:40"], summary: "제안서 초안 1차예요. 과정 구성과 일정을 담았어요.", comment: "첫 장에 교육 목표를 3줄로 요약해 주세요", reviewedAt: [-2, "09:10"], artifact: "art-cr-001" },
   { id: "sub-cr-002", task: 1, v: 2, status: "submitted", at: [0, "08:40"], ai: "Claude", summary: "첫 장에 교육 목표 3줄 요약을 넣고, 실습 비중을 60%로 고쳤어요.", artifact: "art-cr-001" },
   { task: 2, v: 1, status: "submitted", at: [-1, "17:10"], ai: "Claude", summary: "실습 예제 2개를 더하고 슬라이드 글자 크기를 키웠어요. 바뀐 쪽은 7쪽이에요." },
   { task: 3, v: 1, status: "submitted", at: [0, "09:05"], summary: "9월 1~4주 정확도 표와 자주 틀리는 구간 유형 3가지를 정리했어요." },
@@ -199,7 +205,7 @@ const CR_MEETINGS: MeetingDef[] = [
   { id: "mtg-cr-10", title: "[강의] 표준 교안 개정 기획", prefix: "[강의]", type: "planning", projects: [P.eduC], at: [-15, "13:00"], min: 40, who: [EL, E1], status: "confirmed", source: "plaud",
     summary: "표준 교안은 생성형 AI 기초부터 고치고, 8월 만족도 결과를 반영해요." },
   { id: "mtg-cr-11", title: "[강의] 예시기업 특강 리허설", prefix: "[강의]", type: "lecture_rehearsal", projects: [P.eduA], at: [2, "14:00"], min: 60, who: [EL, E1], status: "scheduled", source: "manual", summary: null },
-  { id: "mtg-cr-12", title: "[공통] 10월 1주 주간 회의", prefix: "[공통]", type: "internal_regular", projects: [P.coreGen], at: [5, "10:00"], min: 60, who: [CEO, OPS, EL, E1, SL, AL, A1], status: "scheduled", source: "manual", summary: null },
+  { id: "mtg-cr-12", title: "[공통] 10월 2주 주간 회의", prefix: "[공통]", type: "internal_regular", projects: [P.coreGen], at: [5, "10:00"], min: 60, who: [CEO, OPS, EL, E1, SL, AL, A1], status: "scheduled", source: "manual", summary: null },
 ];
 
 const CR_SEGS: Record<string, SegDef[]> = {
@@ -230,11 +236,12 @@ const CR_SEGS: Record<string, SegDef[]> = {
     [18, 33, "EDU", "EDU-2026-B", "EDU.materials", 0.88, "슬라이드 글자 크기를 조금 키워 주세요.", "auto"],
     [33, 45, "EDU", "EDU-2026-B", "EDU.ops", 0.77, "노트북 대여 수량을 다시 확인해요.", "confirmed"],
   ],
+  // L2(고객 비밀) 회의: AI 분류 꺼짐(국내 경로 개통 전) → 학맞통 리드가 직접 분류(confirmed)
   "mtg-cr-05": [
-    [0, 15, "SSI", "SSI-2026-A", "SSI.agency", 0.9, "기관에서는 관리자 연수를 두 번으로 나누길 원해요.", "auto"],
-    [15, 32, "SSI", "SSI-2026-A", "SSI.training", 0.89, "1회차는 법령과 지원팀 역할을 다뤄요.", "auto"],
-    [32, 48, "SSI", "SSI-2026-A", "SSI.forms", 0.8, "운영계획서 서식은 기관 양식을 먼저 받아 볼게요.", "confirmed"],
-    [48, 60, "SSI", "SSI-2026-A", "SSI.training", 0.86, "2회차는 실습 위주로 구성해요.", "auto"],
+    [0, 15, "SSI", "SSI-2026-A", "SSI.agency", 1, "기관에서는 관리자 연수를 두 번으로 나누길 원해요.", "confirmed"],
+    [15, 32, "SSI", "SSI-2026-A", "SSI.training", 1, "1회차는 법령과 지원팀 역할을 다뤄요.", "confirmed"],
+    [32, 48, "SSI", "SSI-2026-A", "SSI.forms", 1, "운영계획서 서식은 기관 양식을 먼저 받아 볼게요.", "confirmed"],
+    [48, 60, "SSI", "SSI-2026-A", "SSI.training", 1, "2회차는 실습 위주로 구성해요.", "confirmed"],
   ],
   "mtg-cr-06": [
     [0, 14, "ARA", "ARA-CORE", "ARA.release", 0.91, "이번 스프린트에서 버그 7건을 닫았어요.", "auto"],
@@ -347,15 +354,15 @@ const TR_TASKS: TaskDef[] = [
   // 할 일 8
   [20, "CL-2026-03 D5 대책안 초안", Q.clm, null, QA, PL, "todo", 5, { pr: "high", src: "claim", ref: "clm-tr-2026-03", type: "클레임 대응", est: 5, c: -2 }],
   [21, "디커플링 링 프레스 금형 조건 검토", Q.dev, null, DV, PL, "todo", 9, { type: "4M 변경", est: 4, c: -4 }],
-  [22, "크림핑 불량 사진 기준표", Q.ppm, null, OA, QA, "todo", 7, { type: "검사 기준", est: 2, c: -3,
+  [22, "크림핑 불량 사진 기준표", Q.ppm, null, OA, QA, "todo", 7, { src: "meeting", ref: "ap-tr-16", type: "검사 기준", est: 2, c: -2, ct: "10:00",
     desc: "크림핑 공정에서 자주 나오는 불량을 사진 기준표로 만들어요. 사진은 파일 이름만 남겨요." }],
   [23, "프레스 안전검사 서류 준비", Q.press, null, PL, T_CEO, "todo", 20, { type: "안전 점검", est: 3, c: -6 }],
-  [24, "현장 등록 사용 안내문 초안", Q.ax, null, AD, T_CEO, "todo", 6, { type: "파일럿 준비", est: 2, c: -4 }],
+  [24, "현장 등록 사용 안내문 초안", Q.ax, null, AD, T_CEO, "todo", 6, { src: "meeting", ref: "ap-tr-15", type: "파일럿 준비", est: 2, c: -2, ct: "10:00" }],
   [25, "에어백 필터 포장 사양 변경 확인", Q.saf, null, SA, PL, "todo", 8, { src: "mail", type: "납기 대응", est: 1, c: -1 }],
   [26, "계측기 검교정 10월 일정 확인", Q.ppm, null, QA, PL, "todo", 4, { src: "meeting", ref: "ap-tr-07", type: "계측기", est: 1, c: -22 }],
   [27, "파일럿 대상 업무 목록 확정", Q.ax, null, T_CEO, AD, "todo", 10, { type: "파일럿 준비", est: 2, c: -5 }],
   // 진행 중 12
-  [28, "프레스 PR-010-02 이상 소음 점검", Q.press, null, PL, T_CEO, "in_progress", 0, { pr: "high", src: "field_report", ref: "fr-tr-0085", type: "설비 이상", est: 2, c: 0,
+  [28, "프레스 PR-010-02 이상 소음 점검", Q.press, null, PL, T_CEO, "in_progress", 0, { pr: "high", src: "field_report", ref: "fr-tr-0085", type: "설비 이상", est: 2, c: 0, ct: "08:45", cby: PL,
     desc: "현장 등록으로 들어온 이상 소음을 점검해요. 점검 전까지 해당 프레스는 쓰지 않아요.", crit: "소음 원인 기록 · 조치 내용 · 재가동 판단" }],
   [29, "10월 1주 출하 계획 확정", Q.exh, null, SA, PL, "in_progress", 0, { pr: "high", type: "생산 계획", est: 2, c: -2 }],
   [30, "예시배기시스템 10월 내시 반영 생산계획", Q.exh, null, SA, PL, "in_progress", 2, { type: "생산 계획", est: 3, c: -4 }],
@@ -419,10 +426,11 @@ const TR_SEGS: Record<string, SegDef[]> = {
     [15, 30, "MASS", "MASS-EXH", "자재·구매", 0.79, "SUS321 선재는 공급사 한 곳에만 기대고 있어요.", "confirmed"],
     [30, 45, "QUAL", "QUAL-PPM-26H2", "검사 기준", 0.88, "KN-07 조건표 개정은 고객 승인 회신을 이번 주에 받아요.", "auto"],
   ],
+  // L2(고객 비밀) 회의: AI 분류가 꺼져 있어서(국내 경로 개통 전) 품질보증 담당이 직접 분류했어요 → 모두 confirmed(신뢰도는 화면에 안 보여요)
   "mtg-tr-02": [
-    [0, 14, "QUAL", "QUAL-PPM-26H2", "품질 지표", 0.9, "초중종물 실시율이 85%까지 올라왔어요.", "auto"],
-    [14, 27, "QUAL", "QUAL-CLM-2026-03", "클레임 대응", 0.86, "임시 조치 재고 선별은 끝냈어요.", "auto"],
-    [27, 40, "QUAL", "QUAL-PPM-26H2", "검사 기준", 0.77, "출하 검사성적서 양식을 하나로 맞춰요.", "confirmed"],
+    [0, 14, "QUAL", "QUAL-PPM-26H2", "품질 지표", 1, "초중종물 실시율이 85%까지 올라왔어요.", "confirmed"],
+    [14, 27, "QUAL", "QUAL-CLM-2026-03", "클레임 대응", 1, "임시 조치 재고 선별은 끝냈어요.", "confirmed"],
+    [27, 40, "QUAL", "QUAL-PPM-26H2", "검사 기준", 1, "출하 검사성적서 양식을 하나로 맞춰요.", "confirmed"],
   ],
   "mtg-tr-03": [
     [0, 13, "QUAL", "QUAL-PPM-26H2", "품질 지표", 0.91, "8월 공정 불량률을 같이 봐요.", "auto"],
@@ -493,16 +501,31 @@ const TR_APS: ApDef[] = [
   [11, "mtg-tr-08", "선재 입고 성적서 월별 묶기", AD, -5, "dismissed"],
   [12, "mtg-tr-06", "편조 롤 출하 일정 고객 회신", SA, -7, "dismissed"],
   [13, "mtg-tr-05", "프레스 소음 재발 시 보고 절차 공지", PL, 3, "proposed"],
-  [14, "mtg-tr-05", "편조 롤 폭 문의 회신", SA, 1, "proposed"],
-  [15, "mtg-tr-09", "작업자용 현장 등록 안내문", AD, 6, "proposed"],
-  [16, "mtg-tr-09", "불량 사진 기준 정하기", QA, 7, "proposed"],
+  // 이미 있는 업무와 같은 액션은 새로 만들지 않고 그 업무에 연결했어요(리뷰 3차 — '업무로 만들기'를 누르면 같은 업무가 두 번 생기던 문제)
+  [14, "mtg-tr-05", "편조 롤 폭 문의 회신", SA, 1, "accepted", 3],
+  [15, "mtg-tr-09", "작업자용 현장 등록 안내문", AD, 6, "accepted", 24],
+  [16, "mtg-tr-09", "불량 사진 기준 정하기", QA, 7, "accepted", 22],
 ];
 
 // ─────────────────────────────────────────────── 진행 기록 문장(해요체 한 줄, 지어낸 예시)
 const LOG_START = ["자료를 모으기 시작했어요.", "관련 회의 기록을 다시 읽었어요.", "필요한 자료 목록을 정리했어요.", "지난번 비슷한 업무 결과를 찾아봤어요."];
-const LOG_MID_CR = ["초안 절반 정도 썼어요.", "검토자에게 방향을 한 번 물어봤어요.", "빠진 자료를 담당자에게 요청했어요.", "앞부분 구성을 바꿨어요.", "고객 요청 사항과 다시 맞춰 봤어요.", "표 구성을 한 번 더 다듬었어요."];
-const LOG_MID_TR = ["현장에서 확인한 내용을 적었어요.", "LOT 번호를 다시 대조했어요.", "작업일보와 숫자를 맞춰 봤어요.", "사진 파일 이름을 정리했어요.", "공장장에게 방향을 한 번 물어봤어요.", "빠진 기록을 담당자에게 요청했어요."];
-const LOG_AI = ["초안 1차를 만들었어요. 근거 자료 3건을 붙였어요.", "지난 버전과 달라진 부분을 표로 정리했어요.", "작성 규칙을 적용해 문장을 다듬었어요.", "빠진 항목 2개를 찾아 채웠어요.", "회의 기록에서 관련 구간을 찾아 요약했어요."];
+const ASK_REVIEWER = "검토자에게 방향을 한 번 물어봤어요.";
+const LOG_MID_CR = ["초안 절반 정도 썼어요.", ASK_REVIEWER, "빠진 자료를 담당자에게 요청했어요.", "앞부분 구성을 바꿨어요.", "고객 요청 사항과 다시 맞춰 봤어요.", "표 구성을 한 번 더 다듬었어요."];
+/** TR 중간 기록은 업무 종류에 맞는 문장만(리뷰 3차 — 총무 증빙 업무에 'LOT 번호 대조'가 나오던 문제) */
+const LOG_MID_TR: Record<"quality" | "safety" | "purchase" | "plan" | "equipment" | "pilot", string[]> = {
+  quality: ["LOT 번호를 다시 대조했어요.", "검사 기록과 숫자를 맞춰 봤어요.", "측정값을 표로 옮겼어요."],
+  safety: ["점검표 사진 이름을 정리했어요.", "현장에서 확인한 내용을 적었어요.", "빠진 서명을 담당자에게 요청했어요."],
+  purchase: ["공급사 견적을 비교했어요.", "입고 성적서와 수량을 맞춰 봤어요."],
+  plan: ["작업일보와 숫자를 맞춰 봤어요.", "출하 수량을 고객 납기와 맞춰 봤어요."],
+  equipment: ["현장에서 확인한 내용을 적었어요.", "정지 시간과 사유를 기록했어요.", "보전 이력을 다시 확인했어요."],
+  pilot: ["초안 절반 정도 썼어요.", "빠진 자료를 담당자에게 요청했어요."],
+};
+const TR_TYPE_GROUP: Record<string, keyof typeof LOG_MID_TR> = {
+  "검사 기준": "quality", "품질 지표": "quality", "클레임 대응": "quality", 계측기: "quality", "4M 변경": "quality",
+  "안전 점검": "safety", "자재·구매": "purchase", "생산 계획": "plan", "납기 대응": "plan", "설비 이상": "equipment", "설비 보전": "equipment", "파일럿 준비": "pilot",
+};
+/** AI 연결이 남기는 기록: AI 도구 6개(내 업무·상세·시작·진행 기록·제출·검토 상태) 안에서 할 수 있는 일만(회의·작성 규칙은 못 봐요) */
+const LOG_AI = ["초안 1차를 완성했어요. 근거 자료 3건을 붙였어요.", "지난 버전과 달라진 부분을 표로 정리했어요.", "완료 기준 3개 중 2개를 채웠어요.", "빠진 항목 2개를 채웠어요.", "업무 기준을 다시 확인하고 남은 일을 정리했어요."];
 const LOG_END = ["제출 전에 마지막으로 확인했어요.", "검토자 의견을 반영해 마무리했어요."];
 const LOG_REWORK = "검토 코멘트대로 고치는 중이에요.";
 const LOG_CANCEL = "일정이 바뀌어 이 업무는 멈추기로 했어요.";
@@ -513,7 +536,7 @@ const CRITERIA_PREFIX = "완료 기준: ";
 
 function seedTenant(ctx: SeedContext, def: {
   key: "cr" | "tr"; tasks: TaskDef[]; subs: SubDef[]; meetings: MeetingDef[]; segs: Record<string, SegDef[]>; decs: DecDef[]; aps: ApDef[];
-  ai: Record<string, string>; midLogs: string[]; aiRate: number;
+  ai: Record<string, string>; midLogs: (type: string | null, assignee: string) => string[]; aiRate: number;
 }): SeedOutput {
   const { key } = def;
   const projects = new Map(ctx.get("projects").map((p) => [p.id, p]));
@@ -521,16 +544,32 @@ function seedTenant(ctx: SeedContext, def: {
   const tid = (n: number) => `t-${key}-${pad(n)}`;
 
   // 업무
+  // 업무를 만든 날은 일하는 날로(쉬는 날이면 다음 일하는 날 — 마감·완료일을 넘으면 앞쪽 일하는 날)
+  const off = (d: number) => isOffDay(ctx.d(d), { saturday: key === "cr" });
+  const workdayOf = (d: number, cap: number) => {
+    if (!off(d)) return d;
+    let f = d;
+    while (off(f) && f < cap) f += 1;
+    if (!off(f) && f <= cap) return f;
+    let b = d;
+    while (off(b) && b > d - 7) b -= 1;
+    return off(b) ? d : b;
+  };
+  const createdOf = (due: number, o: TaskOpts, status: TaskStatus) => {
+    const raw = o.c ?? Math.min(due - 7, -3);
+    const end = status === "done" || status === "canceled" ? o.end ?? Math.min(due, 0) : 0;
+    return workdayOf(raw, Math.min(0, due, end));
+  };
   const tasks: Row<"tasks">[] = def.tasks.map(([n, title, project, part, assignee, reviewer, status, due, o = {}]) => {
-    const created = o.c ?? Math.min(due - 7, -3);
+    const created = createdOf(due, o, status);
     const end = status === "done" || status === "canceled" ? o.end ?? Math.min(due, 0) : null;
     const desc = (o.desc ?? `${projects.get(project)?.name ?? "프로젝트"} 업무예요.`) + `\n${CRITERIA_PREFIX}${o.crit ?? DEFAULT_CRIT}`;
     return {
       id: tid(n), project_id: project, part_id: part, title, description: desc, task_type: o.type ?? null,
       assignee_id: assignee, reviewer_id: reviewer, due_at: ctx.at(due, o.time ?? "18:00"), priority: o.pr ?? "normal", status,
       source: o.src ?? "manual", source_ref: o.ref ?? null, estimate_hours: o.est ?? null, sensitivity: o.sens ?? sensOf(project),
-      created_by: reviewer, created_at: ctx.at(created, "09:00"),
-      updated_at: end != null ? ctx.at(end, "17:00") : status === "todo" ? ctx.at(created, "09:00") : ctx.at(-1, "17:50"),
+      created_by: o.cby ?? reviewer, created_at: ctx.at(created, o.ct ?? "09:00"),
+      updated_at: end != null ? ctx.at(end, "17:00") : status === "todo" ? ctx.at(created, o.ct ?? "09:00") : created === 0 ? ctx.at(0, "09:15") : ctx.at(-1, "17:50"),
     };
   });
 
@@ -559,25 +598,34 @@ function seedTenant(ctx: SeedContext, def: {
   const rng: Rng = ctx.rng("work.progress_logs");
   const logs: Row<"progress_logs">[] = [];
   let logSeq = 0;
+  // 같은 사람이 같은 날 같은 시각·같은 문장으로 두 번 남기지 않게(감사 로그에 똑같은 줄이 겹쳐 보이던 문제)
+  const usedSlot = new Set<string>();
+  const usedBody = new Set<string>();
   const pushLog = (taskN: number, author: string, body: string, day: number, time: string, ai: string | null) => {
     logs.push({ id: `pl-${key}-${pad(++logSeq)}`, task_id: tid(taskN), author_id: author, body, via: ai ? "ai_connection" : "web", via_client: ai,
       created_by: author, created_at: ctx.at(day, time), updated_at: ctx.at(day, time) });
   };
-  for (const [n, , , , assignee, , status, , o = {}] of def.tasks) {
-    const created = o.c ?? -5;
+  for (const [n, , , , assignee, , status, due, o = {}] of def.tasks) {
+    const created = createdOf(due, o, status);
     if (key === "cr" && n === 1) {
-      // 앵커 업무 t-cr-001: 9/25 AI 연결(Claude) 초안 1차 완성 → 수정 요청 → AI 연결로 v2
+      // 앵커 업무 t-cr-001: 9/23 AI 연결(Claude) 초안 1차 완성 → (추석 연휴) → 9/28 수정 요청 → AI 연결로 v2
       pushLog(1, E1, "킥오프 회의 기록과 요구사항 정리본을 다시 읽었어요.", -8, "10:10", null);
-      pushLog(1, E1, "제안서 초안 1차를 완성했어요. 과정 구성 표를 붙였어요.", -5, "16:20", "Claude");
-      pushLog(1, E1, LOG_REWORK, -3, "09:40", null);
+      pushLog(1, E1, "제안서 초안 1차를 완성했어요. 과정 구성 표를 붙였어요.", -7, "16:20", "Claude");
+      pushLog(1, E1, LOG_REWORK, -2, "09:40", null);
       pushLog(1, E1, "첫 장에 교육 목표 3줄 요약을 넣었어요. 실습 비중을 60%로 고쳤어요.", -1, "17:20", "Claude");
       pushLog(1, E1, LOG_END[0]!, 0, "08:30", null);
       continue;
     }
+    if (key === "tr" && n === 28) {
+      // 앵커 현장 등록 fr-tr-0085(08:40) → 공장장이 08:45에 업무로 → 점검(현장 등록보다 앞선 기록이 없게)
+      pushLog(28, PL, "PR-010-02에 사용 중지 표시를 붙였어요.", 0, "08:50", null);
+      pushLog(28, PL, "클러치·브레이크 쪽에서 소리가 나는지 확인했어요.", 0, "09:15", null);
+      continue;
+    }
     if (key === "tr" && n === 1) {
       pushLog(1, QA, "S-260916-012 LOT의 편조·프레스 기록을 모았어요.", -9, "10:30", null);
-      pushLog(1, QA, "LOT 체인 4단계를 표로 정리했어요.", -6, "14:10", null);
-      pushLog(1, QA, "KN-07 편조 조건 기록을 같은 기간과 비교했어요.", -3, "11:20", null);
+      pushLog(1, QA, "LOT 체인 4단계를 표로 정리했어요.", -7, "14:10", null);
+      pushLog(1, QA, "KN-07 편조 조건 기록을 같은 기간과 비교했어요.", -2, "11:20", null);
       pushLog(1, QA, "원인 후보 3가지와 판단 근거를 정리했어요.", -1, "16:40", null);
       pushLog(1, QA, LOG_END[0]!, 0, "07:40", null);
       continue;
@@ -592,9 +640,19 @@ function seedTenant(ctx: SeedContext, def: {
     const span = Math.max(0, last - created);
     // L2 업무에는 AI 연결 기록을 만들지 않아요(위 제출과 같은 규칙)
     const aiClient = tasks.find((x) => x.id === tid(n))?.sensitivity === "L2" ? null : def.ai[assignee] ?? null;
+    const createdTime = o.ct ?? "09:00";
+    const mids = def.midLogs(o.type ?? null, assignee);
     for (let i = 0; i < count; i += 1) {
-      const day = Math.min(0, created + Math.round(((i + 1) / (count + 1)) * span));
-      const time = day === 0 ? rng.pick(["08:05", "08:20", "08:45", "09:05"]) : rng.pick(LOG_TIMES);
+      // 쉬는 날(일요일·공휴일, CRATA는 토요일도)에는 기록을 남기지 않아요 → 같은 구간 안의 앞쪽 일하는 날로
+      let day = Math.min(0, created + Math.round(((i + 1) / (count + 1)) * span));
+      while (day > created && isOffDay(ctx.d(day), { saturday: key === "cr" })) day -= 1;
+      if (isOffDay(ctx.d(day), { saturday: key === "cr" })) continue;
+      // 만든 날의 기록은 만든 시각 뒤에만(오늘은 지금 09:30 전까지)
+      const pool = (day === 0 ? ["08:05", "08:20", "08:45", "09:05"] : LOG_TIMES).filter((t) => day !== created || t > createdTime);
+      if (!pool.length) continue;
+      const free = pool.filter((t) => !usedSlot.has(`${assignee}|${day}|${t}`));
+      const time = rng.pick(free.length ? free : pool);
+      usedSlot.add(`${assignee}|${day}|${time}`);
       let body: string;
       let ai: string | null = null;
       if (status === "canceled") body = LOG_CANCEL;
@@ -602,8 +660,12 @@ function seedTenant(ctx: SeedContext, def: {
       else if (status === "changes_requested" && i === count - 1) body = LOG_REWORK;
       else if ((status === "submitted" || status === "done") && i === count - 1) body = rng.pick(LOG_END);
       else if (aiClient && rng.chance(def.aiRate)) { body = rng.pick(LOG_AI); ai = aiClient; }
-      else body = rng.pick(def.midLogs);
+      else {
+        const fresh = mids.filter((b) => !usedBody.has(`${assignee}|${day}|${b}`));
+        body = rng.pick(fresh.length ? fresh : mids);
+      }
       if (aiClient && i > 0 && !ai && status !== "canceled" && rng.chance(def.aiRate / 2) && body !== LOG_REWORK) { body = rng.pick(LOG_AI); ai = aiClient; }
+      usedBody.add(`${assignee}|${day}|${body}`);
       pushLog(n, assignee, body, day, time, ai);
     }
   }
@@ -666,12 +728,19 @@ function crataKpis(ctx: SeedContext): SeedOutput {
 function seed(ctx: SeedContext): SeedOutput {
   if (ctx.tenant.slug === "crata-demo") {
     return {
-      ...seedTenant(ctx, { key: "cr", tasks: CR_TASKS, subs: CR_SUBS, meetings: CR_MEETINGS, segs: CR_SEGS, decs: CR_DECS, aps: CR_APS, ai: CR_AI, midLogs: LOG_MID_CR, aiRate: 0.42 }),
+      ...seedTenant(ctx, { key: "cr", tasks: CR_TASKS, subs: CR_SUBS, meetings: CR_MEETINGS, segs: CR_SEGS, decs: CR_DECS, aps: CR_APS, ai: CR_AI, aiRate: 0.42,
+        // 대표는 검토를 받는 쪽이 아니라서 '검토자에게 물어봤어요'를 쓰지 않아요
+        midLogs: (_type, assignee) => (assignee === CEO ? LOG_MID_CR.filter((x) => x !== ASK_REVIEWER) : LOG_MID_CR) }),
       ...crataKpis(ctx),
     };
   }
   if (ctx.tenant.slug === "tr-technology") {
-    return seedTenant(ctx, { key: "tr", tasks: TR_TASKS, subs: TR_SUBS, meetings: TR_MEETINGS, segs: TR_SEGS, decs: TR_DECS, aps: TR_APS, ai: TR_AI, midLogs: LOG_MID_TR, aiRate: 0.25 });
+    return seedTenant(ctx, { key: "tr", tasks: TR_TASKS, subs: TR_SUBS, meetings: TR_MEETINGS, segs: TR_SEGS, decs: TR_DECS, aps: TR_APS, ai: TR_AI, aiRate: 0.25,
+      // 업무 종류별 문장 + '검토자에게 물어봤어요'(공장장·대표가 담당이면 빼요)
+      midLogs: (type, assignee) => {
+        const base = type && TR_TYPE_GROUP[type] ? LOG_MID_TR[TR_TYPE_GROUP[type]!] : LOG_MID_TR.plan;
+        return assignee === PL || assignee === T_CEO ? base : [...base, ASK_REVIEWER];
+      } });
   }
   return {};
 }

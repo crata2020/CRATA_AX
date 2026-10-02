@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { makeProvider } from "./helpers";
+import { resolvePersona } from "@/app/resolvePersona";
+import type { PlatformRole } from "@/tenants/types";
 
 describe("메모리 공급자", () => {
   it("getList: 필터 eq/contains/in, 정렬, 페이지", async () => {
@@ -170,6 +172,19 @@ describe("메모리 공급자", () => {
     expect(today.reviewWaiting).toBe(own);
     expect(today.companyReviewWaiting).toBeGreaterThan(own);
     expect(typeof badges.myUrgent).toBe("number");
+  });
+
+  it("누구로 보기: 구성원 관리에서 바꾼 역할·비활성 상태를 따름", async () => {
+    const ceo = makeProvider("tr-technology", "R_CEO");
+    const plant = ceo.tenant.people.find((p) => p.roleCode === "R_PLANT_MGR" && p.persona)!;
+    const op = ceo.tenant.people.find((p) => p.roleCode === "R_OPERATOR" && p.persona)!;
+    await ceo.dp.custom!({ url: "rpc:change_member_role", method: "post", payload: { memberId: plant.id, role: "member" } });
+    await ceo.dp.custom!({ url: "rpc:set_member_status", method: "post", payload: { memberId: op.id, status: "inactive" } });
+    const memberOf = (id: string) => ceo.store.find("members", id) as { role?: PlatformRole; status?: string } | undefined;
+    // 바꾼 역할로 들어가요(회사 설정의 reviewer가 아니라 member)
+    expect(resolvePersona(ceo.tenant, memberOf, { as: "R_PLANT_MGR" })).toMatchObject({ roleCode: "R_PLANT_MGR", role: "member" });
+    // 비활성 구성원은 고를 수 없어 기본 인물로
+    expect(resolvePersona(ceo.tenant, memberOf, { as: "R_OPERATOR" }).roleCode).toBe(ceo.tenant.defaultPersona);
   });
 
   it("?empty=1: 기준 리소스 몇 개만 남음", async () => {

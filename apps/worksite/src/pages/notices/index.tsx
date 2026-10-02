@@ -14,7 +14,9 @@ import { formatDate } from "@/lib/format";
 import { labelOf, optionsOf } from "@/lib/status";
 import type { Notice, ReadReceipt } from "@/types/entities";
 import { isAdminish, noticeAudienceIds, noticeForMe, useProjects } from "../docs/shared/lib";
-import { NoticeComposeDrawer } from "./ComposeDrawer";
+import { lazyDrawer } from "@/lib/lazyDrawer";
+
+const NoticeComposeDrawer = lazyDrawer(() => import("./ComposeDrawer").then((m) => m.NoticeComposeDrawer));
 
 export default function Page() {
   const { persona, can, clock, tenant } = useWorksite();

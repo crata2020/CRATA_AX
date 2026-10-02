@@ -2,9 +2,9 @@
 // 사람·AI 연결·시스템·CRATA 운영자가 바꾼 기록을 필터로 봅니다. 읽기만(수정·삭제 버튼 없음). ARA 개인 영역 이벤트는 남기지 않아 여기에 없어요.
 // URL: ?range=7d|30d · ?actor=<actor_type> · ?res=<resource> · ?who=<member id> · ?selected=<기록 id> 서랍(바뀐 필드 전 → 후, request_id)
 import { Link } from "react-router";
-import { Button, Skeleton, Tooltip } from "antd";
+import { Button, Skeleton } from "antd";
 import { ExportOutlined } from "@ant-design/icons";
-import { DataTable, DetailDrawer, EmptyState, FilterBar, PageHeader, useFilterBarState, type FilterBarProps } from "@/components";
+import { DataTable, DetailDrawer, EmptyState, FilterBar, PageHeader, useFilterBarState, type FilterBarProps, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { useOne, type CrudFilter } from "@/lib/refine";
 import { useSelectedParam } from "@/lib/url";
@@ -33,8 +33,11 @@ function TargetCell({ e }: { e: Pick<AuditEvent, "resource" | "resource_id"> }) 
   const name = field && q.result ? String(q.result[field] ?? "") : "";
   const label = resourceLabel(e.resource);
   const href = targetPath(e.resource, e.resource_id);
-  const text = name ? `${label} · ${name.length > 18 ? `${name.slice(0, 17)}…` : name}` : label;
-  return href ? <Link to={href} onClick={(ev) => ev.stopPropagation()}>{text}</Link> : <span>{text}</span>;
+  // 한 줄(칸 너비에서 말줄임, 전체는 title) — 코드 중간에서 줄이 꺾여 줄 높이가 들쭉날쭉하던 문제
+  const full = name ? `${label} · ${name}` : label;
+  return href
+    ? <Link className="ws-ellipsis" to={href} title={full} onClick={(ev) => ev.stopPropagation()}>{full}</Link>
+    : <span className="ws-ellipsis" title={full}>{full}</span>;
 }
 
 function EventDrawer({ id, onClose }: { id: string | null; onClose: () => void }) {
@@ -101,7 +104,7 @@ export default function Page() {
       <PageHeader
         title="감사 로그"
         description="누가 언제 무엇을 바꿨는지 남겨요. 아무도 고치거나 지울 수 없어요."
-        actions={<Tooltip title="준비 중이에요"><span tabIndex={0}><Button icon={<ExportOutlined aria-hidden />} disabled>내보내기</Button></span></Tooltip>}
+        actions={<DisabledAction label="} disabled>내보내기" reason={"준비 중이에요"}><Button icon={<ExportOutlined aria-hidden />} disabled>내보내기</Button></DisabledAction>}
       />
       <FilterBar {...fbProps} />
       <DataTable<AuditEvent>
@@ -118,7 +121,7 @@ export default function Page() {
           { key: "actor_id", title: "행위자", width: 200, render: (e) => <AuditActor row={e} /> },
           { key: "actor_type", title: "종류", kind: "tag", statusDomain: "audit_events.actor_type" },
           { key: "action", title: "동작", render: (e) => <b>{actionLabel(e.action)}</b> },
-          { key: "resource", title: "대상", render: (e) => <TargetCell e={e} /> },
+          { key: "resource", title: "대상", width: 240, render: (e) => <TargetCell e={e} /> },
           { key: "changes", title: "바뀐 내용", flex: true, render: (e) => <span style={{ display: "block", whiteSpace: "normal" }}>{changeSummary(e)}</span> },
         ]}
         mobileRow={(e) => ({

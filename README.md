@@ -35,6 +35,24 @@
 
 ---
 
+## 0-1. 공통 업무사이트 뼈대 (첫 고객: (주)티알테크놀러지)
+
+모든 회사가 함께 쓰는 **공통 뼈대**를 먼저 만들었습니다. 회사별 차이는 설정(테넌트 설정 + Company DNA Profile)과 업종 팩으로 얹습니다.
+
+| 항목 | 내용 |
+|---|---|
+| 실행 | `cd apps/worksite && npm install && npm run dev` (서버 없이 예시 데이터로 동작, 해시 라우팅) |
+| 회사·사람 바꿔 보기 | 상단 선택 상자, 또는 `?tenant=tr-technology&as=R_PLANT_MGR` / `?tenant=crata-demo&as=R_CEO` |
+| 스택 | Refine 5 + Ant Design 5 + React 18 + React Router 7 + Vite + TypeScript, Pretendard ([05 기술 스택](docs/worksite/05_tech-stack.md)). GraphQL·DB는 다음 단계에서 Supabase 서울로 연결 |
+| 화면 | 63개 경로. 공통 코어(홈, 내 업무·검토함, 사업·프로젝트, 회의, 문서·양식·수정 규칙·지식, 회사(공지·일정·결재·구성원·조직도), 내 AI 연결, ARA, 관리) + 제조업 팩(생산·품질 홈, 현장 등록, 수주·납품, 생산, 설비 현황판, 품질·클레임 8D, LOT 추적, 자재·재고, 기준정보, 안전보건) |
+| 디자인 | 사용자 레퍼런스(스마트경리 대시보드)의 구조는 살리고 'AI 티'(그라데이션·보라·카드 안 카드)는 뺐습니다. 회사 브랜드색은 설정값입니다(티알 남색, CRATA 딥 틸 가안) ([01 디자인 레퍼런스](docs/worksite/01_design-references.md)) |
+| 공통 항목 | 공통 코어 31개(P0 14 · P1 11 · P2 6) + 업종 팩(제조 6 · 교육·컨설팅 2). 메신저·메일 클라이언트·전자결재 엔진·ERP는 만들지 않고 연동합니다 ([02 공통 모듈](docs/worksite/02_common-modules.md), [config/worksite_modules.yaml](config/worksite_modules.yaml)) |
+| 첫 고객 | 공개 정보만 반영했습니다: 조직도, 공정(편조→크림핑·프레스·스파이럴링), 설비 대수, 제품·소재. 나머지는 진단에서 확인할 가설입니다 ([03 티알테크놀러지](docs/worksite/03_tr-technology.md), [clients/tr-technology/company_profile.yaml](clients/tr-technology/company_profile.yaml)) |
+| 설계서 | [00 빌드 스펙](docs/worksite/00_build-spec.md) · 화면 캡처 [docs/worksite/screenshots](docs/worksite/screenshots) |
+| 검증 | typecheck · build · 단위 테스트 50개 · 규칙 검사 · e2e 258개 통과, 두 회사 전 경로 콘솔 오류 0. 디자인·UX·코드 3중 리뷰 3회 |
+
+> 화면의 모든 숫자·사람·거래처는 **예시 데이터**입니다. 실존 인물 이름과 티알 로고 이미지는 쓰지 않았습니다.
+
 ## 1. 한눈에 보는 결론
 
 ### GOAL A — 회의 자동 분류·라우팅
@@ -105,6 +123,9 @@
 
 | 경로 | 내용 |
 |---|---|
+| [apps/worksite](apps/worksite) | **공통 업무사이트 뼈대** (Refine + Ant Design). 실행 방법과 구조는 [apps/worksite/README.md](apps/worksite/README.md) |
+| [docs/worksite](docs/worksite) | 뼈대 설계 문서: 00 빌드 스펙, 01 디자인 레퍼런스, 02 공통 모듈, 03 티알테크놀러지(제조업 팩), 05 기술 스택, 화면 캡처 |
+| [clients/tr-technology/company_profile.yaml](clients/tr-technology/company_profile.yaml) | 첫 고객 Company DNA Profile 초안(공개 사실만, 나머지 TODO) |
 | [docs/research/00_direction.md](docs/research/00_direction.md) | **최상위 문서**: 사용자 방향 정리, "이미 있는데 의미가 있나"에 대한 답, 방향 검토(맞는 것·고칠 것), 모듈 지도, 실행 순서, 첫 판매 기준, 결정할 것 |
 | [docs/research/01_market-map.md](docs/research/01_market-map.md) | 국내외 유사 서비스 리서치 맵(카테고리별 표), Top 10 레퍼런스, 한국 시장 특수성, CRATA 포지셔닝·상품화·가격, 다음 액션 |
 | [docs/research/02_meeting-auto-classification.md](docs/research/02_meeting-auto-classification.md) | **GOAL A 설계 정본**: 기존 서비스 비교, 아키텍처, 입력 경로 4가지, 분류 체계, 구간 분할·멀티라벨 프롬프트, 출력 스키마, 검수 루프, 산출물 템플릿, 비용 |

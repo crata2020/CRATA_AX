@@ -2,9 +2,9 @@
 // 연동 미리보기: 그룹웨어 결재의 "내가 결재할 문서"(?tab=todo)와 "내가 올린 문서"(?tab=mine)를 상태와 링크로만 보여 줍니다.
 // 서랍(?selected=<id>)에서 결재선을 단계로 보여 줘요(데모는 조직도 기준 예시 결재선). admin만 연동 설정 카드.
 import { Link, useSearchParams } from "react-router";
-import { Button, Tooltip } from "antd";
+import { Button } from "antd";
 import { CheckOutlined, ClockCircleOutlined, CloseOutlined, MinusOutlined, RollbackOutlined, EditOutlined } from "@ant-design/icons";
-import { Banner, CardGrid, DataTable, DemoOnlyLink, DetailDrawer, FilterBar, PageHeader, PersonChip, SectionCard, StatusTag, useFilterBarState, type FilterBarProps } from "@/components";
+import { Banner, CardGrid, DataTable, DemoOnlyLink, DetailDrawer, FilterBar, PageHeader, PersonChip, SectionCard, StatusTag, useFilterBarState, type FilterBarProps, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { useList, useOne } from "@/lib/refine";
 import { useSelectedParam } from "@/lib/url";
@@ -14,7 +14,7 @@ import type { ApprovalLink } from "@/types/entities";
 import type { TenantConfig } from "@/tenants/types";
 import { Caption, KeyValue } from "../docs/shared/lib";
 
-type Tab = "todo" | "mine";
+type Tab = "todo" | "done" | "mine";
 type StepState = "done" | "current" | "waiting" | "rejected" | "withdrawn" | "skipped";
 interface Step { memberId: string; role: string; state: StepState; at?: string | null }
 
@@ -75,13 +75,15 @@ export default function Page() {
   const { persona, tenant, can } = useWorksite();
   const [params] = useSearchParams();
   const [selected, setSelected] = useSelectedParam();
-  const tab: Tab = params.get("tab") === "mine" ? "mine" : "todo";
+  const rawTab = params.get("tab");
+  const tab: Tab = rawTab === "mine" || rawTab === "done" ? rawTab : "todo";
   const me = persona.memberId;
   const admin = can("approval_links", "delete").can;
 
   const fbProps: FilterBarProps = {
     search: { placeholder: "문서 검색", fields: ["title", "doc_no", "form_name"] },
-    chips: [{ param: "astatus", field: "status", options: optionsOf("approval_links.status"), multiple: true, ariaLabel: "상태" }],
+    // '내가 결재할 문서'는 결재 차례인 것(진행 중)만이라 상태 칩이 없어요(탭 숫자 = 줄 수)
+    chips: tab === "todo" ? [] : [{ param: "astatus", field: "status", options: optionsOf("approval_links.status").filter((o) => tab === "mine" || o.value !== "pending"), multiple: true, ariaLabel: "상태" }],
   };
   const fb = useFilterBarState(fbProps);
   const todoQ = useList<ApprovalLink>({ resource: "approval_links", pagination: { mode: "off" }, filters: [{ field: "current_approver_id", operator: "eq", value: me }, { field: "status", operator: "eq", value: "pending" }] });
@@ -100,6 +102,7 @@ export default function Page() {
         description="결재는 결재 시스템에서 하고, 여기서는 업무 옆에서 진행 상황만 봐요."
         tabs={[
           { key: "todo", label: "내가 결재할 문서", to: "?tab=todo", badge: pendingCount },
+          { key: "done", label: "처리함", to: "?tab=done" },
           { key: "mine", label: "내가 올린 문서", to: "?tab=mine" },
         ]}
       />
@@ -109,8 +112,12 @@ export default function Page() {
         key={tab}
         syncWithLocation={false}
         resource="approval_links"
-        ariaLabel={tab === "todo" ? "내가 결재할 문서" : "내가 올린 문서"}
-        filters={[tab === "todo" ? { field: "current_approver_id", operator: "eq", value: me } : { field: "requester_id", operator: "eq", value: me }, ...fb.filters]}
+        ariaLabel={tab === "todo" ? "내가 결재할 문서" : tab === "done" ? "내가 처리한 문서" : "내가 올린 문서"}
+        filters={[
+          ...(tab === "mine" ? [{ field: "requester_id", operator: "eq" as const, value: me }] : [{ field: "current_approver_id", operator: "eq" as const, value: me }]),
+          ...(tab === "todo" ? [{ field: "status", operator: "eq" as const, value: "pending" }] : tab === "done" ? [{ field: "status", operator: "ne" as const, value: "pending" }] : []),
+          ...fb.filters,
+        ]}
         isFiltered={fb.active}
         onClearFilters={fb.clear}
         sorters={[{ field: "submitted_at", order: "desc" }]}
@@ -133,6 +140,7 @@ export default function Page() {
         })}
         empty={tab === "todo"
           ? { kind: "empty", title: "결재할 문서가 없어요", description: "결재 차례가 오면 여기에 보여요." }
+          : tab === "done" ? { kind: "empty", title: "처리한 문서가 없어요", description: "승인하거나 반려한 문서가 여기에 남아요." }
           : { kind: "empty", title: "올린 문서가 없어요", description: "결재 시스템에서 올린 문서가 여기에 이어져요." }}
       />
       {admin && (
@@ -143,7 +151,7 @@ export default function Page() {
                 <KeyValue items={[["결재 시스템", "예시 결재 시스템"], ["상태", <StatusTag tone="neutral" label="미연결" />], ["가져오는 것", "문서 제목·양식·번호·상태·결재자·링크"]]} />
               </div>
               <div className="cb-row__actions">
-                <Tooltip title="결재 시스템 연결은 2단계에서 열려요"><span tabIndex={0}><Button disabled>연결하기</Button></span></Tooltip>
+                <DisabledAction label="연결하기" reason={"결재 시스템 연결은 2단계에서 열려요"}><Button disabled>연결하기</Button></DisabledAction>
               </div>
             </div>
           </SectionCard>

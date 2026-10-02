@@ -155,10 +155,11 @@ export function targetPath(resource: string, id: string | null | undefined): str
 /** 행위자 표시: 사람 · AI 연결 · 시스템 · CRATA 운영자 */
 export function AuditActor({ row, size = "sm" }: { row: Pick<AuditEvent, "actor_type" | "actor_id" | "actor_client">; size?: "sm" | "md" }) {
   if (row.actor_type === "ai_connection") {
+    // 'AI 연결 · ChatGPT' 아래에 누구 대신인지(앞에 가운뎃점 없이)
     return (
-      <span className="as-row" style={{ gap: 6 }}>
+      <span className="as-actor">
         <PersonChip kind="ai" clientName={row.actor_client ?? null} size={size} />
-        {row.actor_id && <span className="as-caption">· <PersonName id={row.actor_id} /></span>}
+        {row.actor_id && <span className="as-caption as-actor__for"><PersonName id={row.actor_id} /> 대신</span>}
       </span>
     );
   }

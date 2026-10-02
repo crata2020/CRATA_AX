@@ -16,7 +16,9 @@ import { daysBetween, toKstDate } from "@/lib/clock";
 import { statusOf, TASK_STATUS_COLOR } from "@/lib/status";
 import type { Submission, Task } from "@/types/entities";
 import { SCOPE_LABEL, useScope, useStructure, useWorkPermissions } from "../task-detail/lib";
-import { TaskFormDrawer } from "../task-detail/TaskFormDrawer";
+import { lazyDrawer } from "@/lib/lazyDrawer";
+
+const TaskFormDrawer = lazyDrawer(() => import("../task-detail/TaskFormDrawer").then((m) => m.TaskFormDrawer));
 import { SubmitDrawer } from "../task-detail/SubmitDrawer";
 import { ReviewDrawer } from "../task-detail/ReviewDrawer";
 import { ViewSwitch } from "../task-detail/ViewSwitch";

@@ -82,7 +82,8 @@ export function ChartFrame({ title, table, children }: ChartFrameProps) {
           size="small"
           type="text"
           className="ws-chart__toggle"
-          aria-pressed={asTable}
+          // 화면에 차트가 여럿이어도 어느 차트의 버튼인지 알 수 있게 이름에 차트 제목을 붙여요(보이는 글자는 짧게)
+          aria-label={`${title ?? table.caption ?? "차트"} ${asTable ? "차트로 보기" : "표로 보기"}`}
           onClick={() => {
             if (!asTable && boxRef.current) setMinH(boxRef.current.getBoundingClientRect().height);
             setAsTable((v) => !v);

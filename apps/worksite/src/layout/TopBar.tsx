@@ -3,19 +3,22 @@
 // 스크롤되면 아래 1px 선. 아이콘만 있는 버튼은 aria-label + 툴팁. Ctrl/Cmd+K → CommandMenu(pages/search/CommandMenu.tsx).
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Button, Drawer, Dropdown, Popover, Select, Switch, Tooltip } from "antd";
+import { Dropdown, Popover, Select, Tooltip } from "antd";
 import { ApiOutlined, BellOutlined, MenuOutlined, SearchOutlined, DownOutlined } from "@ant-design/icons";
 import { useWorksite } from "@/app/TenantBoundary";
 import { TENANTS, TENANT_ORDER } from "@/tenants";
 import { labelOf } from "@/lib/status";
 import { formatRelative, initialsOf } from "@/lib/format";
 import { useList, useSelector, useUpdate } from "@/lib/refine";
-import type { Notification } from "@/types/entities";
+import type { Member, Notification } from "@/types/entities";
 import { DemoDataBadge, CountBadge } from "@/components/basics";
 import { ListRows } from "@/components/ListRow";
-import { PersonChip } from "@/components/PersonChip";
 import { useConfirm } from "@/components/DetailDrawer";
 import { useNavBadges } from "./useNavBadges";
+import { lazyDrawer } from "@/lib/lazyDrawer";
+
+// 모바일 사용자 시트는 처음 열 때 불러와요(데스크톱 첫 화면 묶음에 서랍·스위치가 들어가지 않게)
+const UserSheet = lazyDrawer(() => import("./UserSheet").then((m) => m.UserSheet));
 import type { Breakpoint } from "@/lib/useBreakpoint";
 
 const CommandMenu = lazy(() => import("@/pages/search/CommandMenu"));
@@ -37,6 +40,9 @@ export function TenantSwitcher({ block }: { block?: boolean }) {
 
 export function PersonaSwitcher({ block }: { block?: boolean }) {
   const { tenant, persona, personas, switchPersona } = useWorksite();
+  // 구성원 관리에서 바꾼 역할·상태를 따라요(볼 수 없으면 회사 설정 값)
+  const members = useList<Member>({ resource: "members", queryOptions: { retry: false }, errorNotification: false });
+  const byId = new Map((members.result?.data ?? []).map((m) => [m.id, m]));
   return (
     <Select
       aria-label="누구로 보기"
@@ -45,7 +51,14 @@ export function PersonaSwitcher({ block }: { block?: boolean }) {
       popupMatchSelectWidth={false}
       options={personas.map((p) => {
         const role = tenant.roles.find((r) => r.code === p.roleCode)!;
-        return { value: p.roleCode, label: `${p.displayName} · ${role.title} · ${labelOf("platform_role", role.platformRole)}` };
+        const row = byId.get(p.id);
+        const platform = p.id === persona.memberId ? persona.role : row?.role ?? role.platformRole;
+        const inactive = row?.status === "inactive";
+        return {
+          value: p.roleCode,
+          disabled: inactive,
+          label: `${p.displayName} · ${role.title} · ${labelOf("platform_role", platform)}${inactive ? " (비활성)" : ""}`,
+        };
       })}
       onChange={(v) => switchPersona(v)}
     />
@@ -122,7 +135,7 @@ function NotificationBell({ mobile }: { mobile?: boolean }) {
 }
 
 // ───────── 사용자 메뉴·시트
-function useResetDemo() {
+export function useResetDemo() {
   const { resetDemo } = useWorksite();
   const confirm = useConfirm();
   return async () => {
@@ -150,7 +163,8 @@ function UserMenu() {
           { key: "ai", label: "내 AI 연결" },
           { key: "notif", label: "알림 설정" },
           { type: "divider" },
-          { key: "persist", label: <span className="ws-usersheet__row" style={{ minHeight: 0 }}>변경 내용 이 브라우저에 저장 <Switch size="small" checked={persist} aria-label="변경 내용 이 브라우저에 저장" /></span> },
+          // 메뉴 안에 스위치(또 하나의 누를 것)를 두지 않고, 항목을 누르면 켜고 꺼요. 상태는 글자로
+          { key: "persist", label: "변경 내용 이 브라우저에 저장", extra: <span className="ws-tag">{persist ? "켜짐" : "꺼짐"}</span> },
           { key: "reset", label: "데모 초기화", danger: true },
           { key: "login", label: "데모 시작 화면" },
         ],
@@ -170,37 +184,6 @@ function UserMenu() {
         <DownOutlined aria-hidden style={{ fontSize: 10, color: "var(--ws-muted)" }} />
       </button>
     </Dropdown>
-  );
-}
-
-/** 모바일 사용자 시트(바텀시트): 나 · 회사·인물 전환 · AI 연결 상태 · 바로가기 · 저장 스위치 · 데모 초기화 */
-export function UserSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { persona, tenant, role, persist, setPersist } = useWorksite();
-  const reset = useResetDemo();
-  return (
-    <Drawer open={open} onClose={onClose} placement="bottom" height="auto" title="내 계정과 데모" className="ws-drawer ws-drawer--sheet" styles={{ wrapper: { maxHeight: "90vh" } }}>
-      <div className="ws-usersheet__section">
-        <PersonChip memberId={persona.memberId} showUnit />
-        <span className="ws-t-caption">{role.title} · {labelOf("platform_role", persona.role)} · {tenant.displayName}</span>
-        <AiStatusChip />
-        <div className="ws-row">
-          <Link to="/me" onClick={onClose}><Button>내 정보</Button></Link>
-          <Link to="/me/notifications" onClick={onClose}><Button>알림 설정</Button></Link>
-        </div>
-      </div>
-      <div className="ws-usersheet__section">
-        <label className="ws-t-label">회사</label>
-        <TenantSwitcher block />
-        <label className="ws-t-label">누구로 보기</label>
-        <PersonaSwitcher block />
-        <div className="ws-usersheet__row">
-          <span className="ws-t-body">변경 내용 이 브라우저에 저장</span>
-          <Switch checked={persist} onChange={setPersist} aria-label="변경 내용 이 브라우저에 저장" />
-        </div>
-        <Button danger onClick={() => void reset()}>데모 초기화</Button>
-        <p className="ws-t-caption">모든 숫자와 사람은 예시예요. 실제 회사 값이 아니에요.</p>
-      </div>
-    </Drawer>
   );
 }
 

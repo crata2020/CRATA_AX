@@ -121,6 +121,11 @@ export class Policy {
         if (row.sensitivity === "L2" && !this.adminish && !part) return false;
         return this.role === "member" ? part || !row.project_id : true;
       }
+      case "knowledge_items": {
+        // 고객 비밀(L2) 지식(작업표준서 등)은 소유자·관리자와 담당·프로젝트 참여자만
+        if (row.sensitivity !== "L2" || this.adminish) return true;
+        return row.owner_id === me || this.participant(row.project_id as string);
+      }
       case "artifact_versions":
       case "corrections":
         return this.parentVisible("artifacts", row.artifact_id);

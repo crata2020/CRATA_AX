@@ -1,9 +1,9 @@
 // industry 그룹 화면이 함께 쓰는 작은 UI(소유: industry 그룹). 카드 안에 카드를 넣지 않습니다.
 import type { ReactNode } from "react";
-import { Button, Table, Tooltip, type TableColumnType } from "antd";
+import { Button, Table, type TableColumnType } from "antd";
 import { ExportOutlined } from "@ant-design/icons";
 import { useWorksite } from "@/app/TenantBoundary";
-import { ListRows, MaterialGradeTag, useInsideCard, type ListRowProps, type LinkTab } from "@/components";
+import { ListRows, MaterialGradeTag, useInsideCard, type ListRowProps, type LinkTab, DisabledAction } from "@/components";
 import { useBreakpoint } from "@/lib/useBreakpoint";
 
 /** 정보 표(라벨 · 값). 값이 비면 "—" */
@@ -81,9 +81,7 @@ export function ExportButton({ label = "내보내기" }: { label?: string }) {
   const { persona } = useWorksite();
   if (persona.role !== "owner" && persona.role !== "admin") return null;
   return (
-    <Tooltip title="내보내기는 준비 중이에요">
-      <span tabIndex={0} aria-label={`${label} 준비 중`}><Button icon={<ExportOutlined />} disabled>{label}</Button></span>
-    </Tooltip>
+    <DisabledAction label={label} reason="내보내기는 준비 중이에요"><Button icon={<ExportOutlined />} disabled>{label}</Button></DisabledAction>
   );
 }
 

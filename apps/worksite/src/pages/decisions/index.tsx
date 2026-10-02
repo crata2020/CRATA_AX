@@ -59,9 +59,14 @@ export default function Page() {
   // 프로젝트별 묶음(프로젝트를 고르면 한 묶음). 묶음 순서는 최근 결정이 있는 프로젝트부터
   const groups = useMemo(() => {
     const g = new Map<string, Decision[]>();
-    for (const d of list) { const k = d.project_id ?? "none"; g.set(k, [...(g.get(k) ?? []), d]); }
+    // 볼 수 없는 프로젝트(L2·참여 안 함)의 결정은 한 묶음으로(같은 이름의 묶음이 여럿 생기지 않게)
+    for (const d of list) {
+      const k = d.project_id ? (st.projectById.has(d.project_id) ? d.project_id : "hidden") : "none";
+      g.set(k, [...(g.get(k) ?? []), d]);
+    }
     return [...g.entries()];
-  }, [list]);
+  }, [list, st.projectById]);
+  const groupName = (pid: string) => st.projectById.get(pid)?.name ?? (pid === "hidden" ? "볼 수 없는 프로젝트" : "프로젝트 없음");
 
   return (
     <>
@@ -77,14 +82,14 @@ export default function Page() {
               {groups.map(([pid, items]) => {
                 const p = st.projectById.get(pid);
                 return (
-                  <section key={pid} className="wk-dec-group" aria-label={p?.name ?? "프로젝트 없음"}>
+                  <section key={pid} className="wk-dec-group" aria-label={groupName(pid)}>
                     {!project && (
                       <h3 className="wk-section-title">
-                        {p ? <Link to={`/projects/${p.id}?tab=decisions`}>{p.name}</Link> : "프로젝트 없음"}
+                        {p ? <Link to={`/projects/${p.id}?tab=decisions`}>{p.name}</Link> : groupName(pid)}
                         <span className="wk-caption" style={{ marginLeft: 8 }}>{items.length}건</span>
                       </h3>
                     )}
-                    <ol className="ws-timeline" aria-label={`${p?.name ?? "프로젝트 없음"} 결정`}>
+                    <ol className="ws-timeline" aria-label={`${groupName(pid)} 결정`}>
                       {items.map((d) => {
                         const s = statusOf("decisions.status", d.status);
                         const m = meetingById.get(d.meeting_id);

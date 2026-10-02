@@ -40,7 +40,12 @@ html :focus:not(:focus-visible) { outline: none; }
    antd가 .ant-select-selector에 outline: 0을 (0,6,0)으로 걸어서, antd가 꾸미지 않는 바깥 상자(.ant-select)에 그려요 */
 html .ant-select:has(input:focus-visible) { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: 10px; }
 /* 정렬 가능한 표 머리: antd의 th.ant-table-column-has-sorters { outline: none }(0,3,1)보다 세게 */
-html .ant-table-wrapper .ant-table-thead > tr > th.ant-table-column-has-sorters:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: -2px; }
+html .ant-table-wrapper .ant-table-thead > tr > th.ant-table-column-has-sorters:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: -2px; transition: none; }
+/* 글자 입력칸·숫자칸·날짜칸: 테마가 초점 그림자를 껐으니(activeShadow none) 키보드 초점일 때 바깥 상자에 같은 초점 선 */
+html .ant-input:not(.ant-input-affix-wrapper .ant-input):focus-visible,
+html .ant-input-affix-wrapper:has(input:focus-visible),
+html .ant-input-number:has(input:focus-visible),
+html .ant-picker:has(input:focus-visible) { outline: 2px solid var(--ws-brand); outline-offset: 2px; }
 /* 화면이 바뀔 때 코드가 옮긴 초점(제목·본문)은 선을 그리지 않아요(누를 수 있는 것이 아니라서) */
 html h1[tabindex="-1"]:focus, html main[tabindex="-1"]:focus { outline: none; }
 html .ws-on-brand :focus-visible, html [data-hero] :focus-visible,

@@ -16,8 +16,10 @@ import { formatDate, formatDateTime, formatMinutes } from "@/lib/format";
 import { labelOf, statusOf, taskStatusSegments } from "@/lib/status";
 import type { Artifact, Decision, MailLink, Meeting, Part, Partner, Project, Task } from "@/types/entities";
 import { isOpen, meetingTitle, useStructure, useWorkPermissions } from "../task-detail/lib";
-import { TaskFormDrawer } from "../task-detail/TaskFormDrawer";
-import { ProjectFormDrawer } from "../projects/ProjectFormDrawer";
+import { lazyDrawer } from "@/lib/lazyDrawer";
+
+const TaskFormDrawer = lazyDrawer(() => import("../task-detail/TaskFormDrawer").then((m) => m.TaskFormDrawer));
+const ProjectFormDrawer = lazyDrawer(() => import("../projects/ProjectFormDrawer").then((m) => m.ProjectFormDrawer));
 import "../task-detail/work.css";
 
 type ProjectRel = Project & { _rel?: { partner?: Partner | null } };

@@ -100,11 +100,11 @@ export default function Page() {
             </>
           ) : <EmptyState kind="empty" compact title="미조치 위험요인이 없어요" description="위험성평가에서 개선대책을 모두 이행했어요." />}
         </SectionCard>
-        <SectionCard title="아차사고·의견" pill span={6} demo caption={member ? "내가 남긴 아차사고만 보여요." : undefined}>
+        <SectionCard title="아차사고·의견" span={5} demo caption={member ? "내가 남긴 아차사고만 보여요." : undefined}>
           <StatTile label={`${formatMonth(months[2]!)} 아차사고 신고`} value={thisMonth} unit="건" caption={`많을수록 좋은 신호예요 · 의견·개선 제안 ${opinionsThisMonth}건`} />
           <SimpleBarChart data={byMonth} unit="건" highlightKey={months[2]} ariaLabel={`월별 아차사고 신고, ${byMonth.map((b) => `${b.label} ${b.value}건`).join(", ")}`} tableCaption="월별 아차사고 신고(예시)" height={150} />
         </SectionCard>
-        <SectionCard title="법정 일정" span={6} demo>
+        <SectionCard title="법정 일정" span={7} demo>
           {upcoming.length ? (
             <ListRows ariaLabel="법정 일정" rows={upcoming.map((l) => ({ key: l.id, title: l.title, subtitle: `${labelOf("legal_calendar_items.kind", l.kind)} · ${l.basis}`, to: linkOf(l) ?? undefined, trailing: <DdayBadge date={l.due_on} /> }))} />
           ) : <EmptyState kind="empty" compact title="다가오는 법정 일정이 없어요" />}

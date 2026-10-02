@@ -5,7 +5,8 @@ import react from "@vitejs/plugin-react";
 // 상대 경로 빌드(base "./") + 해시 라우팅: dist/를 어떤 정적 호스팅의 어느 하위 경로에 올려도 동작합니다.
 // 묶음 나누기(Vite 8 = rolldown): rollup의 manualChunks는 rolldown에서 일부만 먹혀서 output.codeSplitting.groups로 나눠요.
 //   react(+router) · refine 코어(+tanstack)는 따로, 예시 데이터(src/data/seed)는 TenantBoundary가 import()로 따로 받아요.
-//   첫 화면(홈) gzip 445KB(목표 450KB, notes/INTEGRATION.md 측정법). 표 묶음은 목록 화면에서만 받아요(아래 moduleSideEffects).
+//   첫 화면(홈) gzip 449KB(목표 450KB, notes/INTEGRATION.md 측정법 · tests/e2e/smoke.spec.ts '첫 화면 JS 예산'이 지켜요). 표 묶음은 목록 화면에서만,
+//   서랍·폼(날짜 선택)은 처음 열 때(src/lib/lazyDrawer.tsx) 받아요.
 // 경고 기준(chunkSizeWarningLimit)은 기본값(500kB) 그대로 둡니다.
 export default defineConfig({
   base: "./",

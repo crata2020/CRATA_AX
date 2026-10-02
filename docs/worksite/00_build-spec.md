@@ -328,13 +328,14 @@ flowchart LR
 | 기한 지남 1 | 오늘 마감 2 | 검토 요청 1 |                                        |
 | [내 업무 보기]                   |                                          |
 +------------------------------+------------------------------------------+
-| (1440 미만) 오늘 M            | (알약) 프리셋 3번째 위젯 M                    |
-+------------------------------+------------------------------------------+
-| 나머지 위젯: S=4열 · M=6열 · L=12열, grid-auto-flow: dense (위에서 아래로 프리셋 순서)  |
+| 두 줄기(MasonryGrid): (1440 미만) 오늘 카드 → 프리셋 3번째 위젯부터 차례로,          |
+| 실제 높이를 재서 더 짧은 줄기 아래에 쌓음. L 위젯은 두 줄기 사이 전체 폭,            |
+| L 사이에 카드가 하나만 남으면 그 카드도 전체 폭. 1024 미만은 한 줄기(프리셋 순서)    |
+| L 바로 앞 두 줄기 끝이 크게 어긋나면(패널 구멍) 뒤 카드를 앞으로 당겨 채움(balance)    |
 +-----------------------------------------------------------------------+
 RightRail(≥1440): 필독 공지 · 오늘 일정 · 다가오는 회의 (2.5절)
 ```
-- **컴포넌트:** `PageHeader`(greeting, period), `HeroCard`, `WidgetSlot`×n, `RightRail`, `SectionCard`('오늘' 카드).
+- **컴포넌트:** `PageHeader`(greeting, period), `HeroCard`, `WidgetSlot`×n, `MasonryGrid`(히어로 줄 아래), `RightRail`, `SectionCard`('오늘' 카드). 히어로 줄의 2번째 위젯 카드는 히어로 높이까지 늘려 첫 줄을 한 띠로 둡니다(리뷰 3차 — 카드 옆 패널 구멍 대신 카드 안 여백). 위젯 크기·첫 그림용 높이 어림값은 `src/pages/home/lib/widgetLayout.ts`(위젯 파일 `def.size`와 같은지 단위 테스트).
 - **데이터:** `custom({url:"sel:home.today"})` → `{ myOpen, dueToday, overdue, reviewWaiting, companyReviewWaiting, returnedToMe, returnedOnly, meetingsToday, dueSoon, workOrdersToday?, workOrdersByProcess?, checksPending? }`. `reviewWaiting`은 **내가 지정 검토자인** 검토 대기만 셉니다(소유자·관리자도 회사 전체를 세지 않음 — 같은 건이 두 사람의 할 일로 보이지 않게). 위젯은 3.1.1절 카탈로그.
 - **동작:** 기간 세그먼트(`?period=week|month`)는 기간을 받는 위젯 전부에 같이 적용. 히어로 행은 각각 필터된 목록으로 이동(`/work?due=overdue`, `/work?due=today`, `/work/review`, `/work?status=changes_requested`). 위젯 제목 줄 '더보기'는 카탈로그의 링크.
 - **빈 상태:** 히어로의 모든 줄이 0일 때만 "오늘 처리할 일이 없어요. 이번 주 업무를 미리 볼까요?" + [이번 주 업무 보기]. 위젯은 각자의 빈 문구(카탈로그). 위젯이 하나도 남지 않으면(모듈이 다 꺼짐) 히어로만 보여 줍니다.
@@ -614,7 +615,7 @@ KanbanBoard(패널 위에 바로, 카드로 감싸지 않음)
 | 본문(8)                                     | 정보(4)                |
 | 설명                                        | 담당 · 검토자 PersonChip |
 | ─ 진행 기록(Timeline, 추가만 가능)            | 출처: 회의 링크          |
-|   9/25 AI 연결(Claude): 초안 1차 완성          | 업무 유형 · 우선순위       |
+|   9/23 AI 연결(Claude): 초안 1차 완성          | 업무 유형 · 우선순위       |
 |   [한 줄 기록 남기기 ……] [남기기]             | 예상 시간 · 민감도         |
 | ─ 제출·검토 이력(Timeline)                    | 산출물 링크              |
 |   v2 AI 연결로 제출 · 검토 대기                |                       |
@@ -719,9 +720,9 @@ KanbanBoard(패널 위에 바로, 카드로 감싸지 않음)
 +----------------------------+----------------------------------------------+
 | 버전(4)                     | 비교(8)  [v1 AI 초안 v] → [v3 최종본 v]          |
 | Timeline                   | 수정 목록(corrections)                          |
-|  v3 최종본 · 성춘향 · 9/26  |  전: "교육 목표"                                  |
-|  v2 수정본 · 이몽룡 · 9/25  |  후: "교육 목표(3줄 요약)"   [추가] 표시            |
-|  v1 AI 초안 · AI 연결 · 9/24 |  범위 제안: 작성 규칙 0.81 · 사유 [사유 남기기]     |
+|  v3 최종본 · 성춘향 · 9/30  |  전: "교육 목표"                                  |
+|  v2 수정본 · 이몽룡 · 9/28  |  후: "교육 목표(3줄 요약)"   [추가] 표시            |
+|  v1 AI 초안 · AI 연결 · 9/23 |  범위 제안: 작성 규칙 0.81 · 사유 [사유 남기기]     |
 |                            | 적용된 규칙 칩: R-07 첫 장 요약 3줄 …              |
 +----------------------------+----------------------------------------------+
 ```
@@ -780,7 +781,7 @@ KanbanBoard(패널 위에 바로, 카드로 감싸지 않음)
 [DataTable: 제목 | 종류 | 프로젝트 | 담당 | 검증일 | 재검토일(DdayBadge) | 상태]
 서랍: 요약 · 원문 링크(외부) · 관련 항목(knowledge_links: 결정·회의·산출물·용어) · [검증됨으로 확정](검토자)
 ```
-- **데이터:** knowledge_items(id, kind, title, summary, body_ref, project_id, owner_id, source_ref, verified_at, review_by, status), knowledge_links(from_type, from_id, to_type, to_id, relation).
+- **데이터:** knowledge_items(id, kind, title, summary, body_ref, project_id, owner_id, source_ref, verified_at, review_by, status, sensitivity), knowledge_links(from_type, from_id, to_type, to_id, relation).
 - **동작:** [검증됨으로 확정] → status verified, verified_at=오늘, review_by=+180일. [+ 지식 추가](구성원 이상, status=draft).
 - **빈 상태:** "등록된 지식이 없어요. 회의에서 확정된 결정이 여기에 쌓여요."
 
@@ -864,12 +865,12 @@ KanbanBoard(패널 위에 바로, 카드로 감싸지 않음)
 - **배치**
 ```
 [배너(info): 연동 미리보기 · "결재 원본은 결재 시스템에 있어요. 여기서는 상태와 링크만 보여요."]
-[PageHeader: 결재 · tabs ?tab=: 내가 결재할 문서 | 내가 올린 문서]
+[PageHeader: 결재 · tabs ?tab=: 내가 결재할 문서(진행 중만, 탭 숫자 = 줄 수) | 처리함(?tab=done, 내가 결재선 끝에서 승인·반려한 문서) | 내가 올린 문서]
 [DataTable: 문서 제목 | 양식 | 문서 번호 | 기안자 | 현재 결재자 | 상태 | 올린 날 | 연결된 업무·프로젝트 | [원문 열기](끔)]
 (admin) [SectionCard 연동 설정] 결재 시스템: 예시 결재 시스템 · 상태 미연결 · [연결하기](끔)
 ```
 - **데이터:** approval_links(id, system, doc_no, title, form_name, requester_id, current_approver_id, status, submitted_at, completed_at, url, related_type, related_id).
-- **빈 상태:** "결재할 문서가 없어요." / "올린 문서가 없어요."
+- **빈 상태:** "결재할 문서가 없어요." / "처리한 문서가 없어요." / "올린 문서가 없어요."
 - **역할 차이:** member는 본인이 기안자이거나 결재선에 있는 것만. admin만 연동 설정 카드.
 
 #### C-12 구성원 `/company/people` · `people` · org-members · 깊이 A
@@ -1515,7 +1516,9 @@ caption: 관리자도 AI와 나눈 대화 내용은 볼 수 없어요. 저장하
 
 | 토큰 | CSS 변수 | 쓰임 | `tr-technology` | `crata-demo` | 확인한 대비 |
 |---|---|---|---|---|---|
-| brand | `--ws-brand` | 히어로 카드 면, 활성 메뉴 글자·막대, 주 버튼, 초점 링, info 태그 글자 | `#2D3C67` | `#0B6E69` | 흰 글자 10.75 / 6.09, 흰 바탕 위 글자 10.75 / 6.09 |
+| brand | `--ws-brand` | 히어로 카드 면, 활성 메뉴 막대, 주 버튼, 초점 링, (TR) info 태그 | `#2D3C67` | `#0B6E69` | 흰 글자 10.75 / 6.09, 흰 바탕 위 글자 10.75 / 6.09 |
+| brand-text | `--ws-brand-text` | 글자만 쓰는 강조: 링크, 켜진 메뉴·탭 글자, 정렬 화살표, 더보기 호버(리뷰 3차 — TR 남색은 ink와 1.55:1이라 검은 글자처럼 보였어요) | `#3A5BA8`(로고 파랑) | `#0B6E69`(브랜드 그대로) | 흰 바탕 6.48 / 6.09, ink와 2.57 / 2.74 |
+| info-mark·bg·fg | `--ws-info-*` | info 상태(진행·검토 대기 등). 브랜드가 good 초록과 색상 60° 안이면 고정 파랑 묶음(CRATA 청록 47° → '진행'과 '정상' 알약이 같은 계열로 보이던 문제) | brand · brand-weak · brand | `#4F7BD0` · `#E9F0FB` · `#2A549E` | fg 흰 바탕 10.75 / 7.34, fg/bg 9.16 / 6.41 |
 | brand-weak | `--ws-brand-weak` | 활성 메뉴 바탕, 클릭 가능한 행 호버, info 태그 바탕, 내 말풍선 | `#E7EDFB` | `#DFF1EF` | brand 글자 9.16 / 5.21 |
 | on-brand | `--ws-on-brand` | 히어로 위 글자 | `#FFFFFF` | `#FFFFFF` | 10.75 / 6.09 |
 | on-brand-2 | `--ws-on-brand-2` | 히어로 위 보조 글자 | `#E7EDFB` | `#DFF1EF` | 9.16 / 5.21 |
@@ -1808,7 +1811,7 @@ interface ChartFrameProps { title: string; table: { columns: string[]; rows: (st
 
 **검사용 표시(data 속성):** `SectionCard`는 `data-card`, 히어로는 `data-hero`, `PillLabel`은 `data-pill`, `DemoDataBadge`는 `data-demo-badge`, `EmptyState`는 `data-empty-kind="<kind>"`, `StatusTag`는 `data-tone`, 차트 틀은 `data-chart`를 붙입니다(8.2·8.4절 자동 검사가 씀).
 
-**그 밖의 공통 요소:** `HeroCard`(=`SectionCard variant="hero"`), `DetailDrawer`(`open`, `title`, `onClose`, `footer`: 왼쪽 [닫기]·오른쪽 주 버튼, 초점 가두기·복귀), `ConfirmDialog`, `DdayBadge`(`date` → "D-3"(neutral) · "D-1 내일 마감"(warning) · "오늘 마감"(warning) · "2일 지남"(critical)), `SensitivityTag`(`level: "L0"|"L1"|"L2"` → "공개"·"내부"·"고객 비밀"(툴팁 "국내에서만 처리해요"), L2만 LockOutlined), `AiTag`(`kind: "draft"|"summary"|"submitted"` → "AI 초안"·"AI 요약"·"AI 연결로 제출", RobotOutlined), `PriceGate`(`children`; `view_prices`가 없으면 "—" + 툴팁 "금액은 권한이 있는 사람만 볼 수 있어요"), `MaterialGradeTag`(`code` → 색 견본 8px 사각 + 코드 글자), `CopyField`(값 + [복사] + 토스트), `WidgetSlot`(`id` → `src/widgets/<id>.tsx` 지연 로딩, 없으면 '준비 중' 내용), `LinkTabs`, `Banner`(`tone: "info"|"warning"`, 연동 미리보기·정책 꺼짐 안내), `CommandMenu`(home 그룹 소유, 4.9절 계약은 H-04).
+**그 밖의 공통 요소:** `HeroCard`(=`SectionCard variant="hero"`), `DetailDrawer`(`open`, `title`, `onClose`, `footer`: 왼쪽 [닫기]·오른쪽 주 버튼, 초점 가두기·복귀), `ConfirmDialog`, `DdayBadge`(`date` → "D-3"(neutral) · "D-1 내일 마감"(warning) · "오늘 마감"(warning) · "2일 지남"(critical)), `SensitivityTag`(`level: "L0"|"L1"|"L2"` → "공개"·"내부"·"고객 비밀"(툴팁 "고객 비밀 · AI 꺼짐(국내 경로 개통 전)"), L2만 LockOutlined), `DisabledAction`(`label`, `reason` — 비활성 버튼을 감싼 Tab 정지점, 툴팁 + 스크린리더 "{label}: {reason}"), `MasonryGrid`(`items: {key, node, full?, est?}[]`, `balance?` — 높이가 다른 카드를 두 줄기로 쌓음, 1024 미만 한 줄기. `balance`(홈): 전체 폭 카드 앞 구멍을 뒤 카드로 채우고 혼자 남은 카드는 전체 폭, 순서는 `arrangeMasonry` 순수 함수로 단위 테스트), `AiTag`(`kind: "draft"|"summary"|"submitted"` → "AI 초안"·"AI 요약"·"AI 연결로 제출", RobotOutlined), `PriceGate`(`children`; `view_prices`가 없으면 "—" + 툴팁 "금액은 권한이 있는 사람만 볼 수 있어요"), `MaterialGradeTag`(`code` → 색 견본 8px 사각 + 코드 글자), `CopyField`(값 + [복사] + 토스트), `WidgetSlot`(`id` → `src/widgets/<id>.tsx` 지연 로딩, 없으면 '준비 중' 내용), `LinkTabs`, `Banner`(`tone: "info"|"warning"`, 연동 미리보기·정책 꺼짐 안내), `CommandMenu`(home 그룹 소유, 4.9절 계약은 H-04).
 
 ### 4.10 상태 표시 매핑
 
@@ -1848,6 +1851,8 @@ export type PlatformTermKey =
 
 export interface BrandTokens {
   brand: string; brandWeak: string; onBrand: string; onBrand2: string; heroLine: string;
+  brandText: string;                                   // 글자 강조(4.1.1절 brand-text)
+  info: { mark: string; bg: string; fg: string };       // info 상태색(4.1.1절)
   panel: string; surface: string; line: string; controlLine: string;
   ink: string; ink2: string; muted: string;
   chartAccent: string; chartMuted: string;
@@ -2000,7 +2005,7 @@ export interface TenantConfig {
 | 대상 | 규칙 |
 |---|---|
 | `projects` (member) | `member_ids`·`owner_member_id`·`reviewer_member_id`에 내가 있는 것만 |
-| `sensitivity = "L2"` 행(projects·tasks·meetings·artifacts) | owner·admin과 참여자(프로젝트 구성원·담당·검토자·참석자)만. 나머지에게는 목록에서 빠지고 `getOne`은 404 |
+| `sensitivity = "L2"` 행(projects·tasks·meetings·artifacts·knowledge_items) | owner·admin과 참여자(프로젝트 구성원·담당·검토자·참석자)만. 나머지에게는 목록에서 빠지고 `getOne`은 404 |
 | `tasks` (member) | `assignee_id = 나` |
 | `submissions` approve | 역할이 approve 이상이고, (task.reviewer_id = 나 또는 owner·admin). **담당자 본인(task.assignee_id = 나)은 owner·admin이어도 승인 못 함**("내 제출은 지정된 검토자가 승인해요"). owner·admin이 남의 제출을 승인하면 감사 기록에 `rpc:approve_submission_substitute`('대신 승인')로 남고 지정 검토자에게도 알림 |
 | `progress_logs` | `appendOnly`: create만, edit·delete 403 |
@@ -2199,7 +2204,7 @@ export type GroupSeed = (ctx: SeedContext) => Partial<Record<ResourceName, Row[]
 | `*.via` | web 웹 · ai_connection AI 연결 · system 시스템 |
 | `projects.status` | planned 준비 · active 진행 · on_hold 보류 · done 완료 (neutral·info·warning·good) |
 | `projects.health` | good 정상(good) · warning 주의(warning) · critical 위험(critical) |
-| `sensitivity` | L0 공개 · L1 내부 · L2 고객 비밀(국내에서만 처리) |
+| `sensitivity` | L0 공개 · L1 내부 · L2 고객 비밀(국내 처리 경로 개통 전까지 AI 기능 꺼짐: AI 요약·분류·초안·AI 연결 없음) |
 | `meetings.status` | scheduled 예정(neutral) · needs_review 확인 필요(warning) · confirmed 분류 확인 완료(good) |
 | `meeting_segments.review_status` | auto 자동 분류(info) · pending 확인 필요(warning) · confirmed 확인됨(good) · corrected 고침(good) · unclassified 미분류(neutral) |
 | `decisions.status` | proposed 결정 제안(info) · confirmed 확정(good) · superseded 바뀜(neutral) |
@@ -2302,6 +2307,7 @@ export type GroupSeed = (ctx: SeedContext) => Partial<Record<ResourceName, Row[]
 5. **재현 가능:** 고정 난수(`rng(stream)`), 기준일 `demoToday = 2026-09-30(수)`. 기간은 2026-07-01 ~ 2026-09-30(13주) + 앞으로 일정(마감·납기·법정 일정)은 2026-10-31까지. 날짜는 기준일에서 거꾸로 계산해 D-day·마감 임박이 늘 보이게 합니다.
 6. **이미지 없음:** 사진 칸은 파일 이름 문자열만(`현장사진_0930_01.jpg` 같은 가짜 이름). 저장소에 제3자 이미지·로고를 넣지 않습니다.
 7. **문장 톤:** 업무 제목은 짧은 명사구("예시기업 특강 제안서 초안"), 진행 기록·요약은 해요체 한두 문장, 결정은 "~한다/~하기로 했어요". 과장·이모지 없음.
+8. **이야기가 맞게(리뷰 3차):** 사람·AI 연결이 남긴 기록(업무 만들기·진행 기록·감사 로그)은 일하는 날만(일요일·공휴일 — 2026 추석 9/24~26 — CRATA는 토요일도 쉼, `lib/clock.ts isOffDay`). 진행 기록은 업무를 만든 뒤에만, 업무 종류에 맞는 문장으로(TR: 품질·안전·자재·생산 계획·설비·파일럿). '검토자에게 물어봤어요'는 공장장·대표가 담당이면 쓰지 않아요. AI 연결 기록은 AI 도구 6개(내 업무·상세·시작·진행 기록·제출·검토 상태)로 할 수 있는 일만. 현장 등록에서 온 업무는 등록 뒤에 그 등록을 맡은 사람이 만들고, 마감 알림은 업무를 만든 뒤에 가요. 회의 액션 제안이 이미 있는 업무와 같으면 새로 만들지 않고 그 업무에 연결(accepted)해요. L2 회의·업무에는 AI 요약·분류·AI 연결 기록이 없어요(사람이 정리). `tests/unit/seed-story.test.ts`가 지켜요.
 
 ### 6.2 기준 데이터 (Foundation, `src/tenants/*.ts` + `src/data/seed/reference.ts`)
 

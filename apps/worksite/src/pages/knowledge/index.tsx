@@ -4,9 +4,9 @@
 // 만들기(?selected=new): 구성원 이상, 초안으로 저장
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Button, Form, Input, Select, Tooltip } from "antd";
+import { Button, Form, Input, Select } from "antd";
 import { CheckOutlined, PlusOutlined } from "@ant-design/icons";
-import { DataTable, DdayBadge, DetailDrawer, FilterBar, PageHeader, PersonChip, StatusTag, useFilterBarState, type FilterBarProps } from "@/components";
+import { DataTable, DdayBadge, DetailDrawer, FilterBar, PageHeader, PersonChip, SensitivityTag, StatusTag, useFilterBarState, type FilterBarProps, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { useCreate, useList, useRpc } from "@/lib/refine";
 import { useSelectedParam } from "@/lib/url";
@@ -115,7 +115,8 @@ export default function Page() {
         sorters={[{ field: "review_by", order: "asc" }]}
         onRowClick={(k) => setSelected(k.id)}
         columns={[
-          { key: "title", title: "제목", kind: "name" },
+          // 고객 비밀(L2) 지식(작업표준서 등)은 제목 옆 자물쇠 표시(/admin/data 등급표와 같은 규칙)
+          { key: "title", title: "제목", kind: "name", render: (k) => <span className="ws-row" style={{ flexWrap: "nowrap", minWidth: 0 }}><span className="ws-cell-name ws-ellipsis" title={k.title}>{k.title}</span>{k.sensitivity === "L2" && <SensitivityTag level="L2" />}</span> },
           { key: "kind", title: "종류", width: 112, render: (k) => <span className="ws-tag">{labelOf("knowledge_items.kind", k.kind)}</span> },
           { key: "project_id", title: "프로젝트", width: 160, render: (k) => <span className="ws-ellipsis">{k.project_id ? byId.get(k.project_id)?.name ?? "—" : "회사 전체"}</span> },
           { key: "owner_id", title: "담당", kind: "person", width: 160 },
@@ -127,7 +128,7 @@ export default function Page() {
           { key: "status", title: "상태", kind: "status", statusDomain: "knowledge_items.status", width: 120 },
         ]}
         mobileRow={(k) => ({
-          title: k.title,
+          title: k.sensitivity === "L2" ? `${k.title} · 고객 비밀` : k.title,
           subtitle: [labelOf("knowledge_items.kind", k.kind), k.project_id ? byId.get(k.project_id)?.name : "회사 전체", k.review_by ? `재검토 ${formatDate(k.review_by, false)}` : null].filter(Boolean).join(" · "),
           trailing: <StatusTag {...statusOf("knowledge_items.status", k.status)} />,
         })}
@@ -142,7 +143,7 @@ export default function Page() {
         footer={current && current.status !== "archived" ? (
           canVerify
             ? <Button type="primary" icon={<CheckOutlined aria-hidden />} loading={verify.isPending} onClick={() => void verify.run({ itemId: current.id }).catch(() => undefined)}>검증됨으로 확정</Button>
-            : <Tooltip title="검토자 이상이 확정할 수 있어요"><span tabIndex={0}><Button disabled>검증됨으로 확정</Button></span></Tooltip>
+            : <DisabledAction label="검증됨으로 확정" reason={"검토자 이상이 확정할 수 있어요"}><Button disabled>검증됨으로 확정</Button></DisabledAction>
         ) : undefined}
       >
         {current && (
@@ -153,6 +154,7 @@ export default function Page() {
                 <KeyValue
                   items={[
                     ["종류", labelOf("knowledge_items.kind", current.kind)],
+                    ["등급", <SensitivityTag level={current.sensitivity ?? "L1"} />],
                     ["프로젝트", current.project_id ? byId.get(current.project_id)?.name ?? "—" : "회사 전체"],
                     ["담당", <PersonChip memberId={current.owner_id} size="sm" />],
                     ["원문", <ExternalLink href={current.body_ref}>회사 저장소에서 보기</ExternalLink>],
@@ -193,6 +195,8 @@ function NewKnowledgeDrawer({ onClose, onCreated }: { onClose: () => void; onCre
       values: {
         kind: v.kind, title: v.title.trim(), summary: v.summary.trim(), body_ref: v.body_ref?.trim() || null, project_id: v.project_id ?? null, owner_id: persona.memberId,
         source_ref: v.source_ref?.trim() || null, verified_at: null, review_by: null, status: "draft",
+        // 등급은 프로젝트를 따라가요(L2 프로젝트의 지식은 L2)
+        sensitivity: projects.find((p) => p.id === v.project_id)?.sensitivity ?? "L1",
       },
       successNotification: () => ({ type: "success", message: "지식을 초안으로 추가했어요. 검토자가 확인하면 '검증됨'이 돼요" }),
     });

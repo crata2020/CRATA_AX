@@ -5,14 +5,17 @@
 // 첫 Tab은 SkipLink("본문으로 건너뛰기"). 본문은 <main id="main">.
 import { useEffect, useMemo, useState } from "react";
 import { Outlet } from "react-router";
-import { App, Drawer } from "antd";
+import { App } from "antd";
 import { useWorksite } from "@/app/TenantBoundary";
 import { useBreakpoint } from "@/lib/useBreakpoint";
 import { getPrefs, setPrefs } from "@/lib/storage";
-import { NavTree, NavRail, SideNav } from "./SideNav";
+import { NavRail, SideNav } from "./SideNav";
+import { lazyDrawer } from "@/lib/lazyDrawer";
 import { TopBar } from "./TopBar";
 import { MobileTabBar } from "./MobileTabBar";
 import { RailCtx } from "./RightRail";
+
+const NavDrawer = lazyDrawer(() => import("./NavDrawer").then((m) => m.NavDrawer));
 
 export function SkipLink() {
   return (
@@ -70,16 +73,7 @@ export function AppShell() {
           </div>
         </div>
         {bp === "mobile" && <MobileTabBar tabs={tabs} />}
-        <Drawer
-          open={drawer && bp !== "desktop" && bp !== "wide"}
-          onClose={() => setDrawer(false)}
-          placement="left"
-          width={300}
-          title={tenant.displayName}
-          className="ws-drawer"
-        >
-          <div id="ws-nav-drawer"><NavTree items={nav} mode="drawer" onNavigate={() => setDrawer(false)} /></div>
-        </Drawer>
+        <NavDrawer open={drawer && bp !== "desktop" && bp !== "wide"} onClose={() => setDrawer(false)} title={tenant.displayName} items={nav} />
         <BootNotices />
       </div>
     </RailCtx.Provider>

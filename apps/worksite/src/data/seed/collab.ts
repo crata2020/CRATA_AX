@@ -12,7 +12,7 @@ import { defineGroup, type ActionContext, type SeedContext, type SeedOutput, typ
 import type { ResourceName, RowOf, SeedRow } from "@/types/entities";
 import type { StatusValue } from "@/lib/status";
 import type { Sensitivity, TenantConfig } from "@/tenants/types";
-import { addDays, kstIso, toKstDate, weekStart } from "@/lib/clock";
+import { addDays, isOffDay, kstIso, toKstDate, weekStart } from "@/lib/clock";
 
 type R<K extends ResourceName> = SeedRow<RowOf<K>>;
 type DocType = StatusValue<"artifacts.doc_type">;
@@ -63,8 +63,20 @@ function buildArtifacts(ctx: SeedContext, tenantKey: "crata" | "tr", defs: ArtDe
     const a = (def.sens ?? "L1") === "L2" ? { ...def, ai: false } : def;
     const gap = a.gap ?? 1;
     const lastIso = ctx.at(a.last[0], a.last[1]);
+    const off = (d: number) => isOffDay(ctx.d(d), { saturday: tenantKey === "crata" });
+    let prevDay = -Infinity;
+    let firstIso = "";
     for (let v = 1; v <= a.vers; v += 1) {
-      const dayOff = a.last[0] - gap * (a.vers - v);
+      // 버전 날짜는 일하는 날로(쉬는 날이면 앞쪽 일하는 날, 앞 버전보다 앞서면 뒤쪽 일하는 날)
+      let dayOff = a.last[0] - gap * (a.vers - v);
+      if (v < a.vers && off(dayOff)) {
+        let back = dayOff;
+        while (off(back) && back > dayOff - 7) back -= 1;
+        let fwd = dayOff;
+        while (off(fwd) && fwd < a.last[0]) fwd += 1;
+        dayOff = !off(back) && back > prevDay ? back : !off(fwd) && fwd < a.last[0] ? fwd : dayOff;
+      }
+      prevDay = dayOff;
       const isLast = v === a.vers;
       const kind: StatusValue<"artifact_versions.kind"> = v === 1 ? (a.ai ? "ai_draft" : a.vers === 1 && a.status === "final" ? "final" : "draft") : isLast && a.status === "final" ? "final" : "revision";
       const author = a.authors?.[v - 1] ?? a.owner;
@@ -75,11 +87,13 @@ function buildArtifacts(ctx: SeedContext, tenantKey: "crata" | "tr", defs: ArtDe
         author_id: author, author_kind: kind === "ai_draft" ? "ai" : "member", applied_rule_ids: v === 1 && a.ai ? a.rules ?? [] : [],
         created_at: created, updated_at: created, created_by: author,
       });
+      if (v === 1) firstIso = created;
     }
     artifacts.push({
       id: a.id, project_id: a.project, task_id: a.task ?? null, doc_type: a.doc, template_id: a.tpl ?? null, title: a.title, current_version: a.vers,
       file_ref: `${FILES}/${tenantKey}/${a.id}/v${a.vers}.${extOf(a.doc)}`, ai_generated: a.ai, sensitivity: a.sens ?? "L1", owner_id: a.owner, status: a.status,
-      created_at: ctx.at(a.last[0] - gap * (a.vers - 1), "17:00"), updated_at: lastIso, created_by: a.owner,
+      // 등록 = 첫 버전을 올린 때
+      created_at: firstIso, updated_at: lastIso, created_by: a.owner,
     });
   }
   return { artifacts, versions };
@@ -221,11 +235,11 @@ function buildMail(ctx: SeedContext, prefix: string, member: string, defs: MailD
   });
 }
 
-interface KiDef { id: string; kind: StatusValue<"knowledge_items.kind">; title: string; summary: string; project?: string | null; owner: string; source?: string | null; verified?: number | null; review?: number | null; status: StatusValue<"knowledge_items.status">; body?: boolean }
+interface KiDef { id: string; kind: StatusValue<"knowledge_items.kind">; title: string; summary: string; project?: string | null; owner: string; source?: string | null; verified?: number | null; review?: number | null; status: StatusValue<"knowledge_items.status">; body?: boolean; sens?: Sensitivity }
 function buildKnowledge(ctx: SeedContext, key: string, defs: KiDef[], links: [string, string, string, string, string][]) {
   const items: R<"knowledge_items">[] = defs.map((k) => ({
     id: k.id, kind: k.kind, title: k.title, summary: k.summary, body_ref: k.body === false ? null : `${DOCS}/${key}/knowledge/${k.id}`, project_id: k.project ?? null,
-    owner_id: k.owner, source_ref: k.source ?? null, verified_at: k.verified != null ? ctx.d(k.verified) : null, review_by: k.review != null ? ctx.d(k.review) : null, status: k.status,
+    owner_id: k.owner, source_ref: k.source ?? null, verified_at: k.verified != null ? ctx.d(k.verified) : null, review_by: k.review != null ? ctx.d(k.review) : null, status: k.status, sensitivity: k.sens ?? "L1",
     created_at: ctx.at(Math.min(k.verified ?? -10, -1) - 3, "10:00"), created_by: k.owner,
   }));
   const kl: R<"knowledge_links">[] = links.map(([ft, fid, tt, tid, rel], i) => ({ id: `kl-${key}-${pad(i + 1, 2)}`, from_type: ft, from_id: fid, to_type: tt, to_id: tid, relation: rel }));
@@ -667,7 +681,8 @@ const TR_MAIL_SA: MailDef[] = [
   { subject: "[예시배기시스템] 9월 5주 납품 일정 확인", from: "exh.scm@example.com", partner: "p-tr-exh", project: Q.exh, by: "rule", conf: 0.98, at: [0, "08:15"], suggestion: "납품 일정 회신하기" },
   { subject: "[예시파워트레인] 브리더 필터 샘플 요청", from: "pwt.dev@example.com", partner: "p-tr-pwt", project: null, by: null, at: [-1, "13:40"] },
   { subject: "[예시써멀] 차열 부품 문의", from: "thm.buyer@example.com", partner: "p-tr-thm", project: null, by: null, at: [-2, "11:10"] },
-  { subject: "[예시배기시스템] 클레임 회신 요청", from: "exh.quality@example.com", partner: "p-tr-exh", project: Q.clm, by: "ai", conf: 0.9, at: [0, "07:40"], suggestion: "예시배기시스템 클레임 회신하기" },
+  // 고객 비밀(L2) 클레임 프로젝트로 가는 메일은 AI가 아니라 발신 주소 규칙(exh.quality@ → 클레임)으로 분류해요(L2는 AI 꺼짐)
+  { subject: "[예시배기시스템] 클레임 회신 요청", from: "exh.quality@example.com", partner: "p-tr-exh", project: Q.clm, by: "rule", conf: 0.99, at: [0, "07:40"], suggestion: "예시배기시스템 클레임 회신하기" },
   { subject: "선재 입고 일정 안내", from: "wire.sales@example.com", partner: "p-tr-wire", project: Q.exh, by: "rule", conf: 0.92, at: [-2, "15:30"] },
   { subject: "포장재 납기 지연 안내", from: "pack.sales@example.com", partner: "p-tr-pack", project: Q.saf, by: "ai", conf: 0.83, at: [-1, "10:05"], suggestion: "포장 일정 영향 확인하기" },
   { subject: "[예시세이프티] 10월 발주서", from: "saf.buyer@example.com", partner: "p-tr-saf", project: Q.saf, by: "rule", conf: 0.99, at: [-6, "09:20"], shared: true },
@@ -678,7 +693,7 @@ const TR_MAIL_SA: MailDef[] = [
 ];
 const TR_MAIL_QA: MailDef[] = [
   { subject: "[예시배기시스템] CL-2026-03 8D 제출 기한 안내", from: "exh.quality@example.com", partner: "p-tr-exh", project: Q.clm, by: "rule", conf: 0.99, at: [-11, "09:00"], suggestion: "8D D4 근거 정리하기", sStatus: "accepted", task: "t-tr-001" },
-  { subject: "[예시배기시스템] 임시 조치 결과 확인 요청", from: "exh.quality@example.com", partner: "p-tr-exh", project: Q.clm, by: "ai", conf: 0.92, at: [-9, "14:30"], suggestion: "임시 조치 결과 회신하기", sStatus: "dismissed" },
+  { subject: "[예시배기시스템] 임시 조치 결과 확인 요청", from: "exh.quality@example.com", partner: "p-tr-exh", project: Q.clm, by: "rule", conf: 0.99, at: [-9, "14:30"], suggestion: "임시 조치 결과 회신하기", sStatus: "dismissed" },
   { subject: "검교정 일정 안내", from: "cal.center@example.com", partner: "p-tr-cal", project: Q.ppm, by: "rule", conf: 0.96, at: [-6, "10:10"], suggestion: "계측기 검교정 10월 일정 확인하기", sStatus: "accepted", task: "t-tr-026" },
   { subject: "[예시세이프티] 9월 품질 실적 요청", from: "saf.quality@example.com", partner: "p-tr-saf", project: Q.ppm, by: "ai", conf: 0.87, at: [0, "08:05"], suggestion: "9월 품질 실적 회신하기" },
   { subject: "선재 검사증명서 송부", from: "wire.sales@example.com", partner: "p-tr-wire", project: Q.exh, by: "rule", conf: 0.95, at: [-2, "16:40"] },
@@ -692,8 +707,8 @@ const TR_MAIL_QA: MailDef[] = [
 ];
 
 const TR_KI: KiDef[] = [
-  { id: "ki-tr-01", kind: "manual", title: "편조 작업표준서", summary: "이름만 등록했어요. 본문은 회사 저장소에 있고 진단에서 받은 뒤 연결해요.", project: Q.exh, owner: PL, status: "draft", body: false, source: "진단에서 수집" },
-  { id: "ki-tr-02", kind: "manual", title: "프레스 성형 작업표준서", summary: "이름만 등록했어요. 본문은 진단에서 받은 뒤 연결해요.", project: Q.press, owner: PL, status: "draft", body: false, source: "진단에서 수집" },
+  { id: "ki-tr-01", kind: "manual", title: "편조 작업표준서", summary: "이름만 등록했어요. 본문은 회사 저장소에 있고 진단에서 받은 뒤 연결해요.", project: Q.exh, owner: PL, status: "draft", body: false, source: "진단에서 수집", sens: "L2" },
+  { id: "ki-tr-02", kind: "manual", title: "프레스 성형 작업표준서", summary: "이름만 등록했어요. 본문은 진단에서 받은 뒤 연결해요.", project: Q.press, owner: PL, status: "draft", body: false, source: "진단에서 수집", sens: "L2" },
   { id: "ki-tr-03", kind: "policy", title: "출하 검사기준서", summary: "이름만 등록했어요. 고객별 기준 여부는 진단에서 확인해요.", project: Q.ppm, owner: QA, status: "draft", body: false, source: "진단에서 수집" },
   { id: "ki-tr-04", kind: "policy", title: "선재 수입검사 기준", summary: "이름만 등록했어요. 검사증명서 확인 항목은 진단에서 확인해요.", project: Q.ppm, owner: QA, status: "draft", body: false, source: "진단에서 수집" },
   { id: "ki-tr-05", kind: "decision", title: "SUS321 선재 공급사 2곳 검토", summary: "주간 품질회의에서 공급사를 2곳으로 늘리는 안을 검토하기로 했어요.", project: Q.exh, owner: PL, verified: -1, review: 89, status: "verified", source: "회의 결정" },

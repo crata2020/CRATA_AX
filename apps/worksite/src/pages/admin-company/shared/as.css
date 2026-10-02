@@ -150,3 +150,7 @@
 .as-dev { margin-top: 12px; }
 .as-dev > summary { cursor: pointer; font-size: 13px; line-height: 20px; color: var(--ws-ink-2); font-weight: 600; width: fit-content; }
 .as-dev[open] > summary { margin-bottom: 8px; }
+
+/* 감사 기록 행위자(AI 연결): 이름 줄 + 아래 작은 'OO 대신' 줄(아바타 너비만큼 들여 씀) */
+.as-actor { display: inline-flex; flex-direction: column; gap: 0; min-width: 0; max-width: 100%; }
+.as-actor__for { padding-left: 30px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 18px; }
