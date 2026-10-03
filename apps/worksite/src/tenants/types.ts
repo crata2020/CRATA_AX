@@ -95,6 +95,38 @@ export interface GlossaryTermSeed {
   forbidden?: boolean; platformKey?: PlatformTermKey; toConfirm?: boolean; evidence?: string[];
 }
 
+/** 도입 단계. phase1 = 꼭 필요한 화면만(메뉴·홈만 줄이고 모듈·데이터는 그대로), full = 켜진 모듈 전부 */
+export type RolloutStage = "phase1" | "full";
+export type FieldReportKind = "defect" | "equipment" | "near_miss" | "other";
+
+/** 홈 위젯 목록(1순위 역할코드 → 2순위 소속 → 3순위 프리셋) */
+export interface HomeLists {
+  byRoleCode?: Record<string, WidgetId[]>;
+  byUnit?: Record<string, WidgetId[]>;
+  byPreset?: Partial<Record<HomePreset, WidgetId[]>>;
+}
+
+/** 단계별 도입(운영 부담 줄이기): 처음에는 화면 몇 개만 열고, 쓰는 게 익으면 '전체'로 한 번에 넓혀요 */
+export interface RolloutConfig {
+  /** 처음 단계. 회사 설정 › 모듈에서 바꾸면 tenant_settings.overrides.stage가 이 값을 덮어써요 */
+  defaultStage: RolloutStage;
+  phase1: {
+    /** 1단계에 보이는 메뉴 항목(NavChild key). 홈은 늘, 관리 메뉴는 owner·admin에게 늘 보여요. "ara"를 넣으면 ARA도 보여요.
+     *  빠진 화면도 링크(알림·홈 카드)로는 열려요 — 데이터가 이어져 있어서 메뉴만 숨깁니다 */
+    navKeys: string[];
+    /** 1단계 홈(승인만 하면 되는 화면). 없는 역할은 평소 홈 규칙을 따라요 */
+    home: HomeLists;
+  };
+}
+
+/** AI가 고르는 '추천 담당'(한 번 눌러 배정). 값은 역할코드 */
+export interface RoutingConfig {
+  /** 현장 등록 종류 → 담당 역할 */
+  fieldReportByKind?: Partial<Record<FieldReportKind, string>>;
+  /** 현장 등록을 배정하는 역할(이 사람 홈 '승인 대기'에 새 현장 등록이 모여요). 없으면 배정 권한이 있는 사람 모두 */
+  fieldReportDispatcher?: string;
+}
+
 export interface TenantConfig {
   slug: TenantSlug;
   /** 데이터 칸막이: "crata-demo" | "tr-technology-demo" */
@@ -129,12 +161,10 @@ export interface TenantConfig {
   defaultPersona: string;
   /** 묶음 → 역할코드 목록 */
   permissionBundles: Record<PermissionBundle, string[]>;
-  home: {
-    byRoleCode?: Record<string, WidgetId[]>;                  // 1순위
-    byUnit?: Record<string, WidgetId[]>;                      // 2순위
-    byPreset?: Partial<Record<HomePreset, WidgetId[]>>;       // 3순위
-    hidden: WidgetId[];
-  };
+  home: HomeLists & { hidden: WidgetId[] };
+  /** 단계별 도입. 없으면 늘 '전체' */
+  rollout?: RolloutConfig;
+  routing?: RoutingConfig;
   businessStructure: BusinessLineSeed[];
   partners: PartnerSeed[];
   facts: TenantFacts;

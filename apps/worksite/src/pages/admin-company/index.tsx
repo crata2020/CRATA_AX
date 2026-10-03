@@ -49,7 +49,7 @@ function RequestDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 }
 
 export default function Page() {
-  const { tenant, enabledModules, t, today } = useWorksite();
+  const { tenant, enabledModules, t, today, stage } = useWorksite();
   const [selected, setSelected] = useSelectedParam();
   const lines = useList<BusinessLine>({ resource: "business_lines", pagination: { mode: "off" }, sorters: [{ field: "sort_order", order: "asc" }] });
   const projects = useList<Project>({ resource: "projects", pagination: { mode: "off" } });
@@ -67,7 +67,7 @@ export default function Page() {
   const projCount = (lineId: string) => (projects.result?.data ?? []).filter((p) => p.business_line_id === lineId).length;
   const termList = terms.result?.data ?? [];
   const homeText = (r: (typeof tenant.roles)[number]): string => {
-    const ids = homeLayout(tenant, { roleCode: r.code, unitId: r.unitId, homePreset: r.homePreset, bundles: bundlesOf(r.code) }, enabledModules).filter((id) => id !== "greeting");
+    const ids = homeLayout(tenant, { roleCode: r.code, unitId: r.unitId, homePreset: r.homePreset, bundles: bundlesOf(r.code) }, enabledModules, { stage }).filter((id) => id !== "greeting");
     const names = ids.map((id) => WIDGET_BY_ID[id]?.nameKo ?? id);
     return names.length > 3 ? `${names.slice(0, 3).join(", ")} 외 ${names.length - 3}개` : names.join(", ") || "기본";
   };

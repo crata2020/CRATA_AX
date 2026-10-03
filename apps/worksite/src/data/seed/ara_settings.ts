@@ -13,7 +13,7 @@
 // - ARA 관련 동작(set_card_share · withdraw_wellbeing_consent)은 회사 감사 로그에 남기지 않습니다(개별 이용 시각은 회사가 볼 수 없는 것, A-03).
 import { defineGroup, type SeedContext, type SeedOutput, type RpcHandler, type SelectorHandler, type AraSeed, type ActionContext } from "./types";
 import type { McpConnection, Member, RowOf, SeedRow, TenantOverrides } from "@/types/entities";
-import type { PlatformRole } from "@/tenants/types";
+import type { PlatformRole, RolloutStage } from "@/tenants/types";
 import type { ModuleId } from "@/modules/registry.generated";
 import { LOCKED_MODULES, MODULE_BY_ID, resolveModules } from "@/modules";
 import { addDays, isOffDay, kstIso, toKstDate } from "@/lib/clock";
@@ -482,6 +482,20 @@ const rpc: Record<string, RpcHandler> = {
     ctx.update("tenant_settings", "settings", { overrides: next });
     ctx.audit({ action: "rpc:set_module_enabled", resource: "tenant_settings", resourceId: "settings", changes: { [`modules.${moduleId}`]: [before.has(moduleId), enabled] } });
     return { ok: true };
+  },
+
+  /** A-07 도입 단계: 1단계(꼭 필요한 화면만)와 전체 사이 전환. 메뉴·홈만 바뀌고 모듈·데이터는 그대로예요 */
+  set_rollout_stage: (ctx, { stage }: { stage: RolloutStage }) => {
+    if (!isAdminish(ctx) || !ctx.can("tenant_settings", "edit")) ctx.fail(403, "권한이 없어요");
+    if (!ctx.tenant.rollout) ctx.fail(409, "이 회사는 도입 단계를 나누지 않았어요");
+    if (stage !== "phase1" && stage !== "full") ctx.fail(400, "단계를 다시 골라 주세요");
+    const o = currentOverrides(ctx);
+    const before = o.stage ?? ctx.tenant.rollout!.defaultStage;
+    if (before === stage) return { ok: true, changed: false };
+    const next: TenantOverrides = { ...o, stage };
+    ctx.update("tenant_settings", "settings", { overrides: next });
+    ctx.audit({ action: "rpc:set_rollout_stage", resource: "tenant_settings", resourceId: "settings", changes: { stage: [before, stage] } });
+    return { ok: true, changed: true };
   },
 
   /** A-08: 브랜드·테마 저장(흰 글자 대비 4.5:1 미만이면 막음, 차트 강조는 검사 통과 목록만) */

@@ -1,13 +1,13 @@
 // TenantBoundary: 테넌트·페르소나·기준 날짜를 정하고(?tenant=&as=&today= → 저장된 마지막 선택 → 기본값),
 // 공급자(메모리·ARA·정책)를 만들고, 테마 CSS 변수를 적용합니다(빌드 스펙 2.2·4.5·5.5절).
-// 회사 설정 덮어쓰기(모듈·테마·용어)가 바뀌면 메뉴·테마를 바로 다시 계산합니다.
+// 회사 설정 덮어쓰기(모듈·테마·용어·도입 단계)가 바뀌면 메뉴·테마를 바로 다시 계산합니다.
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import type { DataProvider } from "@refinedev/core";
 import { TENANTS, DEFAULT_TENANT, isTenantSlug, type TenantConfig, type TenantSlug } from "@/tenants";
-import type { BrandTokens, Density, PermissionBundle, PersonSeed, RoleDef } from "@/tenants/types";
+import type { BrandTokens, Density, PermissionBundle, PersonSeed, RoleDef, RolloutStage } from "@/tenants/types";
 import { resolvePersona, type MemberState } from "./resolvePersona";
 import type { ModuleId } from "@/modules/registry.generated";
-import { buildNav, makeT, mobileTabs, resolveModules, type MobileTab, type NavItem } from "@/modules";
+import { buildNav, makeT, mobileTabs, resolveModules, rolloutStage, stageNavKeys, type MobileTab, type NavItem } from "@/modules";
 import type { TenantOverrides, ResourceName } from "@/types/entities";
 import type { SeedRegistry, BuildSeedOptions } from "@/data/seed";
 import type { Persona } from "@/data/seed/types";
@@ -97,6 +97,8 @@ export interface WorksiteContextValue {
   tokens: BrandTokens;
   density: Density;
   overrides: TenantOverrides;
+  /** 도입 단계(1단계면 메뉴·홈이 줄어요. 모듈·데이터는 그대로) */
+  stage: RolloutStage;
   enabledModules: Set<ModuleId>;
   isModuleOn: (id: ModuleId) => boolean;
   /** 리소스 또는 모듈 × 동작(행 규칙 포함). 버튼 숨기기·끄기에 씁니다 */
@@ -160,7 +162,9 @@ function Booted({ b, children }: { b: Boot; children: ReactNode }) {
     const t = makeT(b.tenant, overrides);
     const theme = themeFor(b.tenant, overrides);
     const tenant: TenantConfig = overrides.theme?.monogram ? { ...b.tenant, monogram: overrides.theme.monogram } : b.tenant;
-    return { modules, t, theme, tenant, nav: buildNav(b.tenant, b.persona.role, modules.enabled, t), tabs: mobileTabs(b.tenant) };
+    const stage = rolloutStage(b.tenant, overrides);
+    const nav = buildNav(b.tenant, b.persona.role, modules.enabled, t, { navKeys: stageNavKeys(b.tenant, stage) });
+    return { modules, t, theme, tenant, stage, nav, tabs: mobileTabs(b.tenant) };
   }, [b, overrides]);
 
   useLayoutEffect(() => {
@@ -183,6 +187,7 @@ function Booted({ b, children }: { b: Boot; children: ReactNode }) {
     tokens: derived.theme.tokens,
     density: derived.theme.density,
     overrides,
+    stage: derived.stage,
     enabledModules: derived.modules.enabled,
     isModuleOn: (id) => derived.modules.enabled.has(id),
     can: (r, action, row) => b.policy.can(r, action, row),

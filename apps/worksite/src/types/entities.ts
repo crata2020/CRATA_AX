@@ -2,7 +2,7 @@
 // 리소스 이름 = 2단계 DB 테이블 이름(snake_case 복수형). enum 값은 src/lib/status.ts가 정본입니다.
 // 이 파일은 Foundation 소유입니다. 필드가 더 필요하면 notes/<group>.md에 적어 주세요.
 import type { StatusValue as S } from "@/lib/status";
-import type { PlatformRole, Sensitivity, PlatformTermKey } from "@/tenants/types";
+import type { PlatformRole, Sensitivity, PlatformTermKey, RolloutStage } from "@/tenants/types";
 import type { ModuleId } from "@/modules/registry.generated";
 
 /** "YYYY-MM-DD"(KST 날짜) */
@@ -51,6 +51,8 @@ export interface TenantOverrides {
   theme?: { brand?: string; chartAccent?: string; monogram?: string; density?: "comfortable" | "compact" | "public" };
   /** 화면 용어 덮어쓰기(C-06) */
   glossary?: Partial<Record<PlatformTermKey, string>>;
+  /** 도입 단계 덮어쓰기(A-07 '도입 단계'). 없으면 TenantConfig.rollout.defaultStage */
+  stage?: RolloutStage;
 }
 export interface TenantSettings extends RowBase {
   display_name: string; brand_tokens: unknown; logo_ref: null; locale: "ko"; timezone: "Asia/Seoul"; enabled_modules: ModuleId[]; enabled_packs: string[];

@@ -194,3 +194,42 @@ a.wh-result:hover { background: var(--ws-brand-weak); }
 .wh-persona input { accent-color: var(--ws-brand); width: 16px; height: 16px; flex: none; margin: 0; }
 /* 히어로 줄: 옆 알약 카드는 히어로 높이까지 늘려 첫 줄을 한 띠로(카드 옆 패널 구멍 대신 카드 안 여백) */
 .ws-grid.wh-home > .ws-card--pill:not(.ws-card--hero) { align-self: stretch; }
+
+/* ── 승인 대기(approval-inbox): 한 번 눌러 끝내는 줄 */
+.wa-counts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.wa-count {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid var(--ws-control-line); color: var(--ws-ink-2); font-size: 13px; font-weight: 600; text-decoration: none; box-sizing: border-box;
+}
+.wa-count b { color: var(--ws-ink); font-variant-numeric: tabular-nums; }
+.wa-count:hover { background: var(--ws-brand-weak); color: var(--ws-brand-text); }
+.wa-list > li + li { border-top: 1px solid var(--ws-line); }
+.wa-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 4px; }
+.wa-row__main { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wa-row__line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.wa-row__line .ws-tag { flex: none; gap: 4px; }
+.wa-row__title {
+  min-width: 0; font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink); text-decoration: none;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.wa-row__title:hover { color: var(--ws-brand-text); text-decoration: underline; }
+/* 보조 줄(추천 담당·AI 분류)은 잘리면 안 되는 정보라 두 줄까지 */
+.wa-row__sub {
+  font-size: 13px; line-height: 20px; color: var(--ws-muted); overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.wa-row__acts { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-left: auto; }
+.wa-link {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 8px; border-radius: var(--ws-radius-control);
+  color: var(--ws-brand-text); font-size: 14px; font-weight: 600; text-decoration: none; box-sizing: border-box;
+}
+.wa-link:hover { background: var(--ws-brand-weak); }
+.wa-later.ant-btn { color: var(--ws-muted); }
+.wa-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 8px 0 0; font-size: 13px; line-height: 20px; color: var(--ws-muted); }
+.wa-inline.ant-btn { padding: 0 4px; height: auto; font-size: 13px; }
+@media (max-width: 767px) {
+  .wa-row__acts { width: 100%; margin-left: 0; }
+  .wa-row__acts .ant-btn, .wa-link { min-height: 44px; }
+  .wa-row__acts .ant-btn-primary { flex: 1; }
+}
+.wh-stage { margin: 16px 0 0; font-size: 13px; line-height: 20px; color: var(--ws-muted); }

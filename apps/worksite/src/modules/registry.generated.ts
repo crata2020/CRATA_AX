@@ -5,7 +5,7 @@
 
 export type ModuleId = "home-dashboard" | "org-members" | "company-info" | "business-structure" | "tasks" | "meetings" | "documents" | "notices" | "notifications" | "search" | "ai-connect" | "admin-members" | "admin-settings" | "audit-log" | "partners" | "calendar" | "approvals" | "attendance-leave" | "knowledge" | "correction-rules" | "mail-connector" | "integrations" | "ara-wellbeing" | "reports" | "safety-health" | "training-records" | "surveys" | "resource-booking" | "help-updates" | "data-export" | "billing" | "mfg-master-data" | "mfg-orders" | "mfg-production" | "mfg-quality" | "mfg-equipment" | "mfg-materials" | "edu-sales" | "edu-programs";
 export type NavGroupId = "home" | "work" | "projects" | "meetings" | "docs" | "industry" | "company" | "ara" | "admin";
-export type WidgetId = "greeting" | "my-tasks" | "returned-submissions" | "review-queue" | "team-workload" | "project-health" | "upcoming-meetings" | "recent-decisions" | "notices" | "ai-connect-status" | "company-kpi" | "ax-effect" | "approvals-pending" | "attendance-today" | "mail-followups" | "safety-status" | "ara-card" | "ara-aggregate" | "calendar-week" | "admin-health" | "mfg-delivery-due" | "mfg-production-today" | "mfg-quality-ppm" | "mfg-equipment-status" | "mfg-field-report" | "mfg-material-alert" | "mfg-claims-8d" | "mfg-inspection-queue" | "mfg-4m-changes" | "mfg-calibration-due" | "mfg-first-mid-last" | "mfg-pm-due" | "mfg-legal-calendar" | "mfg-monthly-summary" | "mfg-order-backlog" | "mfg-field-feed" | "mfg-dev-projects" | "mfg-material-price";
+export type WidgetId = "greeting" | "my-tasks" | "returned-submissions" | "review-queue" | "team-workload" | "project-health" | "upcoming-meetings" | "recent-decisions" | "notices" | "ai-connect-status" | "company-kpi" | "ax-effect" | "approvals-pending" | "attendance-today" | "mail-followups" | "safety-status" | "ara-card" | "ara-aggregate" | "calendar-week" | "admin-health" | "mfg-delivery-due" | "mfg-production-today" | "mfg-quality-ppm" | "mfg-equipment-status" | "mfg-field-report" | "mfg-material-alert" | "mfg-claims-8d" | "mfg-inspection-queue" | "mfg-4m-changes" | "mfg-calibration-due" | "mfg-first-mid-last" | "mfg-pm-due" | "mfg-legal-calendar" | "mfg-monthly-summary" | "mfg-order-backlog" | "mfg-field-feed" | "mfg-dev-projects" | "mfg-material-price" | "approval-inbox";
 export type PlatformRoleId = "owner" | "admin" | "reviewer" | "member";
 export type PermissionLevel = "manage" | "approve" | "edit" | "own" | "view" | "aggregate" | "none";
 export type ModuleTier = "P0" | "P1" | "P2";
@@ -2888,6 +2888,18 @@ export const HOME_WIDGETS: RegistryWidget[] = [
     "industry": "manufacturing",
     "suitableFor": [
       "ceo",
+      "staff_admin"
+    ],
+    "extra": true
+  },
+  {
+    "id": "approval-inbox",
+    "nameKo": "승인 대기",
+    "tier": "P1",
+    "module": "tasks",
+    "suitableFor": [
+      "ceo",
+      "lead",
       "staff_admin"
     ],
     "extra": true

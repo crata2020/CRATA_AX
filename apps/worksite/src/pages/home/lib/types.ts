@@ -122,6 +122,47 @@ export interface OrderBacklog { top: WRow[]; segments: WSeg[]; openLines: number
 export interface MaterialPrice { rows: { material: string; unit: string; latest: number; values: number[]; changePct: number | null; period: string }[] }
 export interface SafetyStatus { stats: WStat[] }
 
+/** 승인 대기(sel:widget.approval-inbox): 검토·분류 확인·결정·현장 배정·규칙 후보를 한곳에. 한 번 누르면 끝나는 것만 줄로 */
+export type ApprovalKind = "submission" | "action" | "segment" | "decision" | "field" | "rule";
+/** 한 번 누르면 끝나는 동작(rpc 이름 + 보낼 값) */
+export interface ApprovalAction {
+  rpc: "approve_submission" | "accept_action_proposal" | "confirm_segment" | "confirm_decision" | "assign_field_report" | "approve_rule" | "reject_rule";
+  payload: Record<string, unknown>;
+  /** 버튼 글자(예: "승인") */
+  label: string;
+  /** 끝난 뒤 알림(예: "승인했어요") */
+  done: string;
+}
+export interface ApprovalItem {
+  /** 종류까지 붙인 고유 id(예: "submission:sub-tr-001") */
+  key: string;
+  kind: ApprovalKind;
+  /** 종류 글자(예: "검토") */
+  kindLabel: string;
+  title: string;
+  /** 누가·언제 + AI가 고른 것(추천 담당·분류) */
+  subtitle: string;
+  /** 고치거나 자세히 볼 곳(제목 링크와 '고치기') */
+  to: string;
+  /** '고치기' 버튼 글자(예: "수정 요청", "다른 담당") */
+  editLabel: string;
+  /** AI가 만든 것이면 AI 태그 */
+  ai: boolean;
+  primary: ApprovalAction;
+  /** 두 번째 한 번 누르기(규칙 후보 '이번만') */
+  secondary?: ApprovalAction | null;
+  /** 정렬용(오래된 것 먼저) */
+  at: string;
+}
+export interface ApprovalInbox {
+  total: number;
+  /** 종류별 건수(머리 칩, 누르면 그 화면으로) */
+  counts: { kind: ApprovalKind; label: string; count: number; to: string }[];
+  items: ApprovalItem[];
+  /** 한 번에 끝낼 수 없어 화면에서 직접 골라야 하는 것(예: 미분류 구간) */
+  manual: { label: string; count: number; to: string }[];
+}
+
 /** 검색 결과(sel:search) */
 export interface SearchItem {
   id: string;

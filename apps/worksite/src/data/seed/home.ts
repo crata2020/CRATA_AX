@@ -7,12 +7,13 @@
 import { defineGroup, type SeedContext, type SeedOutput, type RpcHandler, type SelectorHandler, type SelectorContext } from "./types";
 import type { Notification, NotificationPreference, ResourceName, RowOf, SeedRow, Task } from "@/types/entities";
 import type { ModuleId } from "@/modules/registry.generated";
+import type { FieldReportKind } from "@/tenants/types";
 import { statusOf, labelOf, orderLineStatus, type StatusValue } from "@/lib/status";
 import { addDays, addMinutes, daysBetween, kstIso, toKstDate, weekStart } from "@/lib/clock";
 import { latestRisks } from "@/lib/safety";
 import { formatDate, formatMinutes, formatMonth, formatNumber, formatRelative, formatTime } from "@/lib/format";
 import type {
-  AiConnect, AxEffect, CompanyKpi, EquipmentStatus, HomeRail, HomeToday, MaterialPrice, MonthlySummary, OrderBacklog, ProductionToday,
+  ApprovalInbox, ApprovalItem, ApprovalKind, AiConnect, AxEffect, CompanyKpi, EquipmentStatus, HomeRail, HomeToday, MaterialPrice, MonthlySummary, OrderBacklog, ProductionToday,
   ProjectHealth, QualityPpm, RailItem, SafetyStatus, SaveNotificationPrefsInput, SearchGroup, SearchGroupKey, SearchItem, SearchResult,
   TeamWorkload, WFigure, WList, WRow, WSeg, WStat,
 } from "@/pages/home/lib/types";
@@ -651,6 +652,134 @@ W["review-queue"] = (c): WList | null => {
       };
     }),
   };
+};
+
+// 승인 대기: 내 차례인 것만(같은 건이 두 사람 할 일로 보이지 않게) + 한 번 누르면 끝나는 것만 줄로.
+//   검토 = 내가 지정 검토자인 제출 · 회의 액션·분류 = 회의 프로젝트의 검토자(프로젝트가 없으면 참석한 검토자)
+//   회의 결정 = 결정 역할이 내 역할(역할이 없으면 회의 검토자) · 현장 배정 = 배정 역할(routing.fieldReportDispatcher) · 작성 규칙 = 지정 승인자
+const APPROVAL_LABEL: Record<ApprovalKind, string> = { submission: "검토", action: "회의 액션", segment: "회의 분류", decision: "회의 결정", field: "현장 배정", rule: "작성 규칙" };
+const APPROVAL_TO: Record<ApprovalKind, string> = {
+  submission: "/work/review", action: "/meetings/inbox?kind=action", segment: "/meetings/inbox?kind=segment", decision: "/meetings/inbox?kind=decision",
+  field: "/ops/report?tab=feed", rule: "/docs/rules",
+};
+W["approval-inbox"] = (c): ApprovalInbox | null => {
+  const items: ApprovalItem[] = [];
+  const manual: ApprovalInbox["manual"] = [];
+  const myTitle = c.tenant.roles.find((r) => r.code === c.persona.roleCode)?.title;
+  const memberOfRole = (code: string | undefined) => (code ? c.tenant.people.find((p) => p.roleCode === code && p.persona) ?? c.tenant.people.find((p) => p.roleCode === code) : undefined);
+
+  // 1) 검토: 내가 지정 검토자인 제출 → 승인(수정 요청은 코멘트가 필요해서 검토함으로)
+  for (const sb of reviewableSubs(c)) {
+    const t = c.get("tasks", sb.task_id);
+    const who = sb.via === "ai_connection" ? `${personName(c, sb.submitted_by)} · AI 연결(${sb.via_client ?? "AI"})` : personName(c, sb.submitted_by);
+    items.push({
+      key: `submission:${sb.id}`, kind: "submission", kindLabel: APPROVAL_LABEL.submission, title: t?.title ?? "업무",
+      subtitle: subOf(who, formatRelative(sb.submitted_at, nowOf(c)) + " 제출"), to: `/work/review?selected=${sb.id}`, editLabel: "수정 요청",
+      ai: sb.via === "ai_connection", at: sb.submitted_at,
+      primary: { rpc: "approve_submission", payload: { submissionId: sb.id }, label: "승인", done: `"${t?.title ?? "업무"}" 승인했어요` },
+    });
+  }
+
+  // 2~4) 회의: 프로젝트 검토자(없으면 참석한 검토자)가 확인
+  if (on(c, "meetings") && c.can("meetings", "approve")) {
+    const meetings = indexBy(ls(c, "meetings"));
+    const projects = indexBy(on(c, "business-structure") ? ls(c, "projects") : []);
+    const lineByCode = new Map((on(c, "business-structure") ? ls(c, "business_lines") : []).map((l) => [l.code, l.name]));
+    const projectByCode = new Map([...projects.values()].map((p) => [p.code, p]));
+    const mine = (m: RowOf<"meetings"> | undefined) => {
+      if (!m) return false;
+      const p = m.project_ids[0] ? projects.get(m.project_ids[0]) : undefined;
+      return p ? p.reviewer_member_id === me(c) : m.attendee_ids.includes(me(c));
+    };
+    const meetingTitle = (m: RowOf<"meetings"> | undefined) => (m ? `${m.title} (${shortDay(toKstDate(m.started_at))})` : "회의");
+
+    for (const ap of ls(c, "action_proposals", [{ field: "status", operator: "eq", value: "proposed" }])) {
+      const m = meetings.get(ap.meeting_id);
+      if (!m || !mine(m) || !m.project_ids[0]) continue;
+      const assignee = ap.suggested_assignee_id ?? me(c);
+      const who = assignee === me(c) ? "나" : personName(c, assignee);
+      items.push({
+        key: `action:${ap.id}`, kind: "action", kindLabel: APPROVAL_LABEL.action, title: ap.title,
+        subtitle: subOf(meetingTitle(m), `추천 담당 ${who}`, ap.suggested_due_at ? `${shortDay(toKstDate(ap.suggested_due_at))}까지` : null),
+        to: `/meetings/inbox?kind=action&meeting=${m.id}`, editLabel: "고치기", ai: true, at: m.started_at,
+        primary: { rpc: "accept_action_proposal", payload: { proposalId: ap.id }, label: "업무로 만들기", done: assignee === me(c) ? `"${ap.title}" 업무를 내 업무에 넣었어요` : `"${ap.title}" 업무를 ${who}님에게 보냈어요` },
+      });
+    }
+
+    let unclassified = 0;
+    for (const sg of ls(c, "meeting_segments", [{ field: "review_status", operator: "in", value: ["pending", "unclassified"] }])) {
+      const m = meetings.get(sg.meeting_id);
+      if (!mine(m)) continue;
+      // 미분류(AI가 사업을 못 고름)는 한 번에 끝낼 수 없어요 → 화면에서 고르기
+      if (!sg.business_line_code) { unclassified++; continue; }
+      const prj = sg.project_code ? projectByCode.get(sg.project_code)?.name : null;
+      const guess = [lineByCode.get(sg.business_line_code) ?? sg.business_line_code, prj].filter(Boolean).join(" › ");
+      items.push({
+        key: `segment:${sg.id}`, kind: "segment", kindLabel: APPROVAL_LABEL.segment, title: `"${firstLine(sg.evidence_quote, 44)}"`,
+        subtitle: subOf(meetingTitle(m), `AI 분류 ${guess}`, `확신 ${Math.round(sg.confidence * 100)}%`),
+        to: `/meetings/inbox?kind=segment&meeting=${sg.meeting_id}`, editLabel: "고치기", ai: true, at: `${m!.started_at}|${String(sg.start_ts).padStart(6, "0")}`,
+        primary: { rpc: "confirm_segment", payload: { segmentId: sg.id }, label: "분류 맞아요", done: `${guess}(으)로 확인했어요` },
+      });
+    }
+    if (unclassified) manual.push({ label: "AI가 분류하지 못한 회의 구간", count: unclassified, to: "/meetings/inbox?kind=segment&conf=unclassified" });
+
+    for (const d of ls(c, "decisions", [{ field: "status", operator: "eq", value: "proposed" }])) {
+      const m = meetings.get(d.meeting_id);
+      const turn = d.decided_by_role ? d.decided_by_role === myTitle : mine(m);
+      if (!turn) continue;
+      items.push({
+        key: `decision:${d.id}`, kind: "decision", kindLabel: APPROVAL_LABEL.decision, title: firstLine(d.statement, 60),
+        subtitle: subOf(meetingTitle(m), d.decided_by_role ? `${d.decided_by_role} 확정` : null), to: `/meetings/inbox?kind=decision&meeting=${d.meeting_id}`,
+        editLabel: "고치기", ai: true, at: d.decided_at,
+        primary: { rpc: "confirm_decision", payload: { decisionId: d.id }, label: "확정", done: "결정을 확정했어요" },
+      });
+    }
+  }
+
+  // 5) 현장 배정: 배정 역할의 홈에 모여요. AI(회사 규칙)가 고른 추천 담당에게 한 번 눌러 배정
+  const dispatcher = c.tenant.routing?.fieldReportDispatcher;
+  if (on(c, "mfg-quality") && c.can("field_reports", "approve") && (!dispatcher || dispatcher === c.persona.roleCode)) {
+    for (const f of ls(c, "field_reports", [{ field: "status", operator: "eq", value: "new" }])) {
+      const target = memberOfRole(c.tenant.routing?.fieldReportByKind?.[f.kind as FieldReportKind]);
+      const by = f.anonymous || !f.reported_by ? "익명" : personName(c, f.reported_by);
+      const base = { key: `field:${f.id}`, kind: "field" as const, kindLabel: APPROVAL_LABEL.field, title: firstLine(f.note, 50), to: `/ops/report?tab=feed&selected=${f.id}`, at: f.reported_at };
+      if (!target) { manual.push({ label: "추천 담당이 없는 현장 등록", count: 1, to: base.to }); continue; }
+      const self = target.id === me(c);
+      items.push({
+        ...base, editLabel: "다른 담당", ai: false,
+        subtitle: subOf(`${labelOf("field_reports.kind", f.kind)} · ${by}`, formatRelative(f.reported_at, nowOf(c)), `추천 담당 ${self ? "나" : target.displayName}`),
+        primary: { rpc: "assign_field_report", payload: { reportId: f.id, assigneeId: target.id }, label: self ? "내가 맡기" : "배정", done: self ? "내가 맡았어요" : `${target.displayName}님에게 배정했어요` },
+      });
+    }
+  }
+
+  // 6) 작성 규칙 후보: 지정 승인자(없으면 소유자·관리자)
+  if (on(c, "correction-rules")) {
+    for (const r of ls(c, "rules", [{ field: "status", operator: "eq", value: "candidate" }])) {
+      const turn = r.approver_id ? r.approver_id === me(c) : adminish(c);
+      if (!turn || !c.can("rules", "approve", r as unknown as Record<string, unknown>)) continue;
+      items.push({
+        key: `rule:${r.id}`, kind: "rule", kindLabel: APPROVAL_LABEL.rule, title: r.statement,
+        subtitle: `같은 수정 ${r.evidence_ids.length}번 → 규칙으로 만들까요?`, to: `/docs/rules?selected=${r.id}`, editLabel: "고치기", ai: true, at: r.created_at,
+        primary: { rpc: "approve_rule", payload: { ruleId: r.id }, label: "반영", done: "다음 초안부터 이 규칙을 써요" },
+        secondary: { rpc: "reject_rule", payload: { ruleId: r.id }, label: "이번만", done: "이번 수정으로만 남겼어요" },
+      });
+    }
+  }
+
+  // 추천 담당이 없는 현장 등록은 한 줄로 묶어요
+  const merged = manual.reduce<ApprovalInbox["manual"]>((acc, m) => {
+    const same = acc.find((x) => x.label === m.label);
+    if (same) { same.count += m.count; same.to = APPROVAL_TO.field; } else acc.push({ ...m });
+    return acc;
+  }, []);
+  if (!items.length && !merged.length) return null;
+  const order: ApprovalKind[] = ["submission", "field", "action", "decision", "segment", "rule"];
+  items.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || a.at.localeCompare(b.at));
+  const counts = order
+    .map((kind) => ({ kind, label: APPROVAL_LABEL[kind], count: items.filter((i) => i.kind === kind).length, to: APPROVAL_TO[kind] }))
+    .filter((x) => x.count > 0);
+  return { total: items.length, counts, items, manual: merged };
 };
 
 W["team-workload"] = (c): TeamWorkload | null => {

@@ -1,5 +1,5 @@
 // 모듈 런타임(빌드 스펙 5.1절): resolveModules · buildNav · homeLayout · 용어 t()
-import type { TenantConfig, PlatformRole, PlatformTermKey, PermissionBundle } from "@/tenants/types";
+import type { TenantConfig, PlatformRole, PlatformTermKey, PermissionBundle, RolloutStage, HomeLists } from "@/tenants/types";
 import type { TenantOverrides } from "@/types/entities";
 import { MANIFEST } from "@/routes/manifest";
 import {
@@ -54,6 +54,17 @@ export const LEVEL_ACTIONS: Record<PermissionLevel, string[]> = {
   aggregate: ["list"],
   none: [],
 };
+
+// ───────── 도입 단계
+/** 지금 단계: 회사 설정 덮어쓰기 → TenantConfig.rollout.defaultStage → 단계 설정이 없으면 '전체' */
+export function rolloutStage(tenant: TenantConfig, overrides?: TenantOverrides | null): RolloutStage {
+  if (!tenant.rollout) return "full";
+  return overrides?.stage ?? tenant.rollout.defaultStage;
+}
+/** 1단계면 보일 메뉴 항목 key 목록, 전체면 undefined(거르지 않음) */
+export function stageNavKeys(tenant: TenantConfig, stage: RolloutStage): string[] | undefined {
+  return stage === "phase1" ? tenant.rollout?.phase1.navKeys : undefined;
+}
 
 // ───────── 용어
 /** 플랫폼 기본 용어(회사 용어집 platform_key로 바꿀 수 있음) */
@@ -184,16 +195,20 @@ const GROUP_PREFIXES: Record<NavGroupId, string[]> = {
 };
 const GROUP_MODULE: Partial<Record<NavGroupId, ModuleId>> = { home: "home-dashboard", ara: "ara-wellbeing" };
 
-/** 역할·켜진 모듈로 거른 메뉴 트리. 하위 항목이 하나도 없으면 그룹을 뺍니다(홈·ARA 제외) */
-export function buildNav(tenant: TenantConfig, role: PlatformRole, enabled: Set<ModuleId>, t: (k: string) => string): NavItem[] {
+/** 역할·켜진 모듈로 거른 메뉴 트리. 하위 항목이 하나도 없으면 그룹을 뺍니다(홈·ARA 제외).
+ *  opts.navKeys(도입 1단계)가 있으면 그 항목만 남겨요. 홈은 늘, 관리 메뉴는 역할이 되면 늘, ARA는 "ara"가 있을 때만 */
+export function buildNav(tenant: TenantConfig, role: PlatformRole, enabled: Set<ModuleId>, t: (k: string) => string, opts: { navKeys?: string[] } = {}): NavItem[] {
+  const keep = opts.navKeys ? new Set(opts.navKeys) : null;
   const items: NavItem[] = [];
   const allowed = (moduleId: ModuleId, action: "list" | "approve" = "list") =>
     enabled.has(moduleId) && LEVEL_ACTIONS[permissionLevel(moduleId, role)].includes(action);
   for (const g of [...NAV_GROUPS].sort((a, b) => a.order - b.order)) {
     if (!g.visibleTo.includes(role)) continue;
     if (g.id === "industry" && tenant.packs.length === 0) continue;
+    if (keep && g.id === "ara" && !keep.has("ara")) continue;
+    const staged = (key: string) => !keep || g.id === "admin" || keep.has(key);
     const children = CHILDREN[g.id](tenant.packs)
-      .filter((c) => (!c.roles || c.roles.includes(role)) && allowed(c.moduleId, c.action ?? "list"))
+      .filter((c) => staged(c.key) && (!c.roles || c.roles.includes(role)) && allowed(c.moduleId, c.action ?? "list"))
       .map(({ action: _a, roles: _r, ...c }) => c);
     // 소제목은 처음 보이는 항목에 다시 붙임(앞 항목이 빠져도 소제목이 남게)
     const sections = CHILDREN[g.id](tenant.packs);
@@ -283,9 +298,13 @@ export function homeLayout(
   tenant: TenantConfig,
   persona: { roleCode: string; unitId: string; homePreset: keyof typeof HOME_PRESETS; bundles: PermissionBundle[] },
   enabled: Set<ModuleId>,
-  opts: { population?: number } = {},
+  opts: { population?: number; stage?: RolloutStage } = {},
 ): WidgetId[] {
-  let list: WidgetId[] | undefined = tenant.home.byRoleCode?.[persona.roleCode] ?? tenant.home.byUnit?.[persona.unitId];
+  // 도입 1단계: 1단계 홈 목록이 있는 역할은 그 목록(승인만 하면 되는 홈), 없으면 평소 규칙
+  const staged: HomeLists | undefined = opts.stage === "phase1" ? tenant.rollout?.phase1.home : undefined;
+  let list: WidgetId[] | undefined =
+    staged?.byRoleCode?.[persona.roleCode] ?? staged?.byUnit?.[persona.unitId] ?? staged?.byPreset?.[persona.homePreset]
+    ?? tenant.home.byRoleCode?.[persona.roleCode] ?? tenant.home.byUnit?.[persona.unitId];
   if (!list) {
     const own = tenant.home.byPreset?.[persona.homePreset];
     if (own) list = own;

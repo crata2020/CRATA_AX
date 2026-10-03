@@ -12,7 +12,7 @@ const yamlPath = resolve(appRoot, "../../config/worksite_modules.yaml");
 const outPath = resolve(appRoot, "src/modules/registry.generated.ts");
 const iconDir = resolve(appRoot, "node_modules/@ant-design/icons/lib/icons");
 
-/** 03 문서 추가 제안 위젯 12개(레지스트리 반영 전). 빌드 스펙 3.1.1절 */
+/** 03 문서 추가 제안 위젯 12개 + 승인 대기(레지스트리 반영 전). 빌드 스펙 3.1.1절 */
 const EXTRA_WIDGETS: { id: string; name_ko: string; module: string; industry?: string; suitable_for: string[] }[] = [
   { id: "mfg-claims-8d", name_ko: "클레임·8D", module: "mfg-quality", industry: "manufacturing", suitable_for: ["ceo", "lead"] },
   { id: "mfg-inspection-queue", name_ko: "검사 대기", module: "mfg-quality", industry: "manufacturing", suitable_for: ["lead", "staff"] },
@@ -26,6 +26,8 @@ const EXTRA_WIDGETS: { id: string; name_ko: string; module: string; industry?: s
   { id: "mfg-field-feed", name_ko: "오늘 현장 등록", module: "mfg-quality", industry: "manufacturing", suitable_for: ["lead"] },
   { id: "mfg-dev-projects", name_ko: "개발 진행", module: "business-structure", industry: "manufacturing", suitable_for: ["lead", "staff"] },
   { id: "mfg-material-price", name_ko: "원재료 가격", module: "mfg-materials", industry: "manufacturing", suitable_for: ["ceo", "staff_admin"] },
+  // 승인 대기: 검토·분류 확인·결정·현장 배정·규칙 후보를 한곳에 모아 한 번 눌러 처리(도입 1단계 홈의 중심)
+  { id: "approval-inbox", name_ko: "승인 대기", module: "tasks", suitable_for: ["ceo", "lead", "staff_admin"] },
 ];
 
 type Any = Record<string, any>;

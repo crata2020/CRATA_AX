@@ -1,5 +1,6 @@
 // 홈 `/` · H-01 · 깊이 A · 모듈 home-dashboard · 소유: home 그룹
 // 인사말(h1) + '오늘 할 일' 히어로 1장 + 역할·소속별 위젯(homeLayout, 빌드 스펙 5.3절).
+// 도입 1단계면 1단계 홈 목록(승인 대기 중심)을 쓰고, 소유자·관리자에게 넓히는 곳을 한 줄로 알려요.
 // 배치: 첫 줄 = 히어로 5열 + 2번째 위젯 7열(알약). 그 아래는 두 줄기(MasonryGrid)로 실제 높이를 재서 짧은 줄기 아래에 다음 카드를 쌓아요.
 //   L 위젯은 두 줄기 사이에 전체 폭(그 앞 줄기 끝이 크게 어긋나면 뒤 카드를 당겨 채움). 1024 미만은 한 줄기(원래 순서). 1440 이상에서는 '오늘' 내용이 오른쪽 레일로 갑니다.
 import "./lib/home.css";
@@ -15,6 +16,7 @@ import { formatDate } from "@/lib/format";
 import { homeLayout } from "@/modules";
 import type { WidgetId } from "@/modules/registry.generated";
 import { Skeleton } from "antd";
+import { Link } from "react-router";
 import type { HomeRail, HomeToday, RailItem } from "./lib/types";
 import { TodayHeroBody, greetingSummary } from "./lib/TodayHero";
 import { WidgetError } from "./lib/widgetKit";
@@ -46,7 +48,7 @@ function TodayCard({ rail }: { rail: HomeRail }) {
 }
 
 export default function HomePage() {
-  const { persona, role, tenant, today, enabledModules } = useWorksite();
+  const { persona, role, tenant, today, enabledModules, stage } = useWorksite();
   const [periodRaw] = useUrlParam("period", "week");
   const period: "week" | "month" = periodRaw === "month" ? "month" : "week";
   const railVisible = useRailVisible();
@@ -57,9 +59,9 @@ export default function HomePage() {
 
   const population = todayQ.data?.population ?? 0;
   const widgets = useMemo(
-    () => homeLayout(tenant, { roleCode: persona.roleCode, unitId: persona.unitId, homePreset: role.homePreset, bundles: persona.bundles }, enabledModules, { population })
+    () => homeLayout(tenant, { roleCode: persona.roleCode, unitId: persona.unitId, homePreset: role.homePreset, bundles: persona.bundles }, enabledModules, { population, stage })
       .filter((id) => id !== "greeting"),
-    [tenant, persona, role.homePreset, enabledModules, population],
+    [tenant, persona, role.homePreset, enabledModules, population, stage],
   );
   const [second, ...below] = widgets;
   const showPeriod = widgets.some((w) => PERIOD_AWARE.has(w));
@@ -93,6 +95,11 @@ export default function HomePage() {
         {second && <WidgetSlot id={second} pill span={7} period={period} />}
       </CardGrid>
       {flow.length > 0 && <MasonryGrid className="wh-home wh-flow" items={flow} balance />}
+      {stage === "phase1" && (persona.role === "owner" || persona.role === "admin") && (
+        <p className="wh-stage">
+          지금은 도입 1단계예요 — 꼭 필요한 화면만 열어 뒀어요. 익숙해지면 <Link to="/admin/modules">회사 설정 › 모듈</Link>에서 한 번에 넓힐 수 있어요.
+        </p>
+      )}
       {rail && (
         <RightRail
           blocks={[

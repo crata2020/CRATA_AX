@@ -59,6 +59,21 @@ export const crataDemo: TenantConfig = {
   defaultPersona: "R_EDU_LEAD",
   permissionBundles: { view_prices: ["R_CEO", "R_EDU_LEAD"] },
   home: { hidden: ["ara-aggregate"] },
+  // 단계별 도입(CRATA는 이미 다 쓰고 있어서 '전체'로 시작). 1단계로 바꾸면 업무·회의·문서 6개 화면만 남아요
+  rollout: {
+    defaultStage: "full",
+    phase1: {
+      navKeys: ["work-list", "work-review", "meetings", "meeting-inbox", "docs", "correction-rules"],
+      home: {
+        byPreset: {
+          ceo: ["greeting", "approval-inbox", "project-health", "recent-decisions"],
+          lead: ["greeting", "approval-inbox", "my-tasks", "upcoming-meetings"],
+          staff_admin: ["greeting", "approval-inbox", "my-tasks"],
+          staff: ["greeting", "my-tasks", "returned-submissions", "upcoming-meetings"],
+        },
+      },
+    },
+  },
   businessStructure: [
     {
       id: "bl-cr-edu", code: "EDU", name: "강의·워크샵", description: "기업·학교·교사 대상 AI 강의·워크샵·연수의 수주, 기획, 운영, 사후관리", ownerMemberId: "m-cr-edu-lead",

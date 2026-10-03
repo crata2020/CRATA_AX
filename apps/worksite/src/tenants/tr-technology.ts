@@ -101,6 +101,31 @@ export const trTechnology: TenantConfig = {
     },
     hidden: ["ara-aggregate"],
   },
+  // 단계별 도입: 첫 파일럿은 품질·현장 등록부터(1차 파일럿 범위). 화면 7개만 열고, 홈은 '승인만 하면 되는 화면'으로 시작해요.
+  // 다른 모듈·데이터는 켜 둔 채 메뉴만 숨겨요 — 회사 설정 › 모듈 › 도입 단계에서 '전체'로 한 번에 넓힐 수 있어요
+  rollout: {
+    defaultStage: "phase1",
+    phase1: {
+      navKeys: ["work-list", "work-review", "meetings", "meeting-inbox", "field-report", "quality", "claims"],
+      home: {
+        byRoleCode: { R_OPERATOR: ["greeting", "mfg-field-report", "my-tasks"] },
+        byUnit: {
+          U_CEO: ["greeting", "approval-inbox", "mfg-quality-ppm", "mfg-claims-8d"],
+          U_PLANT: ["greeting", "approval-inbox", "mfg-field-feed", "mfg-claims-8d"],
+          // 승인할 일이 적은 역할은 자기 일을 앞에, 승인 대기는 그 아래(빈 카드가 첫 줄을 차지하지 않게)
+          U_QA: ["greeting", "mfg-claims-8d", "approval-inbox", "mfg-quality-ppm"],
+          U_SALES_PROD: ["greeting", "my-tasks", "approval-inbox"],
+          U_ADMIN_PUR: ["greeting", "my-tasks", "approval-inbox"],
+          U_DEV: ["greeting", "my-tasks", "returned-submissions"],
+        },
+      },
+    },
+  },
+  // 현장 등록 추천 담당(가설 — 진단 때 회사 규칙으로 바꿔요): 공장장 홈에 모이고, 한 번 눌러 추천 담당에게 배정
+  routing: {
+    fieldReportByKind: { defect: "R_QA", equipment: "R_PLANT_MGR", near_miss: "R_ADMIN_PUR_ACC", other: "R_ADMIN_PUR_ACC" },
+    fieldReportDispatcher: "R_PLANT_MGR",
+  },
   businessStructure: [
     {
       id: "bl-tr-mass", code: "MASS", name: "양산·납품", description: "양산 품목의 수주·생산·출하(가설)", ownerMemberId: "m-tr-plant", hypothesis: true,

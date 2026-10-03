@@ -1,13 +1,15 @@
 // 모듈 `/admin/modules` · A-07 · 깊이 A · 모듈 admin-settings · 소유: ara_settings 그룹(owner·admin만)
 // 이 회사에서 켤 공통 코어 모듈을 정합니다. 스위치 → rpc:set_module_enabled(덮어쓰기 저장 + 감사 기록) → 메뉴가 바로 바뀜(TenantBoundary가 다시 계산).
 // 규칙: 다른 켜진 모듈이 쓰는 모듈은 끌 수 없음(이유 표시), 필요한 모듈이 꺼져 있으면 켤 수 없음, 꼭 필요한 모듈 5개는 잠금. 업종 팩은 보기만.
-import { useState } from "react";
-import { App, Switch } from "antd";
+// 도입 단계(맨 위): 1단계(꼭 필요한 화면만)와 전체 사이 전환 → rpc:set_rollout_stage. 메뉴·홈만 바뀌고 모듈·데이터는 그대로예요.
+import { useMemo, useState } from "react";
+import { App, Radio, Switch } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import { CardGrid, EmptyState, FilterBar, PageHeader, SectionCard, StatTile, StatRow, useConfirm, useFilterBarState, type FilterBarProps, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { useRpc } from "@/lib/refine";
-import { LOCKED_MODULES, MODULES, MODULE_BY_ID, NAV_GROUPS, type ModuleId, type RegistryModule } from "@/modules";
+import { LOCKED_MODULES, MODULES, MODULE_BY_ID, NAV_GROUPS, buildNav, stageNavKeys, type ModuleId, type RegistryModule } from "@/modules";
+import type { RolloutStage } from "@/tenants/types";
 import { MANIFEST } from "@/routes/manifest";
 import { ResponsiveTable } from "../admin-company/shared/lib";
 
@@ -17,6 +19,54 @@ const PACKS: { id: string; name: string }[] = [
   { id: "education_consulting", name: "교육·컨설팅(영업·교육)" },
 ];
 const WITH_SCREEN = new Set<string>(MANIFEST.map((m) => m.moduleId));
+
+/** 메뉴 이름 목록(관리 메뉴 제외, 모든 역할이 보는 것 기준 = owner) */
+function useMenuLabels(stage: RolloutStage): string[] {
+  const { tenant, enabledModules, t } = useWorksite();
+  return useMemo(() => buildNav(tenant, "owner", enabledModules, t, { navKeys: stageNavKeys(tenant, stage) })
+    .filter((g) => g.key !== "admin")
+    .flatMap((g) => (g.children.length ? g.children.filter((c) => !c.alias).map((c) => c.label) : [g.label])), [tenant, enabledModules, t, stage]);
+}
+
+/** 도입 단계 카드: 처음에는 화면 몇 개만, 익으면 '전체'로 한 번에 */
+function StageCard() {
+  const { tenant, stage } = useWorksite();
+  const { message } = App.useApp();
+  const { run, isPending } = useRpc("set_rollout_stage");
+  const phase1 = useMenuLabels("phase1");
+  const full = useMenuLabels("full");
+  if (!tenant.rollout) return null;
+  const change = async (next: RolloutStage) => {
+    try {
+      await run({ stage: next });
+      message.success(next === "phase1" ? `1단계로 바꿨어요. 메뉴가 ${phase1.length}개만 보여요` : `전체로 바꿨어요. 메뉴 ${full.length}개가 모두 보여요`);
+    } catch { /* 토스트는 useRpc */ }
+  };
+  return (
+    <SectionCard
+      span={12}
+      title="도입 단계"
+      caption="메뉴와 홈만 바뀌어요. 모듈·데이터는 그대로라 언제든 되돌릴 수 있고, 숨긴 화면도 알림·홈 카드의 링크로는 열려요."
+    >
+      <Radio.Group
+        optionType="button"
+        buttonStyle="solid"
+        value={stage}
+        disabled={isPending}
+        onChange={(e) => void change(e.target.value as RolloutStage)}
+        aria-label="도입 단계"
+        options={[
+          { value: "phase1", label: `1단계 · 꼭 필요한 화면만 (${phase1.length}개)` },
+          { value: "full", label: `전체 (${full.length}개)` },
+        ]}
+      />
+      <p className="as-caption" style={{ marginTop: 12 }}>
+        {stage === "phase1" ? "지금 보이는 메뉴: " : "1단계로 바꾸면 남는 메뉴: "}
+        {phase1.join(" · ")}
+      </p>
+    </SectionCard>
+  );
+}
 
 export default function Page() {
   const { tenant, enabledModules, t } = useWorksite();
@@ -112,6 +162,7 @@ export default function Page() {
     <>
       <PageHeader title="모듈" description="켜고 끄면 메뉴가 바로 바뀌어요. 꺼도 데이터는 지우지 않아요." />
       <CardGrid>
+        <StageCard />
         <SectionCard span={12} title="공통 코어" demo caption="'화면 없음' 모듈은 이번 빌드에 화면이 없고 다른 화면의 데이터로만 쓰여요.">
           <StatRow>
             <StatTile label="켜진 모듈" value={onCount} unit="개" />

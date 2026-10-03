@@ -12,6 +12,7 @@ import { kstIso } from "@/lib/clock";
 import { formatDateTime, formatTime } from "@/lib/format";
 import { labelOf, optionsOf, statusOf } from "@/lib/status";
 import type { FieldReport, Project } from "@/types/entities";
+import type { FieldReportKind } from "@/tenants/types";
 import { periodStart, useMfgLookups, useRows } from "../ops-home/kit/data";
 import { Kv } from "../ops-home/kit/ui";
 
@@ -48,7 +49,11 @@ export function Feed() {
 
   const reports = useRows<FieldReport>("field_reports", { enabled: !!selected });
   const current = selected ? reports.rows.find((r) => r.id === selected) ?? null : null;
-  const defaultAssignee = (r: FieldReport) => tenant.people.find((p) => p.roleCode === (r.kind === "defect" ? "R_QA" : r.kind === "equipment" ? "R_PLANT_MGR" : "R_ADMIN_PUR_ACC"))?.id;
+  // 추천 담당: 회사 규칙(TenantConfig.routing — 홈 '승인 대기'와 같은 규칙)
+  const defaultAssignee = (r: FieldReport) => {
+    const code = tenant.routing?.fieldReportByKind?.[r.kind as FieldReportKind];
+    return code ? (tenant.people.find((p) => p.roleCode === code && p.persona) ?? tenant.people.find((p) => p.roleCode === code))?.id : undefined;
+  };
   const defaultProject = (r: FieldReport) => {
     const want = r.kind === "equipment" ? "prj-tr-safe-press" : r.kind === "defect" ? "prj-tr-qual-ppm" : "prj-tr-safe-h2";
     return projects.rows.find((p) => p.id === want)?.id ?? projects.rows[0]?.id;

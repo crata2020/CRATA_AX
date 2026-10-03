@@ -136,7 +136,7 @@ export const GROUP_ACTIONS = {
     sel: ["ops.today"],
   },
   ara_settings: {
-    rpc: ["revoke_mcp_connection", "revoke_all_mcp", "set_card_share", "withdraw_wellbeing_consent", "update_my_profile", "request_profile_change", "set_module_enabled", "save_theme", "change_member_role", "set_member_status"],
+    rpc: ["revoke_mcp_connection", "revoke_all_mcp", "set_card_share", "withdraw_wellbeing_consent", "update_my_profile", "request_profile_change", "set_module_enabled", "set_rollout_stage", "save_theme", "change_member_role", "set_member_status"],
     sel: [],
   },
   home: { rpc: ["mark_all_notifications_read", "save_notification_preferences"], sel: ["home.today", "home.rail", "search", "widget.<id>"] },
