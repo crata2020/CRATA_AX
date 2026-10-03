@@ -9,6 +9,8 @@
 | `crata-demo` | CRATA 내부 적용 가안 | 딥 틸 `#0B6E69`(가안) | 교육·컨설팅(영업·교육) |
 
 정본 문서: [`docs/worksite/00_build-spec.md`](../../docs/worksite/00_build-spec.md)(화면·데이터·규칙) · [`05_tech-stack.md`](../../docs/worksite/05_tech-stack.md)(버전·구조).
+
+**도입 단계:** `TenantConfig.rollout`이 있으면 '1단계'(정한 메뉴 항목 `navKeys`와 1단계 홈만)와 '전체'를 오갑니다. 모듈·데이터는 그대로 두고 메뉴·홈만 거르므로, 관리 › 모듈 › 도입 단계(`rpc:set_rollout_stage`, `tenant_settings.overrides.stage`)에서 바로 바꿀 수 있어요. 티알은 1단계, CRATA는 전체로 시작합니다. 현장 등록 추천 담당은 `TenantConfig.routing`, 홈 '승인 대기'는 `widget.approval-inbox`([06 입력 부담 점검](../../docs/worksite/06_input-burden-audit.md) 6장).
 **모든 숫자와 사람은 예시입니다.** 실존 인물 이름, 지어낸 실존 회사 사실, 제3자 이미지(레퍼런스 캡처·TR 로고)를 넣지 않습니다.
 
 ---
