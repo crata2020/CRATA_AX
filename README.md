@@ -45,12 +45,12 @@
 | 회사·사람 바꿔 보기 | 상단 선택 상자, 또는 `?tenant=tr-technology&as=R_PLANT_MGR` / `?tenant=crata-demo&as=R_CEO` |
 | 스택 | Refine 5 + Ant Design 5 + React 18 + React Router 7 + Vite + TypeScript, Pretendard ([05 기술 스택](docs/worksite/05_tech-stack.md)). GraphQL·DB는 다음 단계에서 Supabase 서울로 연결 |
 | 화면 | 63개 경로. 공통 코어(홈, 내 업무·검토함, 사업·프로젝트, 회의, 문서·양식·수정 규칙·지식, 회사(공지·일정·결재·구성원·조직도), 내 AI 연결, ARA, 관리) + 제조업 팩(생산·품질 홈, 현장 등록, 수주·납품, 생산, 설비 현황판, 품질·클레임 8D, LOT 추적, 자재·재고, 기준정보, 안전보건) |
-| 디자인 | 사용자 레퍼런스(스마트경리 대시보드)의 구조는 살리고 'AI 티'(그라데이션·보라·카드 안 카드)는 뺐습니다. 회사 브랜드색은 설정값입니다(티알 남색, CRATA 딥 틸 가안) ([01 디자인 레퍼런스](docs/worksite/01_design-references.md)) |
+| 디자인 | **Orbix Studio 대시보드 스타일**(instagram.com/orbixdashboard, 레퍼런스 52장)로 다시 만들었습니다: 회색 캔버스 + 흰 사이드바·상단 바 틀, 거의 안 보이는 1px 테두리의 흰 카드(라운드 12), 알약 모양 툴바·행 버튼, 큰 숫자 옆 증감 칩, 강조 막대 하나 + 옅은 나머지 차트, 도넛·게이지. 'AI 티'(그라데이션·블러·카드 안 카드)는 여전히 뺐고, 강조색은 회사 브랜드 하나입니다(티알 남색, CRATA 딥 틸 가안) ([07 Orbix 리디자인 명세](docs/worksite/07_orbix-redesign.md), 이전 레퍼런스 [01](docs/worksite/01_design-references.md)) |
 | 공통 항목 | 공통 코어 31개(P0 14 · P1 11 · P2 6) + 업종 팩(제조 6 · 교육·컨설팅 2). 메신저·메일 클라이언트·전자결재 엔진·ERP는 만들지 않고 연동합니다 ([02 공통 모듈](docs/worksite/02_common-modules.md), [config/worksite_modules.yaml](config/worksite_modules.yaml)) |
 | 첫 고객 | 공개 정보만 반영했습니다: 조직도, 공정(편조→크림핑·프레스·스파이럴링), 설비 대수, 제품·소재. 나머지는 진단에서 확인할 가설입니다 ([03 티알테크놀러지](docs/worksite/03_tr-technology.md), [clients/tr-technology/company_profile.yaml](clients/tr-technology/company_profile.yaml)) |
 | 운영 부담 줄이기 | **도입 단계**: 티알은 '1단계'(홈 + 화면 7개)로 시작하고, 관리 › 모듈 › 도입 단계에서 버튼 한 번으로 '전체'로 넓힙니다(모듈·데이터는 그대로, 메뉴·홈만 바뀜). **홈 '승인 대기'**: 검토 승인·회의 액션→업무·분류 확인·결정 확정·현장 배정·작성 규칙을 AI·회사 규칙이 미리 채우고 사람은 한 번 누릅니다. 화면 63개를 하나씩 센 결과와 자동화 방법은 [06 입력 부담 점검](docs/worksite/06_input-burden-audit.md) |
-| 설계서 | [00 빌드 스펙](docs/worksite/00_build-spec.md) · 화면 캡처 [docs/worksite/screenshots](docs/worksite/screenshots)(11~14번이 1단계 화면) |
-| 검증 | typecheck · build · 단위 테스트 67개 · 규칙 검사 · e2e 258개 통과, 두 회사 전 경로 콘솔 오류 0. 승인 대기의 모든 버튼을 두 회사 10개 역할로 눌러 끝까지 되는지 확인. 디자인·UX·코드 3중 리뷰 3회 |
+| 설계서 | [00 빌드 스펙](docs/worksite/00_build-spec.md) · 화면 캡처 [docs/worksite/screenshots](docs/worksite/screenshots)(01·02 전체 단계, 11~14 1단계 화면, 모두 새 디자인) |
+| 검증 | typecheck · build · 단위 테스트 67개 · 규칙 검사 · e2e 258개 통과, 두 회사 전 경로 콘솔 오류 0. 승인 대기의 모든 버튼을 두 회사 10개 역할로 눌러 끝까지 되는지 확인. 디자인·UX·코드 3중 리뷰 3회. Orbix 리디자인 뒤 화면 36장 × 시각 리뷰 5라운드(레퍼런스 충실도·레이아웃 회귀·일관성·접근성·모바일)로 고치고 e2e 258개 다시 통과 |
 
 > 화면의 모든 숫자·사람·거래처는 **예시 데이터**입니다. 실존 인물 이름과 티알 로고 이미지는 쓰지 않았습니다.
 
@@ -125,7 +125,7 @@
 | 경로 | 내용 |
 |---|---|
 | [apps/worksite](apps/worksite) | **공통 업무사이트 뼈대** (Refine + Ant Design). 실행 방법과 구조는 [apps/worksite/README.md](apps/worksite/README.md) |
-| [docs/worksite](docs/worksite) | 뼈대 설계 문서: 00 빌드 스펙, 01 디자인 레퍼런스, 02 공통 모듈, 03 티알테크놀러지(제조업 팩), 05 기술 스택, 06 입력 부담 점검(화면 63개 · 1단계 구성), 화면 캡처 |
+| [docs/worksite](docs/worksite) | 뼈대 설계 문서: 00 빌드 스펙, 01 디자인 레퍼런스, 02 공통 모듈, 03 티알테크놀러지(제조업 팩), 05 기술 스택, 06 입력 부담 점검(화면 63개 · 1단계 구성), 07 Orbix 리디자인 명세, 화면 캡처 |
 | [clients/tr-technology/company_profile.yaml](clients/tr-technology/company_profile.yaml) | 첫 고객 Company DNA Profile 초안(공개 사실만, 나머지 TODO) |
 | [docs/research/00_direction.md](docs/research/00_direction.md) | **최상위 문서**: 사용자 방향 정리, "이미 있는데 의미가 있나"에 대한 답, 방향 검토(맞는 것·고칠 것), 모듈 지도, 실행 순서, 첫 판매 기준, 결정할 것 |
 | [docs/research/01_market-map.md](docs/research/01_market-map.md) | 국내외 유사 서비스 리서치 맵(카테고리별 표), Top 10 레퍼런스, 한국 시장 특수성, CRATA 포지셔닝·상품화·가격, 다음 액션 |
