@@ -1,0 +1,154 @@
+/* ARA: Orbix AI 채팅 홈(가운데 질문 + 입력 상자 + 카드 3장, 은은한 파스텔 배경) */
+.ara-lock {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; margin-bottom: 16px; border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--line); font-size: 13.5px; color: var(--ink-2); line-height: 20px;
+}
+.ara-lock p { flex: 1; min-width: 0; }
+.ara-lock b { font-weight: 600; color: var(--ink); }
+.ara-lock__ic { width: 34px; height: 34px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; background: var(--dark); color: #fff; }
+.ara-lock__ic svg { width: 16px; height: 16px; stroke-width: 1.9; }
+.ara-lock__more { flex: none; display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; font-size: 13px; font-weight: 500; color: var(--ink-2); cursor: pointer; padding: 6px 8px; border-radius: 8px; }
+.ara-lock__more:hover { background: var(--sunken); }
+.ara-lock__more svg { width: 14px; height: 14px; }
+
+.ara-hero {
+  position: relative; overflow: hidden; border-radius: var(--r-xl); border: 1px solid var(--line);
+  background:
+    radial-gradient(120% 90% at 100% 100%, rgba(246, 146, 120, 0.42) 0%, rgba(246, 146, 120, 0) 55%),
+    radial-gradient(70% 60% at 82% 18%, rgba(250, 214, 140, 0.38) 0%, rgba(250, 214, 140, 0) 60%),
+    radial-gradient(60% 70% at 4% 92%, rgba(244, 164, 196, 0.32) 0%, rgba(244, 164, 196, 0) 60%),
+    radial-gradient(50% 50% at 10% 8%, rgba(184, 170, 246, 0.22) 0%, rgba(184, 170, 246, 0) 60%),
+    #fffdfb;
+}
+/* 점 무늬(오른쪽 아래·왼쪽 아래만) */
+.ara-hero::before, .ara-hero::after {
+  content: ""; position: absolute; pointer-events: none; background-image: radial-gradient(circle, rgba(232, 108, 128, 0.36) 1.1px, transparent 1.5px); background-size: 11px 11px;
+}
+.ara-hero::before { right: 0; bottom: 0; width: 40%; height: 55%; -webkit-mask-image: radial-gradient(80% 80% at 100% 100%, #000 10%, transparent 75%); mask-image: radial-gradient(80% 80% at 100% 100%, #000 10%, transparent 75%); }
+.ara-hero::after { left: 0; bottom: 0; width: 30%; height: 50%; -webkit-mask-image: radial-gradient(70% 70% at 0% 100%, #000 5%, transparent 70%); mask-image: radial-gradient(70% 70% at 0% 100%, #000 5%, transparent 70%); opacity: .7; }
+.ara-hero__in { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 72px 24px 56px; display: flex; flex-direction: column; align-items: center; }
+.ara-hero__date { font-size: 13px; color: var(--muted); }
+.ara-hero__q { font-size: 34px; line-height: 44px; font-weight: 500; letter-spacing: -0.03em; color: var(--ink); text-align: center; margin-top: 6px; }
+.ara-hero__sub { font-size: 14px; color: var(--muted); margin-top: 6px; text-align: center; }
+
+.ara-orb { width: 26px; height: 26px; border-radius: 50%; flex: none; background: radial-gradient(circle at 32% 30%, #fff 0 14%, rgba(255,255,255,0) 40%), conic-gradient(from 200deg, #b9a6f7, #f6a6c4, #fbc59a, #a9d8f5, #b9a6f7); box-shadow: inset 0 0 0 1px rgba(255,255,255,.6), 0 2px 6px rgba(160, 124, 240, .25); }
+.ara-orb--sm { width: 24px; height: 24px; margin-top: 2px; }
+
+/* 대화 */
+.ara-chat { width: 100%; margin-top: 24px; display: flex; flex-direction: column; gap: 10px; max-height: 360px; overflow-y: auto; padding: 2px; }
+.ara-msg { display: flex; gap: 10px; align-items: flex-start; }
+.ara-msg--me { justify-content: flex-end; }
+.ara-msg__b { max-width: 82%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 21px; background: rgba(255, 255, 255, .92); border: 1px solid var(--line); color: var(--ink-2); }
+.ara-msg--me .ara-msg__b { background: var(--dark); border-color: var(--dark); color: #fff; border-bottom-right-radius: 6px; }
+.ara-msg--ara .ara-msg__b { border-top-left-radius: 6px; }
+.ara-msg--crisis .ara-msg__b { border-color: var(--c-coral); background: #fff; }
+.ara-msg__list { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.ara-msg__list li { display: flex; gap: 6px; align-items: flex-start; font-size: 13.5px; }
+.ara-msg__list svg { width: 14px; height: 14px; color: var(--good); margin-top: 3px; flex: none; }
+.ara-msg__help { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+
+/* 입력 상자 */
+.ara-prompt { width: 100%; margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px 14px 12px; box-shadow: 0 1px 2px rgba(16, 18, 27, .04), 0 16px 40px rgba(232, 140, 120, .14); }
+.ara-prompt:focus-within { border-color: var(--line-2); box-shadow: 0 0 0 4px rgba(255, 255, 255, .7), 0 16px 40px rgba(232, 140, 120, .18); }
+.ara-prompt__top { display: flex; gap: 12px; align-items: flex-start; padding: 0 4px; }
+.ara-prompt textarea { flex: 1; min-width: 0; border: 0; outline: 0; resize: none; background: transparent; font-size: 15px; line-height: 24px; color: var(--ink); min-height: 52px; padding: 1px 0 0; }
+.ara-prompt textarea::placeholder { color: var(--faint); }
+.ara-prompt__bar { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.ara-model { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--surface); font-size: 14px; font-weight: 500; color: var(--ink); }
+.ara-model svg { width: 16px; height: 16px; color: #e0699a; }
+.ara-model__s { font-size: 11.5px; font-weight: 500; color: var(--muted); background: var(--sunken); border-radius: var(--r-pill); padding: 2px 7px; }
+.ara-send { width: 44px; height: 44px; padding: 0; border-radius: 12px; }
+.ara-send svg { width: 20px; height: 20px; stroke-width: 2.2; }
+.ara-ai-note { margin-top: 10px; font-size: 12px; color: var(--faint); text-align: center; }
+
+/* 카드 3장 */
+.ara-cards { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.ara-card { display: flex; flex-direction: column; text-align: left; padding: 0; border-radius: 16px; border: 1px solid var(--line); background: rgba(255, 255, 255, .94); cursor: pointer; overflow: hidden; transition: box-shadow .12s, transform .12s; min-width: 0; }
+.ara-card:hover { box-shadow: 0 8px 22px rgba(16, 18, 27, .08); transform: translateY(-1px); }
+.ara-card__top { display: flex; gap: 12px; align-items: flex-start; padding: 16px; flex: 1; }
+.ara-card__ic { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none; }
+.ara-card__ic svg { width: 18px; height: 18px; stroke-width: 1.8; }
+.ara-card__t { display: block; font-size: 14.5px; font-weight: 500; color: var(--ink); line-height: 20px; }
+.ara-card__d { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 18px; }
+.ara-card__foot { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-2); background: rgba(250, 250, 251, .7); }
+.ara-card__foot svg { width: 16px; height: 16px; color: var(--muted); }
+
+.ara-below { margin-top: var(--gap); }
+
+/* 체크인 스파크라인 */
+.ara-spark__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ara-spark__l { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
+.ara-spark__l i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.ara-spark__top b { font-size: 22px; line-height: 28px; font-weight: 500; }
+.ara-spark__top b .faint { font-size: 13px; font-weight: 400; margin-left: 1px; }
+.ara-spark__chart { height: 48px; margin-top: 6px; }
+.ara-spark__dates { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin-top: 2px; }
+
+/* 나의 일하는 방식 */
+.ara-lines > li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
+.ara-lines > li:first-child { border-top: 0; padding-top: 2px; }
+.ara-lines__n { width: 28px; height: 28px; border-radius: 8px; background: var(--sunken); color: var(--muted); font-size: 12.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.ara-lines li.is-shared .ara-lines__n { background: var(--brand-soft); color: var(--brand-ink); }
+.ara-lines__t { font-size: 14.5px; color: var(--ink); line-height: 21px; }
+.ara-lines__s { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.ara-lines__s svg { width: 14px; height: 14px; }
+.ara-lines__s.on { color: var(--brand-ink); }
+.ara-preview { margin-top: 12px; padding: 14px 16px; border-radius: 12px; background: var(--surface-2); border: 1px dashed var(--line-2); }
+.ara-preview__h { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
+.ara-preview__h svg { width: 14px; height: 14px; }
+.ara-preview ul { display: flex; flex-direction: column; gap: 6px; }
+.ara-preview li { font-size: 13.5px; color: var(--ink-2); padding-left: 12px; position: relative; }
+.ara-preview li::before { content: ""; position: absolute; left: 0; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: var(--brand); }
+
+/* 오늘 제안 */
+.ara-sugg > li { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); }
+.ara-sugg > li:first-child { border-top: 0; padding-top: 2px; }
+.ara-sugg__ic, .ara-help__ic { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex: none; }
+.ara-sugg__ic svg, .ara-help__ic svg { width: 18px; height: 18px; stroke-width: 1.8; }
+.ara-sugg__t { font-size: 14.5px; font-weight: 500; color: var(--ink); line-height: 21px; }
+.ara-undo { border: 0; background: none; padding: 4px 2px; font-size: 12.5px; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.ara-today { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+.ara-today__i { display: inline-flex; gap: 6px; align-items: center; height: 26px; padding: 0 10px; border-radius: var(--r-pill); background: var(--sunken); font-size: 12.5px; color: var(--ink-2); }
+.ara-today__i .num { color: var(--muted); }
+
+/* 도움 연결 */
+.ara-help > li { display: flex; gap: 12px; align-items: center; padding: 13px 0; border-top: 1px solid var(--line); }
+.ara-help > li:first-child { border-top: 0; padding-top: 2px; }
+.ara-help > li > .btn, .ara-help > li > a { flex: none; }
+.ara-help__crisis { margin-top: 4px; padding: 12px !important; border: 1px solid var(--bad-bg) !important; border-radius: 12px; background: #fff8f8; }
+
+/* 서랍 */
+.ara-pv { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); }
+.ara-pv h3 { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.ara-pv h3 svg { width: 16px; height: 16px; color: var(--good); }
+.ara-pv--no h3 svg { color: var(--bad); }
+.ara-pv--promise { background: var(--surface-2); }
+.ara-pv--promise h3 svg { color: var(--brand); }
+.ara-pv ul { display: flex; flex-direction: column; gap: 6px; }
+.ara-pv li { font-size: 13.5px; line-height: 20px; color: var(--ink-2); padding-left: 14px; position: relative; }
+.ara-pv li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: var(--faint); }
+.ara-soft { display: flex; gap: 8px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: var(--c-violet-soft); color: #5b3fb0; font-size: 13.5px; line-height: 20px; }
+.ara-soft svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+
+@media (max-width: 1100px) {
+  .ara-hero__in { padding: 56px 20px 44px; }
+}
+@media (max-width: 767px) {
+  .ara-lock { align-items: flex-start; font-size: 13px; }
+  .ara-lock__more { display: none; }
+  .ara-hero__in { padding: 36px 14px 20px; }
+  .ara-hero__q { font-size: 25px; line-height: 33px; }
+  .ara-prompt { margin-top: 20px; padding: 12px 10px 10px; border-radius: 18px; }
+  .ara-prompt textarea { font-size: 15px; }
+  .ara-model { height: 40px; padding: 0 10px; }
+  .ara-cards { grid-template-columns: 1fr; gap: 10px; }
+  .ara-card__top { padding: 14px; }
+  .ara-card__foot { padding: 10px 14px; }
+  .ara-lines > li { grid-template-columns: 28px minmax(0, 1fr) auto; row-gap: 6px; }
+  .ara-lines__s { grid-column: 2; grid-row: 2; }
+  .ara-lines > li .toggle { grid-column: 3; grid-row: 1 / span 2; }
+  .ara-help > li { flex-wrap: wrap; }
+  .ara-help > li > .list__main { flex: 1 1 calc(100% - 60px); }
+  .ara-help > li > .btn, .ara-help > li > a { margin-left: 50px; }
+  .ara-msg__b { max-width: 92%; }
+}

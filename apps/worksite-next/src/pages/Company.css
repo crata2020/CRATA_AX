@@ -1,0 +1,147 @@
+/* 회사 DNA */
+/* 진단 한눈에(Hope 'Analytic View': 큰 % + 묶음 목록 + 막대) */
+.dna-over { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 28px; }
+.dna-over__side { display: flex; flex-direction: column; padding-top: 2px; min-width: 0; }
+.dna-over__big { font-size: 48px; line-height: 56px; font-weight: 500; letter-spacing: -0.03em; margin-top: 2px; }
+.dna-over__big span { font-size: 22px; color: var(--muted); margin-left: 2px; }
+.dna-over__groups { margin-top: 10px; }
+.dna-over__groups > li { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.dna-over__groups > li:last-child { border-bottom: 1px solid var(--line); }
+.dna-over__dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.dna-over__gname { flex: 1; color: var(--ink-2); }
+.dna-over__groups b { font-weight: 500; color: var(--ink); }
+.dna-over__ai { margin-top: auto; padding-top: 16px; font-size: 13px; line-height: 20px; color: var(--muted); }
+.dna-over__ai svg { width: 16px; height: 16px; color: var(--brand); display: block; margin-bottom: 6px; }
+.dna-over__chart { min-width: 0; }
+.dna-over__legend { display: flex; gap: 18px; justify-content: flex-end; margin-top: 6px; }
+
+/* 진단 단계 점 스텝 */
+.dna-steps { list-style: none; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.dna-steps__i { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; min-width: 0; }
+.dna-steps__i::before { content: ""; position: absolute; top: 13px; left: calc(-50% + 16px); right: calc(50% + 16px); height: 2px; border-radius: 2px; background: var(--line-2); }
+.dna-steps__i:first-child::before { display: none; }
+.dna-steps__i--done::before, .dna-steps__i--now::before { background: var(--brand); }
+.dna-steps__dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; background: var(--sunken); color: var(--faint); border: 1.5px solid var(--line-2); }
+.dna-steps__dot svg { width: 14px; height: 14px; stroke-width: 2.6; }
+.dna-steps__i--done .dna-steps__dot { background: var(--brand); border-color: var(--brand); color: #fff; }
+.dna-steps__i--now .dna-steps__dot { background: var(--surface); border: 2px solid var(--brand); color: var(--brand-ink); box-shadow: 0 0 0 4px var(--brand-soft); }
+.dna-steps__t { font-size: 12.5px; color: var(--ink-2); line-height: 16px; }
+.dna-steps__i--next .dna-steps__t { color: var(--faint); }
+.dna-steps__i--now .dna-steps__t { color: var(--ink); font-weight: 600; }
+.dna-steps__s { font-size: 11.5px; color: var(--faint); min-height: 16px; }
+.dna-steps__i--now .dna-steps__s { color: var(--brand-ink); font-weight: 500; }
+
+/* 가설 */
+.dna-hypo > li { padding: 14px 0; border-top: 1px solid var(--line); }
+.dna-hypo > li:first-child { border-top: 0; padding-top: 2px; }
+.dna-hypo__t { font-size: 14.5px; font-weight: 500; color: var(--ink); line-height: 21px; }
+.dna-hypo__conf { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.dna-link { border: 0; background: none; padding: 4px 2px; font-size: 12.5px; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.dna-link:hover { color: var(--ink); }
+
+/* 확신도 다섯 칸 */
+.dna-conf { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
+.dna-conf__cells { display: inline-flex; gap: 2px; }
+.dna-conf__cells i { width: 8px; height: 8px; border-radius: 2px; background: var(--sunken); border: 1px solid var(--line-2); }
+.dna-conf--good .dna-conf__cells i.on { background: var(--c-green); border-color: var(--c-green); }
+.dna-conf--warn .dna-conf__cells i.on { background: var(--c-amber); border-color: var(--c-amber); }
+.dna-conf--bad .dna-conf__cells i.on { background: var(--c-coral); border-color: var(--c-coral); }
+.dna-conf b { font-weight: 500; color: var(--ink); }
+.dna-conf__l { color: var(--muted); }
+
+/* 10개 층 카드 격자 */
+.dna-layers { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.dna-layer { border: 1px solid var(--line); border-radius: 14px; padding: 16px; background: var(--surface); display: flex; flex-direction: column; min-width: 0; transition: border-color .12s, box-shadow .12s; }
+.dna-layer:hover { border-color: var(--line-2); box-shadow: 0 1px 2px rgba(16, 18, 27, .04), 0 6px 16px rgba(16, 18, 27, .05); }
+.dna-layer__top { display: flex; align-items: center; gap: 8px; }
+.dna-layer__ic { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none; }
+.dna-layer__ic svg { width: 17px; height: 17px; stroke-width: 1.8; }
+.dna-layer__code { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.dna-layer__name { font-size: 15px; line-height: 21px; font-weight: 500; color: var(--ink); margin: 12px 0 10px; }
+.dna-layer__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; margin-bottom: 6px; }
+.dna-layer__row b { font-weight: 500; color: var(--ink); }
+.dna-layer__sec { font-size: 12px; color: var(--faint); margin: 12px 0 6px; }
+.dna-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.dna-tag { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 9px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); font-size: 12px; line-height: 16px; color: var(--ink-2); }
+.dna-tag--sm { min-height: 20px; padding: 1px 7px; font-size: 11.5px; border-radius: 6px; }
+.dna-layer__todo { margin-top: auto; padding-top: 12px; display: flex; gap: 6px; align-items: flex-start; font-size: 12.5px; line-height: 18px; color: var(--warn-ink); }
+.dna-layer__todo svg { width: 14px; height: 14px; flex: none; margin-top: 2px; }
+.dna-layer__todo--none { color: var(--good-ink); }
+.dna-layer__todo span { min-width: 0; }
+
+/* 사업 구조 나무(회사 → 사업 레인 → 프로젝트 카드) */
+.dna-tree__sq { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+.dna-tree__parts { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.dna-org__root { display: flex; align-items: center; gap: 10px; width: max-content; max-width: 100%; margin: 0 auto; padding: 8px 14px 8px 8px; border-radius: var(--r-pill); border: 1px solid var(--line-2); background: var(--surface); font-size: 14px; color: var(--ink); position: relative; z-index: 1; }
+.dna-org__root b { font-weight: 600; }
+.dna-org__mono { width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 11.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex: none; }
+.dna-org__cols { --n: 5; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 12px; padding-top: 28px; position: relative; }
+/* 가로 연결선 + 위로 올라가는 세로선 */
+.dna-org__cols::before { content: ""; position: absolute; top: 12px; height: 2px; background: var(--line-2); left: calc((100% - (var(--n) - 1) * 12px) / var(--n) / 2); right: calc((100% - (var(--n) - 1) * 12px) / var(--n) / 2); border-radius: 2px; }
+.dna-org__cols::after { content: ""; position: absolute; top: -8px; left: 50%; width: 2px; height: 20px; background: var(--line-2); }
+.dna-org__col { position: relative; background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px; min-width: 0; display: flex; flex-direction: column; }
+.dna-org__col::before { content: ""; position: absolute; top: -17px; left: 50%; width: 2px; height: 16px; background: var(--line-2); }
+.dna-org__head { display: flex; align-items: center; gap: 8px; }
+.dna-org__lname { font-size: 14.5px; font-weight: 500; color: var(--ink); min-width: 0; }
+.dna-org__n { margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line); font-size: 12px; font-weight: 600; color: var(--ink-2); display: inline-flex; align-items: center; justify-content: center; }
+.dna-org__meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.dna-org__desc { font-size: 12.5px; line-height: 18px; color: var(--muted); margin-top: 6px; }
+.dna-org__ps { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.dna-org__p { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; }
+.dna-org__pt { font-size: 13.5px; line-height: 19px; font-weight: 500; color: var(--ink); }
+.dna-org__chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.dna-org__prog { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.dna-org__prog .bar { flex: 1; }
+.dna-org__prog .num { color: var(--ink-2); }
+
+/* 리듬·용어집 */
+.dna-cad__ic { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none; }
+.dna-cad__ic svg { width: 17px; height: 17px; stroke-width: 1.8; }
+.dna-terms { display: flex; flex-wrap: wrap; gap: 8px; }
+.dna-term { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: var(--r-pill); border: 1px solid var(--line-2); background: var(--surface); font-size: 13.5px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
+.dna-term:hover { background: var(--surface-2); }
+.dna-term[aria-pressed="true"] { background: var(--dark); border-color: var(--dark); color: #fff; }
+.dna-term--q { border-style: dashed; border-color: var(--warn); }
+.dna-term__q { font-size: 11px; font-weight: 600; color: var(--warn-ink); background: var(--warn-bg); border-radius: var(--r-pill); padding: 2px 7px; }
+.dna-def { margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.dna-def__t { font-size: 15px; font-weight: 600; color: var(--ink); }
+.dna-def__m { font-size: 13.5px; color: var(--ink-2); margin-top: 6px; line-height: 20px; }
+
+.dna-swipe { display: none; }
+.dna-note { display: flex; gap: 8px; align-items: flex-start; margin-top: 14px; font-size: 12.5px; line-height: 18px; color: var(--muted); }
+.dna-note svg { width: 15px; height: 15px; color: var(--brand); flex: none; margin-top: 1px; }
+
+/* 배분 규칙 표 */
+.dna-when { width: 30px; height: 30px; border-radius: 9px; background: var(--c-amber-soft); color: #b9790c; display: flex; align-items: center; justify-content: center; flex: none; }
+.dna-when svg { width: 15px; height: 15px; stroke-width: 1.9; }
+.dna-rconf { display: flex; align-items: center; gap: 10px; min-width: 130px; }
+.dna-rconf .bar { flex: 1; }
+
+@media (max-width: 1279px) {
+  .dna-layers { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dna-org__cols { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .dna-org__cols::before, .dna-org__cols::after, .dna-org__col::before { display: none; }
+  .dna-org__cols { padding-top: 14px; }
+}
+@media (max-width: 1100px) {
+  .dna-over { grid-template-columns: 1fr; }
+  .dna-over__ai { margin-top: 12px; }
+}
+@media (max-width: 767px) {
+  .dna-layers { grid-template-columns: 1fr; gap: 12px; }
+  .dna-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 16px; }
+  .dna-steps__i:nth-child(5)::before { display: none; }
+  .dna-over__big { font-size: 40px; line-height: 48px; }
+  .dna-over__legend { justify-content: flex-start; flex-wrap: wrap; }
+  .dna-wraphead .card__head { flex-wrap: wrap; row-gap: 10px; }
+  .dna-wraphead .card__actions { margin-left: 0; flex: 1 1 100%; flex-wrap: wrap; }
+  .dna-swipe { display: block; font-size: 12px; color: var(--faint); margin-bottom: 8px; }
+  .dna-layers, .dna-org__cols {
+    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 84%; overflow-x: auto; scroll-snap-type: x mandatory;
+    margin: 0 -16px; padding: 2px 16px 10px; scroll-padding: 0 16px; scrollbar-width: none;
+  }
+  .dna-layers::-webkit-scrollbar, .dna-org__cols::-webkit-scrollbar { display: none; }
+  .dna-layer, .dna-org__col { scroll-snap-align: start; }
+  .dna-org__cols { padding-top: 0; align-items: start; }
+  .dna-org__root { margin: 0 0 12px; }
+}

@@ -1,0 +1,140 @@
+/* 현장 등록(모바일 우선, 데스크톱 가운데 720px): rp- 접두어 */
+.rp { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--gap); }
+.rp > .phead { margin-bottom: 4px; }
+
+.rp-form { --pad: 24px; padding: var(--pad); }
+.rp-step { display: flex; align-items: center; gap: 10px; font-size: 15.5px; font-weight: 500; color: var(--ink); margin: 26px 0 12px; }
+.rp-step:first-child { margin-top: 0; }
+.rp-step__n {
+  width: 24px; height: 24px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--dark); color: #fff; font-size: 12.5px; font-weight: 600;
+}
+.rp-step__n svg { width: 14px; height: 14px; stroke-width: 2.8; }
+.rp-step__n.is-done { background: var(--good); }
+.rp-step__n.is-muted { background: var(--sunken); color: var(--muted); }
+.rp-opt { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--sunken); border-radius: var(--r-pill); padding: 2px 8px; }
+
+/* 큰 타일(smart-home) */
+.rp-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.rp-tile {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 140px; padding: 16px;
+  border-radius: var(--r-xl); border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; text-align: left;
+  transition: background-color .12s, border-color .12s, transform .08s; -webkit-tap-highlight-color: transparent;
+}
+.rp-tile:hover { background: var(--sunken); }
+.rp-tile:active { transform: scale(.985); }
+.rp-tile__icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: auto; }
+.rp-tile__icon svg { width: 22px; height: 22px; stroke-width: 1.8; }
+.rp-tile__t { font-size: 17px; line-height: 24px; font-weight: 500; color: var(--ink); margin-top: 14px; }
+.rp-tile__s { font-size: 12.5px; line-height: 17px; color: var(--muted); }
+.rp-tile.is-on { background: var(--ks); border-color: var(--k); box-shadow: inset 0 0 0 1px var(--k); }
+.rp-tile.is-on .rp-tile__icon { background: var(--surface); }
+.rp-tile.is-on .rp-tile__s { color: var(--ink-2); }
+.rp-tile__check {
+  position: absolute; top: 12px; right: 12px; width: 26px; height: 26px; border-radius: 50%; background: var(--dark); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.rp-tile__check svg { width: 15px; height: 15px; stroke-width: 2.8; }
+
+/* 한 줄 입력(winx 둥근 입력) */
+.rp-line { position: relative; }
+.rp-input {
+  width: 100%; height: 56px; padding: 0 70px 0 18px; border-radius: 16px; border: 1px solid var(--line-2); background: var(--surface);
+  font-size: 16px; outline: 0; color: var(--ink);
+}
+.rp-input::placeholder { color: var(--faint); }
+.rp-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.rp-count { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 12.5px; color: var(--faint); pointer-events: none; }
+.rp-count.is-full { color: var(--bad-ink); font-weight: 600; }
+
+/* 위치 칩(최근 공정·설비) */
+.rp-places { display: flex; flex-wrap: wrap; gap: 8px; }
+.rp-place {
+  display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px 0 11px; border-radius: var(--r-pill);
+  border: 1px solid var(--line-2); background: var(--surface); font-size: 13.5px; font-weight: 500; color: var(--ink-2); cursor: pointer; white-space: nowrap;
+}
+.rp-place svg { width: 15px; height: 15px; color: var(--muted); stroke-width: 1.8; }
+.rp-place:hover { background: var(--surface-2); }
+.rp-place[aria-pressed="true"] { background: var(--dark); border-color: var(--dark); color: #fff; box-shadow: var(--shadow-dark); }
+.rp-place[aria-pressed="true"] svg { color: #fff; }
+.rp-custom { margin-top: 10px; height: 46px; font-size: 16px; }
+
+/* 사진(winx 점선 상자를 한 줄로) */
+.rp-extras { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+.rp-photo {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px;
+  border: 1.5px dashed var(--line-2); background: var(--surface-2); cursor: pointer;
+}
+.rp-photo:hover { background: var(--sunken); }
+.rp-photo:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.rp-photo.has-photo { border-style: solid; border-color: var(--good); background: var(--good-bg); }
+.rp-photo__icon { width: 38px; height: 38px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; flex: none; }
+.rp-photo__icon svg { width: 19px; height: 19px; color: var(--ink-2); stroke-width: 1.8; }
+.rp-photo__txt { display: flex; flex-direction: column; min-width: 0; }
+.rp-photo__t { font-size: 14px; font-weight: 500; color: var(--ink); }
+.rp-photo__s { font-size: 12.5px; color: var(--muted); }
+
+/* 익명(아차사고만) */
+.rp-anon { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line); }
+.rp-anon__icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; }
+.rp-anon__icon svg { width: 18px; height: 18px; }
+.rp-anon__t { font-size: 14px; font-weight: 500; color: var(--ink); }
+.rp-anon__s { font-size: 12.5px; color: var(--muted); }
+
+/* 받는 사람 + 등록하기 */
+.rp-submit { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+.rp-submit .btn--lg { height: 54px; font-size: 16px; border-radius: 16px; }
+.rp-to { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; background: var(--brand-soft); }
+.rp-to__t { font-size: 14px; color: var(--ink-2); }
+.rp-to__t b { color: var(--ink); font-weight: 600; }
+.rp-to__s { font-size: 12.5px; color: var(--muted); }
+.rp-to__bell { width: 18px; height: 18px; color: var(--brand); flex: none; }
+.rp-routes { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.rp-routes li { display: inline-flex; align-items: center; gap: 5px; }
+.rp-routes b { color: var(--ink-2); font-weight: 500; }
+.rp-routes svg { width: 13px; height: 13px; color: var(--faint); }
+.rp-sent { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--good-bg); animation: fadeIn .2s; }
+.rp-sent > svg { width: 22px; height: 22px; color: var(--good); flex: none; }
+.rp-sent__t { font-size: 14.5px; font-weight: 600; color: var(--good-ink); }
+.rp-sent__s { font-size: 12.5px; color: var(--ink-2); }
+.rp-help { font-size: 12.5px; color: var(--faint); text-align: center; margin-top: -4px; }
+
+/* 오늘 내가 등록한 것 */
+.rp-list > li { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+.rp-list > li:first-child { border-top: 0; padding-top: 2px; }
+.rp-list > li.is-fresh { background: linear-gradient(90deg, var(--good-bg), transparent 70%); margin: 0 -22px; padding-left: 22px; padding-right: 22px; }
+.rp-list__icon { width: 40px; height: 40px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; }
+.rp-list__icon svg { width: 18px; height: 18px; stroke-width: 1.8; }
+.rp-list__main { flex: 1; min-width: 0; }
+.rp-list__t { font-size: 14.5px; line-height: 21px; font-weight: 500; color: var(--ink); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.rp-list__s { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.rp-list__s > span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.rp-list__s svg { width: 12px; height: 12px; }
+.rp-list__k { color: var(--ink-2); font-weight: 500; }
+.rp-list__st { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: none; max-width: 130px; }
+
+@media (max-width: 767px) {
+  .rp { gap: 14px; }
+  .rp-form { --pad: 16px; }
+  .rp-step { margin: 20px 0 10px; font-size: 15px; }
+  .rp-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .rp-tile { min-height: 112px; padding: 14px; border-radius: 18px; }
+  .rp-tile__icon { width: 40px; height: 40px; }
+  .rp-tile__icon svg { width: 20px; height: 20px; }
+  .rp-tile__t { font-size: 16px; margin-top: 10px; }
+  .rp-places { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 2px; }
+  .rp-places::-webkit-scrollbar { display: none; }
+  .rp-submit { margin-top: 18px; padding-top: 16px; }
+  .rp-list > li.is-fresh { margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .rp-list__st { max-width: 96px; }
+}
+
+/* 모바일: 받는 사람 + '등록하기'를 아래 탭 위에 붙여 둠(스크롤 없이 두 번째 탭) */
+@media (max-width: 900px) {
+  .rp-submit {
+    position: sticky; bottom: calc(61px + env(safe-area-inset-bottom)); z-index: 6; background: var(--surface);
+    margin: 18px calc(var(--pad) * -1) calc(var(--pad) * -1); padding: 12px var(--pad) 14px; gap: 10px;
+    border-radius: 0 0 var(--r-lg) var(--r-lg); box-shadow: 0 -12px 20px -16px rgba(16, 18, 27, 0.22);
+  }
+  .rp-help { display: none; }
+}

@@ -1,0 +1,174 @@
+/* 현장·품질(FinSight 밝게): ql- 접두어 */
+
+/* KPI 2×2 */
+.ql-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); min-width: 0; }
+.ql-kpis .kpicard { justify-content: space-between; }
+.ql-kpis .kpicard__val { flex-wrap: wrap; row-gap: 6px; }
+.ql-of { font-size: 0.62em; color: var(--muted); font-weight: 500; letter-spacing: 0; }
+
+/* 큰 숫자 */
+.ql-big { font-size: 40px; line-height: 46px; font-weight: 500; letter-spacing: -0.02em; }
+.ql-big span { font-size: 16px; color: var(--muted); margin-left: 6px; letter-spacing: 0; }
+.ql-mid { font-size: 30px; line-height: 36px; font-weight: 500; letter-spacing: -0.02em; }
+.ql-mid span { font-size: 15px; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
+.ql-sum { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.ql-sum b { color: var(--ink); font-weight: 600; }
+
+/* 고객 PPM */
+.ql-ppm { display: flex; flex-direction: column; gap: 14px; height: 100%; }
+.ql-ppm__top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ql-ppm__legend { margin-left: auto; display: inline-flex; gap: 16px; flex-wrap: wrap; }
+.ql-dash i { width: 16px !important; height: 0 !important; border-radius: 0 !important; border-top: 2px dashed var(--c-coral); }
+.ql-ppm__chart { position: relative; }
+.ql-target { position: absolute; left: 30px; right: 0; height: 0; border-top: 1.5px dashed var(--c-coral); pointer-events: none; }
+.ql-forecast {
+  display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line);
+  font-size: 13.5px; color: var(--ink-2); margin-top: auto;
+}
+.ql-forecast svg { width: 16px; height: 16px; color: var(--brand); flex: none; }
+.ql-forecast b { color: var(--ink); font-weight: 600; }
+.ql-forecast__r { margin-left: auto; white-space: nowrap; }
+
+/* 불량 유형: 눈금 막대 */
+.ql-defects { display: flex; flex-direction: column; gap: 14px; }
+.ql-defects li { display: grid; grid-template-columns: 64px minmax(0, 1fr) 28px; align-items: center; gap: 12px; }
+.ql-defects__l { font-size: 13.5px; color: var(--ink-2); white-space: nowrap; }
+.ql-defects__v { text-align: right; font-weight: 500; color: var(--ink); }
+.ql-tick { position: relative; height: 22px; background: repeating-linear-gradient(90deg, var(--line-2) 0 2px, transparent 2px 5px); }
+.ql-tick > i { position: absolute; left: 0; top: 0; bottom: 0; background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 5px); }
+
+/* 초중종물: 게이지 + 공정별 줄 */
+.ql-gauge { display: flex; justify-content: center; padding: 2px 0 12px; }
+.ql-pulse { display: flex; flex-direction: column; gap: 8px; }
+.ql-pulse li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 9px 10px 9px 14px;
+  border: 1px solid var(--line); border-radius: var(--r-md); font-size: 13.5px; color: var(--ink-2);
+}
+
+/* 설비 도넛 */
+.ql-eq { display: flex; align-items: center; gap: 22px; }
+.ql-eq__legend { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.ql-eq__legend li { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ql-eq__legend b { font-weight: 500; color: var(--ink); }
+.ql-eq__down { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ql-eq__row {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--surface); text-align: left; cursor: pointer; font-size: 13.5px; color: var(--ink-2); min-width: 0;
+}
+.ql-eq__row:hover { background: var(--surface-2); }
+.ql-eq__row > .ellipsis { flex: 1; min-width: 0; }
+.ql-eq__why { flex: none; }
+
+/* 현장 등록 표 */
+.ql-kind {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; border-radius: var(--r-pill);
+  font-size: 12.5px; font-weight: 500; white-space: nowrap;
+}
+.ql-kind svg { width: 14px; height: 14px; stroke-width: 1.9; }
+.ql-table td { vertical-align: middle; }
+.ql-note { max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ql-place { display: flex; align-items: center; gap: 4px; margin-top: 2px; white-space: nowrap; }
+.ql-place svg { width: 13px; height: 13px; flex: none; }
+.ql-who { font-size: 13.5px; color: var(--ink); max-width: 120px; }
+.ql-assign { display: flex; align-items: center; gap: 6px; }
+.ql-assign__s { display: flex; flex-direction: column; min-width: 0; max-width: 110px; font-size: 13px; color: var(--ink); line-height: 17px; margin-right: 4px; }
+
+/* 이번 주: 쌓은 캡슐 막대 */
+.ql-weekcard .card__body { display: flex; flex-direction: column; }
+.ql-weekcard .ql-hint { margin-top: auto; }
+.ql-weekcard .ql-wk__legend { margin-bottom: 16px; }
+.ql-wk { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; align-items: end; }
+.ql-wk__col { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.ql-wk__n { font-size: 12px; color: var(--muted); height: 16px; }
+.ql-wk__track {
+  width: 24px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--sunken) 80%, transparent);
+  display: flex; flex-direction: column-reverse; gap: 3px; overflow: hidden;
+}
+.ql-wk__track > i { display: block; width: 100%; border-radius: 6px; flex: none; }
+.ql-wk__track > i:first-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+.ql-wk__d { font-size: 11.5px; color: var(--faint); }
+.ql-wk__col.is-focus .ql-wk__d { color: var(--ink); font-weight: 600; }
+.ql-wk__col.is-focus .ql-wk__n { color: var(--ink); font-weight: 600; }
+.ql-wk__legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; margin-top: 18px; }
+.ql-wk__legend li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ql-wk__legend b { font-weight: 500; color: var(--ink); font-size: 13px; }
+.ql-hint { display: flex; gap: 8px; align-items: flex-start; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); line-height: 19px; }
+.ql-hint--btn { width: 100%; border: 0; border-top: 1px solid var(--line); background: none; text-align: left; cursor: pointer; padding: 14px 0 0; font: inherit; font-size: 13px; }
+.ql-hint--btn:hover span { color: var(--ink-2); }
+.ql-defectcard .card__body { display: flex; flex-direction: column; }
+.ql-defectcard .ql-hint { margin-top: auto; }
+.ql-defectcard .ql-defects { margin-bottom: 18px; }
+.ql-hint svg { width: 15px; height: 15px; color: var(--brand); flex: none; margin-top: 2px; }
+.ql-hint b { color: var(--ink); font-weight: 600; }
+
+/* 클레임·8D */
+.ql-claim { display: flex; flex-direction: column; gap: 22px; }
+.ql-claim__main { min-width: 0; }
+.ql-claim__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ql-claim__no { font-size: 22px; line-height: 30px; font-weight: 500; letter-spacing: -0.01em; margin-right: 4px; }
+.ql-claim__meta { font-size: 13.5px; color: var(--muted); margin-top: 4px; }
+.ql-claim__now { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+.ql-claim__now b { color: var(--ink); font-weight: 500; }
+.ql-claim__side { border-top: 1px solid var(--line); padding-top: 18px; min-width: 0; }
+.ql-side__t { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 10px; }
+
+.ql-steps { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); margin: 22px 0 6px; padding: 0; list-style: none; }
+.ql-steps li { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; min-width: 0; }
+.ql-steps li + li::before { content: ""; position: absolute; top: 13px; right: 50%; width: 100%; height: 2px; background: var(--line-2); z-index: 0; }
+.ql-steps li.is-done + li::before, .ql-steps li.is-now::before { background: var(--brand); }
+.ql-steps__dot {
+  position: relative; z-index: 1; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 2px solid var(--line-2); margin-bottom: 6px;
+}
+.ql-steps__dot i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-2); }
+.ql-steps__dot svg { width: 14px; height: 14px; stroke-width: 2.6; }
+.is-done .ql-steps__dot { background: var(--brand); border-color: var(--brand); color: #fff; }
+.is-now .ql-steps__dot { border-color: var(--brand); box-shadow: 0 0 0 5px var(--brand-soft); }
+.is-now .ql-steps__dot i { background: var(--brand); }
+.ql-steps__c { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.is-now .ql-steps__c { color: var(--brand-ink); }
+.ql-steps__n { font-size: 12px; color: var(--faint); line-height: 16px; padding: 0 2px; }
+.is-now .ql-steps__n { color: var(--ink); font-weight: 500; }
+.is-done .ql-steps__n { color: var(--muted); }
+
+.ql-l2 {
+  display: flex; align-items: center; gap: 10px; margin-top: 18px; padding: 12px 14px; border-radius: var(--r-md);
+  background: var(--warn-bg); color: var(--ink-2); font-size: 13.5px; line-height: 20px;
+}
+.ql-l2 > svg { width: 16px; height: 16px; color: var(--warn-ink); flex: none; }
+.ql-l2 b { color: var(--ink); font-weight: 600; }
+.ql-l2 .chip { margin-left: auto; flex: none; background: var(--surface); }
+
+.ql-todo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ql-todo li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); min-width: 0; }
+.ql-todo li > svg { width: 18px; height: 18px; color: var(--muted); flex: none; stroke-width: 1.8; }
+.ql-todo li > svg.ql-todo__ok { color: var(--good); }
+.ql-todo li.is-done { background: var(--good-bg); border-color: transparent; }
+.ql-todo li.is-next { border-style: dashed; }
+.ql-todo__dot { width: 18px; height: 18px; border-radius: 50%; border: 1.8px solid var(--line-2); flex: none; }
+.ql-todo__t { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+.ql-todo__s { font-size: 12px; color: var(--muted); }
+
+.ql-past { display: flex; gap: 10px 22px; flex-wrap: wrap; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+.ql-past__i { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
+
+@media (max-width: 767px) {
+  .ql-kpis { gap: 12px; }
+  .ql-big { font-size: 34px; line-height: 40px; }
+  .ql-ppm__legend { margin-left: 0; width: 100%; }
+  .ql-forecast { flex-wrap: wrap; }
+  .ql-forecast__r { margin-left: 26px; }
+  .ql-eq { flex-direction: column; align-items: stretch; }
+  .ql-eq > div:first-child { align-self: center; }
+  .ql-eq__legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; }
+  .ql-field .card__head { flex-wrap: wrap; }
+  .ql-field .card__actions { margin-left: 0; width: 100%; }
+  .ql-steps__n { display: none; }
+  .ql-steps__dot { width: 24px; height: 24px; }
+  .ql-steps li + li::before { top: 11px; }
+  .ql-l2 { flex-wrap: wrap; }
+  .ql-l2 .chip { margin-left: 26px; }
+  .ql-eq__why { display: none; }
+  .ql-todo { grid-template-columns: 1fr; }
+  .ql-note { max-width: 240px; }
+}

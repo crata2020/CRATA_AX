@@ -1,0 +1,57 @@
+/* 구성원 */
+.mb-toolbar { margin-bottom: 12px; }
+.mb-search { min-width: 240px; flex: 0 1 300px; }
+.mb-privacy { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 19px; color: var(--muted); margin: 0 0 16px; }
+.mb-privacy svg { width: 15px; height: 15px; flex: none; margin-top: 2px; color: var(--faint); }
+.mb-privacy--box { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+
+/* 카드 격자(Orbix CRM Team Member: 파스텔 배경 + 큰 얼굴) */
+.mb-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--gap); }
+.mb-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; display: flex; flex-direction: column; min-width: 0; transition: box-shadow .12s, border-color .12s; }
+.mb-card:hover { border-color: var(--line-2); box-shadow: 0 1px 2px rgba(16, 18, 27, .04), 0 8px 20px rgba(16, 18, 27, .06); }
+.mb-card__hero { position: relative; height: 128px; display: flex; align-items: center; justify-content: center; margin: 6px 6px 0; border-radius: 12px; }
+.mb-card__hero .ava { width: 76px; height: 76px; font-size: 26px; border: 3px solid rgba(255, 255, 255, .85); box-shadow: 0 6px 16px rgba(16, 18, 27, .10); }
+.mb-card__me { position: absolute; top: 10px; left: 10px; height: 22px; padding: 0 9px; border-radius: var(--r-pill); background: var(--dark); color: #fff; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; }
+.mb-card__field { position: absolute; top: 10px; right: 10px; height: 22px; padding: 0 8px; border-radius: var(--r-pill); background: rgba(255, 255, 255, .85); color: var(--ink-2); font-size: 11.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+.mb-card__field svg { width: 12px; height: 12px; }
+.mb-card__body { padding: 14px 14px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.mb-card__head { display: flex; align-items: flex-start; gap: 4px; }
+.mb-card__head > div:first-child { flex: 1; }
+.mb-card__name { font-size: 15.5px; line-height: 22px; font-weight: 500; color: var(--ink); }
+.mb-card__sub { font-size: 13px; color: var(--muted); }
+.mb-card__head .iconbtn { margin: -4px -6px 0 0; }
+.mb-card__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mb-card__stats { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 12px; margin-top: auto; }
+.mb-card__stats > div { padding: 9px 12px; display: flex; flex-direction: column; }
+.mb-card__stats > div + div { border-left: 1px solid var(--line); }
+.mb-card__stats .num { font-size: 20px; line-height: 26px; font-weight: 500; color: var(--ink); }
+.mb-card__stats small { font-size: 12px; color: var(--muted); }
+.mb-me-inline { margin-left: 6px; height: 18px; padding: 0 7px; border-radius: var(--r-pill); background: var(--dark); color: #fff; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; vertical-align: 1px; }
+
+/* 상세 서랍 */
+.mb-prof { display: flex; gap: 16px; align-items: center; }
+.mb-prof__n { font-size: 18px; font-weight: 500; color: var(--ink); }
+.mb-sec { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 4px; display: flex; gap: 6px; align-items: center; }
+.mb-ai { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); }
+.mb-roles > li { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 14px 0; border-top: 1px solid var(--line); }
+.mb-roles > li:first-child { border-top: 0; padding-top: 0; }
+.mb-roles p { font-size: 13.5px; color: var(--ink-2); line-height: 20px; }
+.mb-opt { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; }
+
+@media (max-width: 1279px) {
+  .mb-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .mb-search { flex: 1 1 100%; min-width: 0; }
+}
+@media (max-width: 767px) {
+  .mb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .mb-card__hero { height: 104px; }
+  .mb-card__hero .ava { width: 60px; height: 60px; font-size: 21px; }
+  .mb-card__body { padding: 12px; gap: 8px; }
+  .mb-card__name { font-size: 14.5px; }
+  .mb-card__stats > div { padding: 8px 10px; }
+  .mb-card__stats .num { font-size: 18px; }
+  .mb-toolbar .toolbar__spacer { display: none; }
+  .mb-toolbar > .btn--dark { flex: 1; }
+}
