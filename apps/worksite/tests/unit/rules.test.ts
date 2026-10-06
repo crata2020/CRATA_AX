@@ -59,6 +59,9 @@ describe("테마 대비(4.1절)", () => {
       expect(contrast(t.muted, t.brandWeak)).toBeGreaterThanOrEqual(4.5);
       expect(contrast(t.controlLine, t.surface)).toBeGreaterThanOrEqual(3);
       expect(contrast(t.controlLine, t.panel)).toBeGreaterThanOrEqual(3);
+      // sunken(트랙·레인·카드 테두리 면) 위 흐린 글자 4.5:1, 입력칸 테두리 3:1(07 Orbix 명세 4.1절)
+      expect(contrast(t.muted, t.sunken)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(t.controlLine, t.sunken)).toBeGreaterThanOrEqual(3);
     });
   }
   it("deriveTenantTheme가 확정 값과 거의 같고 대비 통과", () => {
@@ -70,6 +73,7 @@ describe("테마 대비(4.1절)", () => {
       const near = (a: string, b: string) => [1, 3, 5].every((i) => Math.abs(parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)) <= 2);
       expect(near(d.panel, base.panel)).toBe(true);
       expect(near(d.ink, base.ink)).toBe(true);
+      expect(near(d.sunken, base.sunken)).toBe(true);
     }
   });
 });

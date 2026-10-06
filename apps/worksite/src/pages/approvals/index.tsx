@@ -144,7 +144,7 @@ export default function Page() {
           : { kind: "empty", title: "올린 문서가 없어요", description: "결재 시스템에서 올린 문서가 여기에 이어져요." }}
       />
       {admin && (
-        <CardGrid style={{ marginTop: 24 }}>
+        <CardGrid className="cb-gap-top">
           <SectionCard title="연동 설정" span={12} caption="실제 연결은 2단계에서 해요. 연결해도 결재 원본과 첨부는 가져오지 않아요.">
             <div className="cb-row" style={{ padding: 0 }}>
               <div className="cb-row__main">

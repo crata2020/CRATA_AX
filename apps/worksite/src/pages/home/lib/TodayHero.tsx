@@ -1,5 +1,5 @@
 // 홈 히어로 '오늘 할 일' 내용(소유: home 그룹). H-01과 greeting 위젯이 함께 씁니다.
-// 숫자 = 그 아래 줄의 합(heroModel.ts). 합에 넣지 않는 참고(남은 내 업무, 회사 전체 검토 대기, 작업자의 점검 전 설비)는 구분선 아래 작은 링크로.
+// 숫자 = 그 아래 줄의 합(heroModel.ts). 합에 넣지 않는 참고(남은 내 업무, 회사 전체 검토 대기, 작업자의 점검 전 설비)는 꼬리(.wh-hero__foot) 왼쪽 작은 링크로, CTA는 꼬리 오른쪽.
 import { Link } from "react-router";
 import { RightOutlined } from "@ant-design/icons";
 import { BigNumber } from "@/components";
@@ -29,23 +29,26 @@ export function TodayHeroBody({ data }: { data: HomeToday }) {
           ))}
         </ul>
       )}
-      {m.aside.length > 0 && (
-        <ul className="wh-hero__aside" aria-label="참고">
-          {m.aside.map((r) => (
-            <li key={r.key}>
-              <Link className="wh-hero__asidelink" to={r.to}>
-                {r.label} <strong>{formatNumber(r.value)}{r.unit}</strong>
-                <RightOutlined aria-hidden />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      {m.total > 0 ? (
-        <Link className="wh-hero-btn" to={m.button.to}>{m.button.label}</Link>
-      ) : (
-        <Link className="wh-hero-btn" to={data.mode === "operator" ? "/ops/report" : "/work?due=week"}>{data.mode === "operator" ? "현장 등록하기" : "이번 주 업무 보기"}</Link>
-      )}
+      {/* 꼬리: 왼쪽 참고 링크(합에 넣지 않는 것), 오른쪽 CTA(흰 알약) */}
+      <div className="wh-hero__foot">
+        {m.aside.length > 0 && (
+          <ul className="wh-hero__aside" aria-label="참고">
+            {m.aside.map((r) => (
+              <li key={r.key}>
+                <Link className="wh-hero__asidelink" to={r.to}>
+                  {r.label} <strong>{formatNumber(r.value)}{r.unit}</strong>
+                  <RightOutlined aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        {m.total > 0 ? (
+          <Link className="wh-hero-btn" to={m.button.to}>{m.button.label}</Link>
+        ) : (
+          <Link className="wh-hero-btn" to={data.mode === "operator" ? "/ops/report" : "/work?due=week"}>{data.mode === "operator" ? "현장 등록하기" : "이번 주 업무 보기"}</Link>
+        )}
+      </div>
     </div>
   );
 }

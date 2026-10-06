@@ -2,11 +2,11 @@
 // 그룹 개발자는 여기서 쓰는 법과 모양을 확인합니다. 모든 값은 예시입니다.
 import { useEffect, useState } from "react";
 import { Button } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { ExperimentOutlined, FileTextOutlined, PlusOutlined, ToolOutlined } from "@ant-design/icons";
 import {
   PageHeader, SectionCard, HeroCard, CardGrid, StatTile, StatRow, BigNumber, DeltaText, SimpleBarChart, StackedShareBar,
   LineSpark, Meter, StatusTag, PersonChip, EmptyState, DemoDataBadge, KanbanBoard, Timeline, FilterBar, ListRows, DdayBadge, SensitivityTag,
-  AiTag, PriceGate, MaterialGradeTag, CopyField, Banner, DetailDrawer, Divider, PillLabel,
+  AiTag, PriceGate, MaterialGradeTag, CopyField, Banner, DetailDrawer, Divider, PillLabel, DonutChart, Gauge, KpiStrip, KpiCard,
 } from "@/components";
 import { statusOf } from "@/lib/status";
 import { useWorksite } from "./TenantBoundary";
@@ -39,6 +39,18 @@ export default function Kit() {
       />
 
       <CardGrid>
+        {/* 페이지 위 지표 카드 띠: 카드가 아니라 카드 안에 넣지 않아요(그리드 한 줄 전체) */}
+        <KpiStrip title="공정 지표" demo>
+          <KpiCard>
+            <StatTile label="공정 불량률" value="0.62" unit="%" icon={<ExperimentOutlined />} delta={{ value: -0.1, unit: "%p", period: "지난달보다", goodWhen: "down" }} />
+          </KpiCard>
+          <KpiCard>
+            <Gauge label="초중종물 실시율" value={85} max={100} valueText="85%" caption="목표 100% · 지난달 80%" />
+          </KpiCard>
+          <KpiCard>
+            <StatTile label="미결 시정조치" value={4} unit="건" caption="8D와 간이 시정조치를 합쳤어요" />
+          </KpiCard>
+        </KpiStrip>
         <HeroCard title="오늘 할 일" pill size="M" span={5}>
           <BigNumber label="오늘 처리할 일" value={7} unit="건" />
           <Divider />
@@ -50,7 +62,7 @@ export default function Kit() {
             <StatTile label="공정 불량률" value="0.62" unit="%" caption="예시 값" tone="warning" toneLabel="주의" />
           </StatRow>
         </SectionCard>
-        <SectionCard title="월별 고객 PPM" pill demo size="M">
+        <SectionCard title="월별 고객 PPM" demo size="M" more={{ label: "자세히", to: "/ops/quality" }}>
           <SimpleBarChart
             data={[{ key: "7", label: "7월", value: 24 }, { key: "8", label: "8월", value: 21 }, { key: "9", label: "9월", value: 18 }]}
             unit="PPM" highlightKey="9" target={{ value: 10, label: "Single PPM 목표 10" }} ariaLabel="월별 고객 PPM, 9월 18" tableCaption="월별 고객 PPM(예시)"
@@ -66,6 +78,38 @@ export default function Kit() {
           <StackedShareBar ariaLabel="업무 상태 비중" unit="건" segments={[
             { key: "todo", label: "할 일", value: 10, tone: "neutral" }, { key: "ip", label: "진행 중", value: 14, tone: "info" },
             { key: "sub", label: "검토 대기", value: 6, tone: "warning" }, { key: "done", label: "완료", value: 13, tone: "good" },
+          ]} />
+        </SectionCard>
+        <SectionCard title="설비 상태(도넛)" demo size="M" subtitle="상태 구성 한눈에만, 5조각 이하">
+          <DonutChart
+            ariaLabel="오늘 주간 설비 24대 상태" unit="대" centerValue="24대" centerLabel="전체 설비"
+            segments={[
+              { key: "run", label: "가동", value: 15, tone: "good" }, { key: "idle", label: "대기", value: 4, tone: "warning" },
+              { key: "pm", label: "보전", value: 3, tone: "info" }, { key: "down", label: "고장", value: 2, tone: "critical" },
+            ]}
+          />
+        </SectionCard>
+        <SectionCard title="게이지 · 접힌 도넛" demo size="M">
+          <Gauge label="초중종물 실시율" value={85} max={100} valueText="85%" caption="목표 100% · 지난달 80%" />
+          <Divider />
+          <DonutChart
+            ariaLabel="품목별 주문 비중(6개 이상은 앞 4개 + 기타)" unit="건" size={120} thickness={16}
+            segments={[
+              { key: "a", label: "히터 케이블", value: 12 }, { key: "b", label: "열전대", value: 9 }, { key: "c", label: "커넥터", value: 7 },
+              { key: "d", label: "단자", value: 5 }, { key: "e", label: "보호관", value: 3 }, { key: "f", label: "기타 부품", value: 2 },
+            ]}
+          />
+        </SectionCard>
+        <SectionCard title="행 동작" size="M" subtitle="목록 행 안 버튼은 채우지 않아요(흰 알약 + 글자 버튼)">
+          <ListRows rows={[
+            {
+              key: "r1", leading: <span className="ws-icontile"><FileTextOutlined /></span>, title: "출장비 정산 · 예시", subtitle: "예시 작성자 · 3분 전",
+              action: <><Button className="ws-rowact">승인</Button><Button type="text" className="ws-rowact-text">수정 요청</Button></>,
+            },
+            {
+              key: "r2", leading: <span className="ws-icontile"><ToolOutlined /></span>, title: "설비 보전 계획 변경 · 예시", subtitle: "예시 작성자 · 1시간 전",
+              action: <><Button className="ws-rowact">확인</Button><Button type="text" className="ws-rowact-text">나중에</Button></>,
+            },
           ]} />
         </SectionCard>
         <SectionCard title="숫자·진행" demo size="M">

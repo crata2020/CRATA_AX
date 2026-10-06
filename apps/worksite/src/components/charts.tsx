@@ -1,10 +1,11 @@
 // 차트(차트 라이브러리 없이 SVG·HTML 직접 구현, 빌드 스펙 4.8절 + dataviz 스킬).
 //   SimpleBarChart: 단일 계열 강조형(이번 기간만 chart-accent) 또는 비교형(이전 chart-muted · 이번 chart-accent) + 목표 수평선
-//   StackedShareBar: 비중(도넛 대신). 상태 비중이면 tone 색, 아니면 범주 슬롯 색. 6개 넘으면 "기타"
+//   StackedShareBar: 비중 막대(높이 10, 양끝 알약). 상태 비중이면 tone 색, 아니면 범주 슬롯 색. 6개 넘으면 "기타". 색 규칙 segmentColor는 DonutChart(ringCharts.tsx)와 같이 씀
 //   LineSpark: 96×28 추이선(선 chart-muted, 마지막 점 chart-accent + 2px 바탕 고리)
-//   Meter: 진행 막대(트랙은 같은 색 계열 옅은 단계)
+//   Meter: 진행 막대(트랙: 강조색이면 --ws-sunken, tone이면 tone 바탕)
 //   ChartFrame: [표로 보기]/[차트로 보기] 토글(모든 차트의 접근성 쌍둥이)
-// 마크: 막대 두께 ≤24px, 데이터 끝 4px 라운드·기준선 쪽 직각, 붙은 막대 사이 2px 틈, 격자·축 1px 실선, 글자는 데이터 색을 입지 않음.
+// 마크: 막대 두께 ≤24px, 데이터 끝 6px 라운드·기준선 쪽 직각, 붙은 막대 사이 2px 틈, 격자·축 1px 실선, 글자는 데이터 색을 입지 않음.
+// 진하기 순서: 격자(--ws-sunken) < 회색 막대·기준선(--ws-chart-muted) < 목표선(--ws-muted). 회색 막대도 실제 데이터라 격자보다 진해야 해요.
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Button, Tooltip } from "antd";
 import { formatNumber, formatQty } from "@/lib/format";
@@ -39,8 +40,8 @@ export function niceTicks(max: number, count = 4): number[] {
   return ticks;
 }
 
-/** 위쪽(데이터 끝)만 4px 라운드인 막대 경로. 기준선 쪽은 직각 */
-function barPath(x: number, y: number, w: number, h: number, r = 4): string {
+/** 위쪽(데이터 끝)만 6px 라운드인 막대 경로. 기준선 쪽은 직각 */
+function barPath(x: number, y: number, w: number, h: number, r = 6): string {
   if (h <= 0) return "";
   const rr = Math.min(r, w / 2, h);
   return `M${x},${y + h}V${y + rr}Q${x},${y} ${x + rr},${y}H${x + w - rr}Q${x + w},${y} ${x + w},${y + rr}V${y + h}Z`;
@@ -148,7 +149,7 @@ export function SimpleBarChart({ data, unit, highlightKey, compare, target, heig
         <svg width={width} height={height} role="img" aria-label={`${ariaLabel}: ${data.map((d) => (compare ? `${d.label} ${compare.currentLabel} ${fmt(d.value, unit)}, ${compare.previousLabel} ${fmt(d.previous ?? 0, unit)}` : `${d.label} ${fmt(d.value, unit)}`)).join(", ")}${target ? `, ${target.label} ${fmt(target.value, unit)}` : ""}`}>
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={axisW} x2={axisW + plotW} y1={y(t)} y2={y(t)} stroke={t === 0 ? "var(--ws-chart-muted)" : "var(--ws-line)"} strokeWidth={1} shapeRendering="crispEdges" />
+              <line x1={axisW} x2={axisW + plotW} y1={y(t)} y2={y(t)} stroke={t === 0 ? "var(--ws-chart-muted)" : "var(--ws-sunken)"} strokeWidth={1} shapeRendering="crispEdges" />
               <text x={axisW - 8} y={y(t)} dy="0.32em" textAnchor="end" fontSize={12} fill="var(--ws-muted)">{formatNumber(t)}</text>
             </g>
           ))}
@@ -169,7 +170,7 @@ export function SimpleBarChart({ data, unit, highlightKey, compare, target, heig
                 <rect x={axisW + band * i} y={top} width={band} height={plotH} fill="transparent" className="ws-hit__ring" rx={6} />
                 {vals.map((v, j) => <path key={j} d={barPath(xs[j]!, y(v), bw, top + plotH - y(v))} fill={fills[j]} />)}
                 {d.key === labelKey && (
-                  <text x={pair ? xs[1]! + bw / 2 : cx} y={y(d.value) - 6} textAnchor="middle" fontSize={13} fontWeight={700} fill="var(--ws-ink)">{fmt(d.value, unit)}</text>
+                  <text x={pair ? xs[1]! + bw / 2 : cx} y={y(d.value) - 6} textAnchor="middle" fontSize={13} fontWeight={600} fill="var(--ws-ink)">{fmt(d.value, unit)}</text>
                 )}
                 <text x={cx} y={top + plotH + 18} textAnchor="middle" fontSize={12} fill={d.key === highlightKey ? "var(--ws-ink)" : "var(--ws-muted)"} fontWeight={d.key === highlightKey ? 600 : 400}>{d.label}</text>
               </g>
@@ -196,14 +197,25 @@ export interface StackedShareBarProps {
   /** color(직접 CSS 색, 예: 업무 상태 고정 색) > tone(상태색) > slot(범주색) */
   segments: { key: string; label: string; value: number; slot?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | "other"; tone?: Tone; color?: string }[];
   unit: string;
-  /** 기본 8(가는 막대) */
+  /** 기본 10(가는 막대, 양끝 알약) */
   height?: number;
   /** 기본 list: 점 + 이름 + % + 값, 2열 */
   legend?: "list" | "none";
   ariaLabel: string;
 }
 
-export function StackedShareBar({ segments, unit, height = 8, legend = "list", ariaLabel }: StackedShareBarProps) {
+export type ShareSegment = StackedShareBarProps["segments"][number];
+
+/** 조각 색: color(직접 CSS 색) > tone(상태색) > slot(범주색, other는 chart-muted).
+ *  넓은 면이라 '좋음'은 차분한 채움색(--ws-good-fill). 진한 상태색은 예외(정지·고장 등) 조각과 작은 점에만. DonutChart와 같이 씁니다 */
+export function segmentColor(s: ShareSegment, i: number): string {
+  if (s.color) return s.color;
+  if (s.tone === "good") return "var(--ws-good-fill)";
+  if (s.tone) return `var(--ws-${s.tone}-mark)`;
+  return s.slot === "other" ? "var(--ws-chart-muted)" : `var(--ws-chart-${s.slot ?? i + 1})`;
+}
+
+export function StackedShareBar({ segments, unit, height = 10, legend = "list", ariaLabel }: StackedShareBarProps) {
   const base = segments.filter((s) => s.value > 0);
   let segs = base;
   if (base.length > 6) {
@@ -212,15 +224,13 @@ export function StackedShareBar({ segments, unit, height = 8, legend = "list", a
     segs = [...head, { key: "__other", label: "기타", value: rest, slot: "other" as const }];
   }
   const total = segs.reduce((s, x) => s + x.value, 0);
-  // 넓은 면이라 '좋음'은 차분한 채움색(--ws-good-fill). 진한 상태색은 예외(정지·고장 등) 조각과 작은 점에만
-  const colorOf = (s: (typeof segs)[number], i: number) =>
-    "color" in s && s.color ? s.color : s.tone === "good" ? "var(--ws-good-fill)" : s.tone ? `var(--ws-${s.tone}-mark)` : s.slot === "other" ? "var(--ws-chart-muted)" : `var(--ws-chart-${s.slot ?? i + 1})`;
+  const colorOf = segmentColor;
   const pct = (v: number) => (total ? Math.round((v / total) * 1000) / 10 : 0);
   return (
     <ChartFrame table={{ columns: ["항목", "비중(%)", `값(${unit})`], rows: segments.map((s) => [s.label, pct(s.value), s.value]), caption: ariaLabel }}>
       <div className="ws-share" role="img" aria-label={`${ariaLabel}: ${segs.map((s) => `${s.label} ${formatQty(s.value, unit)}(${pct(s.value)}%)`).join(", ")}`} style={{ height }}>
         {total === 0 ? (
-          <span className="ws-share__seg" style={{ flex: 1, background: "var(--ws-line)" }} />
+          <span className="ws-share__seg" style={{ flex: 1, background: "var(--ws-sunken)" }} />
         ) : segs.map((s, i) => (
           // 조각은 마우스 툴팁만(Tab 자리 없음). 값은 묶음의 접근성 이름·범례·[표로 보기]에 있어요
           <Tooltip key={s.key} title={`${formatQty(s.value, unit)} · ${s.label} ${pct(s.value)}%`}>
@@ -270,12 +280,12 @@ export interface MeterProps {
   /** 기준 눈금(예: 지금 시각까지 계획상 해야 할 양). 트랙 위 세로 실선 + 접근성 글자 */
   marker?: { value: number; label: string };
 }
-/** 높이 8 진행 막대. 트랙 = 같은 색 계열 옅은 단계(accent면 brand-weak, tone이면 태그 바탕). 값 글자는 ink */
+/** 높이 8 진행 막대. 트랙 = accent면 --ws-sunken, tone이면 태그 바탕. 값 글자는 ink */
 export function Meter({ value, max, label, tone, showValue = true, valueText, marker }: MeterProps) {
   const ratio = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
   const mRatio = marker && max > 0 ? Math.min(1, Math.max(0, marker.value / max)) : null;
   const fill = tone ? `var(--ws-${tone}-mark)` : "var(--ws-chart-accent)";
-  const track = tone ? `var(--ws-${tone}-bg)` : "var(--ws-brand-weak)";
+  const track = tone ? `var(--ws-${tone}-bg)` : "var(--ws-sunken)";
   const text = valueText ?? `${formatNumber(value)} / ${formatNumber(max)}`;
   return (
     <div className="ws-meter">

@@ -1,27 +1,35 @@
 /* work 그룹 화면 전용 배치(소유: work 그룹). 색은 모두 --ws-* 변수만, 그림자·점선·그라데이션 없음.
-   공통 승격 후보: .wk-rows(카드 안 줄 목록), .wk-kv(정보 표), .wk-summary-links(글자 링크 요약) — notes/work.md 참고 */
+   07 명세(Orbix): 카드 안 행 구분선 --ws-sunken, 행 제목 14/22/600, 메타 13/20/400 muted, 라벨은 보통 굵기.
+   공통 승격 후보: .wk-rows(카드 안 줄 목록), .wk-kv(정보 표), .wk-summary-links(빠른 필터 알약) — notes/work.md 참고 */
 
-.wk-stack { display: flex; flex-direction: column; gap: 24px; }
-.wk-section-title { font-size: 16px; line-height: 24px; font-weight: 700; color: var(--ws-ink); margin: 0 0 12px; }
+.wk-stack { display: flex; flex-direction: column; gap: var(--ws-gap); }
+.wk-section-title { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink); margin: 0 0 12px; }
 .wk-caption { font-size: 13px; line-height: 20px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
-.wk-body { font-size: 16px; line-height: 24px; color: var(--ws-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.wk-body { font-size: var(--ws-body-size, 15px); line-height: 24px; color: var(--ws-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
 .wk-body-2 { font-size: 14px; line-height: 22px; color: var(--ws-ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
 .wk-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .wk-meta-text { font-size: 14px; line-height: 22px; color: var(--ws-ink-2); font-variant-numeric: tabular-nums; }
+.wk-meta-text strong { font-weight: 600; color: var(--ws-ink); }
+/* 툴바 줄(오른쪽 끝 정렬) */
+.ws-toolbar.wk-toolbar-end { justify-content: flex-end; }
 
-/* 글자 링크 요약: "진행 중 4 · 오늘 마감 2 · 수정 요청 1" (카드 아님) */
-.wk-summary-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0 0 16px; padding: 0; list-style: none; }
+/* 빠른 필터 요약: "진행 중 4 · 오늘 마감 2 · 수정 요청 1" = 32h 흰 알약(1px line), 눌림은 brand-weak. 숫자만 600 */
+.wk-summary-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
 .wk-linkbtn {
-  border: 0; background: none; padding: 4px 0; font: inherit; font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2);
-  cursor: pointer; text-decoration: underline; text-decoration-color: var(--ws-line); text-underline-offset: 4px;
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; box-sizing: border-box;
+  border: 1px solid var(--ws-line); border-radius: 999px; background: var(--ws-surface);
+  font: inherit; font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ws-ink-2); cursor: pointer; white-space: nowrap;
+  transition: background-color 120ms linear;
 }
-.wk-linkbtn:hover { color: var(--ws-brand-text); text-decoration-color: var(--ws-brand-text); }
-.wk-linkbtn[aria-pressed="true"] { color: var(--ws-ink); font-weight: 700; text-decoration-color: var(--ws-ink); }
-.wk-linkbtn strong { font-weight: 700; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
+.wk-linkbtn:hover { background: var(--ws-hover); border-color: var(--ws-control-line); color: var(--ws-ink); }
+.wk-linkbtn[aria-pressed="true"] { background: var(--ws-brand-weak); border-color: var(--ws-brand-weak); color: var(--ws-brand-text); font-weight: 600; }
+.wk-linkbtn strong { font-weight: 600; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
+.wk-linkbtn[aria-pressed="true"] strong { color: var(--ws-brand-text); }
+@media (max-width: 767px) { .wk-linkbtn { min-height: 44px; } }
 
-/* 정보 표(라벨 · 값) */
+/* 정보 표(라벨 · 값): 라벨 400 muted */
 .wk-kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 16px; margin: 0; align-items: center; }
-.wk-kv dt { font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2); }
+.wk-kv dt { font-size: 14px; line-height: 22px; font-weight: 400; color: var(--ws-muted); }
 .wk-kv dd { margin: 0; font-size: 14px; line-height: 22px; color: var(--ws-ink); min-width: 0; overflow-wrap: anywhere; }
 
 /* 완료 기준 체크 목록(글자 + 아이콘) */
@@ -29,15 +37,26 @@
 .wk-crit li { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 22px; color: var(--ws-ink); }
 .wk-crit .anticon { color: var(--ws-brand-text); margin-top: 4px; font-size: 14px; }
 
-/* 카드 안 줄 목록(구간·결정·액션 제안·분류 확인) */
+/* 카드 안 줄 목록(구간·결정·액션 제안·분류 확인): 구분선 sunken, 제목 14/22/600, 메타 13/20 muted */
 .wk-rows { list-style: none; margin: 0; padding: 0; }
-.wk-rows > li + li { border-top: 1px solid var(--ws-line); }
-.wk-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding: 14px 0; align-items: start; transition: opacity 120ms linear; }
+/* 구분선은 가상 요소(행이 라운드 8 hover 면을 가져서 border-top이 모서리에서 휘지 않게) */
+.wk-rows > li { position: relative; }
+.wk-rows > li + li::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--ws-sunken); }
+.wk-rows > li.wk-row + li.wk-row::before { left: 8px; right: 8px; }
+.wk-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding: 14px 8px; margin: 0 -8px; align-items: start;
+  border-radius: var(--ws-radius-control); transition: opacity 120ms linear, background-color 120ms linear;
+}
+.wk-row:hover { background: var(--ws-hover); }
 .wk-row.is-fading { opacity: 0.6; }
 .wk-row__main { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.wk-row__title { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--ws-ink); overflow-wrap: anywhere; }
+.wk-row__title { font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink); overflow-wrap: anywhere; }
+a.wk-row__title { text-decoration: none; }
+a.wk-row__title:hover { color: var(--ws-brand-text); text-decoration: underline; }
+.wk-row .wk-meta-text { font-size: 13px; line-height: 20px; color: var(--ws-muted); }
 .wk-row__actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; }
-.wk-quote { margin: 0; padding: 0 0 0 12px; border-left: 2px solid var(--ws-line); font-size: 15px; line-height: 22px; color: var(--ws-ink-2); overflow-wrap: anywhere; }
+.wk-row__actions .ws-disabled-action:has(> .ws-rowact, > .ws-rowact-text) { border-radius: 999px; }
+.wk-quote { margin: 0; padding: 0 0 0 12px; border-left: 2px solid var(--ws-line); font-size: 14px; line-height: 22px; color: var(--ws-ink-2); overflow-wrap: anywhere; }
 .wk-path { font-size: 14px; line-height: 22px; color: var(--ws-ink); font-weight: 600; overflow-wrap: anywhere; }
 .wk-path--empty { color: var(--ws-muted); font-weight: 400; }
 .wk-time { font-size: 13px; line-height: 20px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
@@ -47,28 +66,29 @@
   .wk-row__actions .ant-btn { min-height: 44px; }
 }
 
-/* 칸반 카드 안 */
-.wk-kcard-title { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink); text-decoration: none; overflow-wrap: anywhere; }
+/* 칸반 카드 안(KanbanBoard의 .ws-kcard 안): 제목 14/22/600, 메타 13/20 muted */
+.wk-kcard-title { font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink); text-decoration: none; overflow-wrap: anywhere; }
 .wk-kcard-title:hover { color: var(--ws-brand-text); text-decoration: underline; }
-.wk-kcard-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; line-height: 20px; color: var(--ws-ink-2); }
+.wk-kcard-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: 13px; line-height: 20px; color: var(--ws-muted); }
 .wk-board-caption { font-size: 13px; line-height: 20px; color: var(--ws-muted); margin: 0 0 12px; }
 
-/* 구조 트리 */
+/* 구조 트리(antd Tree): 선택 = brand-weak, hover = panel(antdTheme Tree 토큰). 여기서는 모양만 맞춰요 */
 .wk-tree .ant-tree-treenode { padding: 2px 0; }
-.wk-tree .ant-tree-node-content-wrapper { border-radius: 8px; }
-.wk-tree-title { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 15px; line-height: 22px; }
-.wk-tree-title strong { font-weight: 700; }
+.wk-tree .ant-tree-node-content-wrapper { border-radius: var(--ws-radius-control); }
+.wk-tree-title { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 14px; line-height: 22px; color: var(--ws-ink); }
+.wk-tree-title strong { font-weight: 600; }
+.wk-tree .ant-tree-node-selected .wk-tree-title { color: var(--ws-brand-text); }
 .wk-tree-code { font-size: 13px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
 
 /* 결정 모음 타임라인 안 링크 */
-.wk-dec-links { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; line-height: 20px; }
-.wk-dec-group + .wk-dec-group { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--ws-line); }
-.wk-anchor-target:focus { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: 8px; }
+.wk-dec-links { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: 13px; line-height: 20px; }
+.wk-dec-group + .wk-dec-group { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--ws-sunken); }
+.wk-anchor-target:focus { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: var(--ws-radius-control); }
 .wk-textlink { border: 0; background: none; padding: 0; font: inherit; color: var(--ws-brand-text); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-align: left; }
 
-/* 서랍 안 묶음 */
+/* 서랍 안 묶음(서랍은 흰 면 → 구분선 line). 묶음 이름은 작은 머리(폼 라벨과 같은 14/22/600) */
 .wk-drawer-block + .wk-drawer-block { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--ws-line); }
-.wk-drawer-label { font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2); margin: 0 0 6px; }
+.wk-drawer-label { display: block; font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2); margin: 0 0 6px; }
 .wk-form .ant-form-item { margin-bottom: 16px; }
 .wk-form .ant-form-item-label > label { font-weight: 600; }
 .wk-inline-form { display: flex; gap: 8px; align-items: flex-start; }

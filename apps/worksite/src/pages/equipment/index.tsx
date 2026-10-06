@@ -195,11 +195,11 @@ function TodayChecks({ equipment }: { equipment: Equipment[] }) {
                 <div className="in-line__actions">
                   {canCheck.can ? (
                     <>
-                      <Button icon={<CheckOutlined />} loading={busy === e.id} onClick={() => void ok(e)}>이상 없음</Button>
-                      <Button icon={<WarningOutlined />} onClick={() => nav(`/ops/report?kind=equipment&equipment=${e.id}`)}>이상 있음</Button>
+                      <Button className="ws-rowact" icon={<CheckOutlined />} loading={busy === e.id} onClick={() => void ok(e)}>이상 없음</Button>
+                      <Button type="text" className="ws-rowact-text" icon={<WarningOutlined />} onClick={() => nav(`/ops/report?kind=equipment&equipment=${e.id}`)}>이상 있음</Button>
                     </>
                   ) : (
-                    <DisabledAction label="이상 없음" reason={canCheck.reason ?? "지금은 기록할 수 없어요"}><Button disabled>이상 없음</Button></DisabledAction>
+                    <DisabledAction label="이상 없음" reason={canCheck.reason ?? "지금은 기록할 수 없어요"}><Button className="ws-rowact" disabled>이상 없음</Button></DisabledAction>
                   )}
                 </div>
               </li>
@@ -266,7 +266,7 @@ function Breakdowns({ eqNo }: { eqNo: (id: string) => string }) {
           { key: "downtime_min", title: "정지", render: (b) => (b.downtime_min != null ? formatMinutes(b.downtime_min) : "진행 중") },
           { key: "cause", title: "원인" },
           { key: "status", title: "상태", kind: "status", statusDomain: "breakdown_records.status" },
-          { key: "act", title: "", render: (b) => (b.status !== "repaired" && can("breakdown_records", "approve").can ? <Button size="small" icon={<ToolOutlined />} onClick={(e) => { e.stopPropagation(); setSelected(b.id); }}>수리 완료</Button> : null) },
+          { key: "act", title: "", render: (b) => (b.status !== "repaired" && can("breakdown_records", "approve").can ? <Button className="ws-rowact" icon={<ToolOutlined />} onClick={(e) => { e.stopPropagation(); setSelected(b.id); }}>수리 완료</Button> : null) },
         ]}
         mobileRow={(b) => ({ title: `${eqNo(b.equipment_id)} · ${b.symptom}`, subtitle: `${formatDateTime(b.occurred_at)}${b.downtime_min != null ? ` · 정지 ${formatMinutes(b.downtime_min)}` : ""}`, trailing: <StatusTag {...statusOf("breakdown_records.status", b.status)} /> })}
         empty={{ kind: "empty", title: "고장 기록이 없어요", description: "현장 등록에서 설비 이상을 남기면 고장 기록이 생겨요." }}

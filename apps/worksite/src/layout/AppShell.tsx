@@ -1,7 +1,8 @@
-// AppShell(빌드 스펙 2.1절): 구간별 배치
-//   wide(≥1440)·desktop(1280~1439): SideNav 240(접으면 72) + TopBar 64 + 틴트 패널(라운드 28) [+ RightRail 320, 홈만·wide만]
-//   tablet(768~1279): NavRail 80 + TopBar 64(메뉴 서랍) + 패널 안쪽 24
-//   mobile(≤767): TopBar 56 + 화면 전체 틴트 + MobileTabBar 64(+안전 영역) + 메뉴 서랍
+// AppShell(빌드 스펙 2.1절, 07 명세 5.1): 구간별 배치. 흰 SideNav·TopBar가 'ㄱ'자로 평평한 회색 캔버스(--ws-panel, 라운드 없음)를 감쌉니다.
+//   wide(≥1440)·desktop(1280~1439): SideNav 240(접으면 72) + TopBar 64 + 캔버스 [+ RightRail 320, 홈만·wide만]
+//   tablet(768~1279): NavRail 80 + TopBar 64(메뉴 서랍) + 캔버스 안쪽 24
+//   mobile(≤767): TopBar 56 + 화면 전체 캔버스 + MobileTabBar 64(+안전 영역) + 메뉴 서랍
+// 창(window)이 스크롤합니다(상단 바 is-scrolled, 표 머리 sticky 64, 레일 sticky가 이를 가정).
 // 첫 Tab은 SkipLink("본문으로 건너뛰기"). 본문은 <main id="main">.
 import { useEffect, useMemo, useState } from "react";
 import { Outlet } from "react-router";

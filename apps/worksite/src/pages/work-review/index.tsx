@@ -84,7 +84,7 @@ export default function Page() {
         meta={<span className="wk-meta-text">검토 대기 <strong className="ws-tabular">{pendingIds.length}</strong>건{companyScope ? " · 회사 전체(내가 검토자가 아니면 대신 승인으로 기록돼요)" : " · 내가 검토자인 업무"}</span>}
       />
       <FilterBar {...fbProps} />
-      <div style={{ marginTop: 16 }}>
+      <div>
         {tasksQ.query.isLoading ? <div style={{ minHeight: 160 }} aria-busy="true" /> : (
           <DataTable<Submission>
             key={pendingView ? "pending" : "done"}

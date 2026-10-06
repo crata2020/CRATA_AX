@@ -12,9 +12,11 @@ export const TR_TOKENS: BrandTokens = {
   onBrand: "#FFFFFF",
   onBrand2: "#E7EDFB",
   heroLine: "rgba(255,255,255,0.24)",
-  panel: "#F3F5FB",
+  // 캔버스 · 카드 테두리·트레이 · 흰 면 위 선(07 Orbix 명세 4.1절, derive STEPS로 계산한 값)
+  panel: "#F5F6F9",
+  sunken: "#EEEFF4",
   surface: "#FFFFFF",
-  line: "#E2E6EF",
+  line: "#E5E7ED",
   controlLine: "#80889B",
   ink: "#1B1E25",
   ink2: "#434853",
@@ -23,8 +25,8 @@ export const TR_TOKENS: BrandTokens = {
   chartMuted: "#C6CAD5",
   chartProgress: "#6F8FD8",
   chartPalette: ["#3A5BA8", ...CATEGORICAL_TAIL],
-  shadowPop: "0 8px 24px rgba(27,30,37,0.12)",
-  shadowModal: "0 16px 48px rgba(27,30,37,0.18)",
+  shadowPop: "0 0 0 1px rgba(27,30,37,0.06), 0 8px 24px rgba(27,30,37,0.08)",
+  shadowModal: "0 0 0 1px rgba(27,30,37,0.06), 0 24px 48px rgba(27,30,37,0.16)",
 };
 
 export const CRATA_TOKENS: BrandTokens = {
@@ -36,9 +38,10 @@ export const CRATA_TOKENS: BrandTokens = {
   onBrand: "#FFFFFF",
   onBrand2: "#DFF1EF",
   heroLine: "rgba(255,255,255,0.24)",
-  panel: "#EFF7F6",
+  panel: "#F4F7F7",
+  sunken: "#EBF1F0",
   surface: "#FFFFFF",
-  line: "#DEE9E8",
+  line: "#E2E9E8",
   controlLine: "#738C8A",
   ink: "#16201F",
   ink2: "#3C4B4A",
@@ -48,6 +51,6 @@ export const CRATA_TOKENS: BrandTokens = {
   // 진행 중은 청록 브랜드·초록 완료와 붙어 앉아서 청록이 아닌 파랑 단계(validate_palette: CVD 16.3 · 일반 20.1)
   chartProgress: "#5E8FD6",
   chartPalette: ["#00897B", ...CATEGORICAL_TAIL],
-  shadowPop: "0 8px 24px rgba(22,32,31,0.12)",
-  shadowModal: "0 16px 48px rgba(22,32,31,0.18)",
+  shadowPop: "0 0 0 1px rgba(22,32,31,0.06), 0 8px 24px rgba(22,32,31,0.08)",
+  shadowModal: "0 0 0 1px rgba(22,32,31,0.06), 0 24px 48px rgba(22,32,31,0.16)",
 };

@@ -102,7 +102,7 @@ export function Feed() {
           { key: "status", title: "상태", kind: "status", statusDomain: "field_reports.status" },
           {
             key: "assign", title: "담당", render: (r) => r.status === "new"
-              ? <Button size="small" icon={<UserAddOutlined />} onClick={(e) => { e.stopPropagation(); setSelected(r.id); }}>담당 정하기</Button>
+              ? <Button className="ws-rowact" icon={<UserAddOutlined />} onClick={(e) => { e.stopPropagation(); setSelected(r.id); }}>담당 정하기</Button>
               : <PersonChip memberId={r.assignee_id} size="sm" />,
           },
         ]}

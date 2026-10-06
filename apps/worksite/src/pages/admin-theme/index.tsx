@@ -47,7 +47,7 @@ function Preview({ tokens, density, monogram, name }: { tokens: BrandTokens; den
   ];
   return (
     <ConfigProvider theme={theme}>
-      <div className="as-preview" style={{ ...vars, fontSize: density === "public" ? 17 : 16 }} aria-label="저장 전 미리보기" role="group">
+      <div className="as-preview" style={{ ...vars, fontSize: density === "public" ? 17 : 15 }} aria-label="저장 전 미리보기" role="group">
         <div>
           <div className="as-preview__label">활성 메뉴</div>
           <div className="as-preview__nav">
@@ -69,7 +69,7 @@ function Preview({ tokens, density, monogram, name }: { tokens: BrandTokens; den
           <div className="as-row">
             <Button type="primary" tabIndex={-1}>승인하기</Button>
             <Button tabIndex={-1}>수정 요청하기</Button>
-            <span style={{ color: "var(--ws-brand-text)", textDecoration: "underline", fontWeight: 600 }}>글자 링크</span>
+            <span style={{ color: "var(--ws-brand-text)", textDecoration: "underline", textUnderlineOffset: 2 }}>글자 링크</span>
           </div>
           <div className="as-row as-mt">
             <StatusTag tone="good" label="완료" />

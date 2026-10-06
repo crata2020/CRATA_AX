@@ -1,11 +1,12 @@
-// SideNav(데스크톱 240, 접으면 72) · NavTree(서랍 안 메뉴) · NavRail(태블릿 80)
-// 활성 항목: brand-weak 바탕 + brand 글자 + 굵기 700(하위 600) + aria-current="page" + 왼쪽 3px 막대(색만으로 표시하지 않음).
+// SideNav(데스크톱 240, 접으면 72) · NavTree(서랍 안 메뉴) · NavRail(태블릿 80). 07 명세 5.2: 흰 바탕 + 오른쪽 1px 선,
+// 로고 줄은 상자 없이(머리 = 로고 + 28 원형 접기 버튼), 펼친 사이드바에는 장식 섹션 라벨 '메뉴'(aria-hidden, Tab 정지점 아님).
+// 꺼진 항목 400, 활성 항목: brand-weak 바탕 + brand 글자 + 굵기 600 + aria-current="page" + 왼쪽 3px 막대(색만으로 표시하지 않음).
 // 하위 항목이 켜지면 그룹 줄은 brand 글자·아이콘만 남기고(바탕·막대 없음), 바탕·막대·점은 하위 항목에만.
 // 하위 항목은 아이콘 없이 점 불릿, 활성 그룹만 펼칩니다(서랍은 모든 그룹을 펼칠 수 있음).
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Button, Tooltip } from "antd";
-import { LockOutlined, MenuFoldOutlined, MenuUnfoldOutlined, DownOutlined, RightOutlined } from "@ant-design/icons";
+import { LockOutlined, DoubleLeftOutlined, DoubleRightOutlined, DownOutlined, RightOutlined } from "@ant-design/icons";
 import { useWorksite } from "@/app/TenantBoundary";
 import { activeNav, NAV_BADGE_LABEL, type NavBadgeKey, type NavItem } from "@/modules";
 import { CountBadge } from "@/components/basics";
@@ -48,6 +49,8 @@ export function NavTree({ items, collapsed, mode = "side", onNavigate }: { items
 
   return (
     <nav className={`ws-nav${mode === "drawer" ? " ws-drawer-nav" : ""}`} aria-label="주 메뉴">
+      {/* 장식 섹션 라벨: 초점을 받지 않고 스크린리더도 읽지 않아요(nav 이름이 이미 '주 메뉴') */}
+      {mode === "side" && !collapsed && <div className="ws-nav__heading" aria-hidden="true">메뉴</div>}
       <ul>
         {items.map((g) => {
           const isActive = active.group === g.key;
@@ -116,23 +119,26 @@ export function SideNav({ collapsed, onCollapse }: { collapsed: boolean; onColla
   const { nav } = useWorksite();
   return (
     <aside className={`ws-sidenav${collapsed ? " is-collapsed" : ""}`} aria-label="메뉴">
-      <Brand collapsed={collapsed} />
-      <Tooltip title={collapsed ? "메뉴 펼치기" : "메뉴 접기"} placement="right">
-        <Button
-          type="text"
-          className="ws-collapse-btn"
-          aria-label={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
-          aria-expanded={!collapsed}
-          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          onClick={() => onCollapse(!collapsed)}
-        />
-      </Tooltip>
+      <div className="ws-sidenav__head">
+        <Brand collapsed={collapsed} />
+        <Tooltip title={collapsed ? "메뉴 펼치기" : "메뉴 접기"} placement="right">
+          <Button
+            shape="circle"
+            size="small"
+            className="ws-collapse-btn"
+            aria-label={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
+            aria-expanded={!collapsed}
+            icon={collapsed ? <DoubleRightOutlined /> : <DoubleLeftOutlined />}
+            onClick={() => onCollapse(!collapsed)}
+          />
+        </Tooltip>
+      </div>
       <NavTree items={nav} collapsed={collapsed} />
     </aside>
   );
 }
 
-/** 태블릿(768~1279) 레일: 아이콘 22 + 글자 13. 하위 메뉴는 상단 바의 메뉴 서랍에서 */
+/** 태블릿(768~1279) 레일: 아이콘 20 + 글자 13. 하위 메뉴는 상단 바의 메뉴 서랍에서 */
 export function NavRail() {
   const { nav, tenant } = useWorksite();
   const { pathname } = useLocation();
@@ -140,7 +146,7 @@ export function NavRail() {
   const badges = useNavBadges();
   return (
     <aside className="ws-navrail" aria-label="메뉴">
-      <Link to="/" className="ws-brand" style={{ margin: "0 0 12px", padding: 0 }} aria-label={`${tenant.displayName} 홈`}>
+      <Link to="/" className="ws-brand ws-brand--rail" aria-label={`${tenant.displayName} 홈`}>
         <span className="ws-monogram" aria-hidden>{tenant.monogram}</span>
       </Link>
       <nav aria-label="주 메뉴">

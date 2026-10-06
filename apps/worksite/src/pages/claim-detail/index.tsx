@@ -142,7 +142,7 @@ export default function Page() {
           <Divider />
           <div className="in-row in-row--between">
             <h3 className="in-sub--sm" style={{ margin: 0 }}>연결 업무 {tasks.rows.length}건</h3>
-            {canTask && <Button size="small" icon={<PlusOutlined />} onClick={() => setTaskOpen(true)}>업무</Button>}
+            {canTask && <Button className="ws-rowact" icon={<PlusOutlined />} onClick={() => setTaskOpen(true)}>업무</Button>}
           </div>
           <ListRows
             ariaLabel="연결 업무"

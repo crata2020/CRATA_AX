@@ -2,13 +2,13 @@
 // 회사가 내건 "Single PPM" 목표 대비 고객 PPM 추이(K06)와 공정 불량률(K03)·초중종물 실시율(K04)·미결 시정조치,
 // 그리고 검사 · 부적합 · 4M 변경 · 계측기 탭. 지표 값은 모두 예시예요.
 import { useMemo } from "react";
-import { CardGrid, DataTable, DdayBadge, EmptyState, FilterBar, LinkTabs, Meter, PageHeader, SectionCard, SimpleBarChart, StatRow, StatTile, StatusTag, useFilterBarState, type FilterBarProps } from "@/components";
+import { CardGrid, DataTable, DdayBadge, EmptyState, FilterBar, Gauge, KpiCard, KpiStrip, LinkTabs, PageHeader, SectionCard, SimpleBarChart, StatTile, StatusTag, useFilterBarState, type FilterBarProps } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
 import { useUrlParam } from "@/lib/url";
 import { formatDate, formatMonth, formatNumber } from "@/lib/format";
 import { labelOf, optionsOf, statusOf } from "@/lib/status";
-import type { CorrectiveAction, Gauge, Inspection, Item, Kpi, KpiValue } from "@/types/entities";
+import type { CorrectiveAction, Gauge as GaugeEntity, Inspection, Item, Kpi, KpiValue } from "@/types/entities";
 import { useIndex, useModuleRows } from "../ops-home/kit/data";
 import { gaugeStatus } from "../ops-home/kit/labels";
 import { lazyPart } from "@/lib/lazyDrawer";
@@ -94,21 +94,28 @@ export default function Page() {
               height={190}
             />
           </SectionCard>
-          <SectionCard title="공정 지표" span={12} demo>
-            <StatRow>
+          <KpiStrip title="공정 지표" demo>
+            <KpiCard>
               <StatTile
                 label="공정 불량률"
                 value={last(k03)?.value != null ? formatNumber(last(k03)!.value, 2) : "—"}
                 unit="%"
                 delta={last(k03, 2) ? { value: Math.round((last(k03)!.value - last(k03, 2)!.value) * 100) / 100, unit: "%p", period: "지난달보다", goodWhen: "down" } : undefined}
               />
-              <div className="ws-stat">
-                <Meter label="초중종물 실시율" value={last(k04)?.value ?? 0} max={100} valueText={`${formatNumber(last(k04)?.value ?? 0)}%`} />
-                <span className="ws-stat__caption">목표 100% · 지난달 {formatNumber(last(k04, 2)?.value ?? 0)}%</span>
-              </div>
+            </KpiCard>
+            <KpiCard>
+              <Gauge
+                label="초중종물 실시율"
+                value={last(k04)?.value ?? 0}
+                max={100}
+                valueText={`${formatNumber(last(k04)?.value ?? 0)}%`}
+                caption={`목표 100% · 지난달 ${formatNumber(last(k04, 2)?.value ?? 0)}%`}
+              />
+            </KpiCard>
+            <KpiCard>
               <StatTile label="미결 시정조치" value={cas.rows.length} unit="건" caption="8D와 간이 시정조치를 합쳤어요" />
-            </StatRow>
-          </SectionCard>
+            </KpiCard>
+          </KpiStrip>
         </CardGrid>
       ) : (
         <SectionCard title="품질 지표">
@@ -146,7 +153,7 @@ export default function Page() {
           {tab === "nc" && <NcTab />}
           {tab === "4m" && <FourMTab />}
           {tab === "gauges" && (
-            <DataTable<Gauge>
+            <DataTable<GaugeEntity>
               resource="gauges"
               ariaLabel="계측기"
               syncWithLocation={false}

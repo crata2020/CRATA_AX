@@ -104,7 +104,7 @@ export default function Page() {
       <PageHeader
         title="감사 로그"
         description="누가 언제 무엇을 바꿨는지 남겨요. 아무도 고치거나 지울 수 없어요."
-        actions={<DisabledAction label="} disabled>내보내기" reason={"준비 중이에요"}><Button icon={<ExportOutlined aria-hidden />} disabled>내보내기</Button></DisabledAction>}
+        actions={<DisabledAction label="내보내기" reason={"준비 중이에요"}><Button icon={<ExportOutlined aria-hidden />} disabled>내보내기</Button></DisabledAction>}
       />
       <FilterBar {...fbProps} />
       <DataTable<AuditEvent>
@@ -120,7 +120,7 @@ export default function Page() {
           { key: "at", title: "시각", kind: "datetime" },
           { key: "actor_id", title: "행위자", width: 200, render: (e) => <AuditActor row={e} /> },
           { key: "actor_type", title: "종류", kind: "tag", statusDomain: "audit_events.actor_type" },
-          { key: "action", title: "동작", render: (e) => <b>{actionLabel(e.action)}</b> },
+          { key: "action", title: "동작", render: (e) => actionLabel(e.action) },
           { key: "resource", title: "대상", width: 240, render: (e) => <TargetCell e={e} /> },
           { key: "changes", title: "바뀐 내용", flex: true, render: (e) => <span style={{ display: "block", whiteSpace: "normal" }}>{changeSummary(e)}</span> },
         ]}

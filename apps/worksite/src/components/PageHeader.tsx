@@ -13,7 +13,7 @@ export interface PageHeaderProps {
   title: string;
   /** 해요체 한 줄 */
   description?: string;
-  /** "안녕하세요, {name}님" (이름만 색칠하지 않음) + 날짜·요약 한 줄 */
+  /** 흐린 날짜 눈썹 + "안녕하세요, {name}님"(28/36) + 요약 한 줄(있을 때) */
   greeting?: { name: string; dateText: string; summary?: string };
   /** 페이지당 1개, 모든 카드에 적용 */
   period?: SegmentedPillsProps<any>;
@@ -29,14 +29,15 @@ export interface PageHeaderProps {
 
 export function PageHeader({ title, description, greeting, period, tabs, actions, back, meta }: PageHeaderProps) {
   return (
-    <header className="ws-page-header">
+    <header className={`ws-page-header${greeting ? " ws-page-header--greeting" : ""}`}>
       {back && <Link className="ws-back" to={back.to}><ArrowLeftOutlined aria-hidden />{back.label}</Link>}
       <div className="ws-page-header__row">
         <div className="ws-page-header__titles">
           {greeting ? (
             <>
-              <h1 className="ws-t-title-page">안녕하세요, <span className="ws-greeting__name">{greeting.name}</span>님</h1>
-              <p className="ws-page-header__desc">{greeting.dateText}{greeting.summary ? ` · ${greeting.summary}` : ""}</p>
+              <p className="ws-page-header__eyebrow">{greeting.dateText}</p>
+              <h1 className="ws-t-title-page ws-t-greeting">안녕하세요, <span className="ws-greeting__name">{greeting.name}</span>님</h1>
+              {greeting.summary && <p className="ws-page-header__desc">{greeting.summary}</p>}
             </>
           ) : (
             <>

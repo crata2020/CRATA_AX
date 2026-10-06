@@ -120,8 +120,8 @@ export default function Page() {
                   </div>
                   <div className="cb-row__actions">
                     {canEdit
-                      ? <Button size="small" icon={<EditOutlined aria-hidden />} onClick={() => setSelected(`key:${r.key}`)}>고치기</Button>
-                      : <DisabledAction label="고치기" reason={"화면 이름은 관리자가 고칠 수 있어요"}><Button size="small" disabled>고치기</Button></DisabledAction>}
+                      ? <Button type="text" className="ws-rowact-text" icon={<EditOutlined aria-hidden />} onClick={() => setSelected(`key:${r.key}`)}>고치기</Button>
+                      : <DisabledAction label="고치기" reason={"화면 이름은 관리자가 고칠 수 있어요"}><Button type="text" className="ws-rowact-text" disabled>고치기</Button></DisabledAction>}
                   </div>
                 </div>
               </li>

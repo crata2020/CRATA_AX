@@ -1,4 +1,4 @@
-// SectionCard: 패널 위의 흰 카드(라운드 20, 그림자·테두리 없음). 카드 안에 카드를 넣지 않습니다(개발 모드에서 콘솔 오류).
+// SectionCard: 캔버스 위의 흰 카드(라운드 12, 거의 안 보이는 1px --ws-sunken 선, 그림자 없음). 카드 안에 카드를 넣지 않습니다(개발 모드에서 콘솔 오류).
 // HeroCard = SectionCard variant="hero"(브랜드 단색 면, 화면당 1장). CardGrid = 12열(태블릿 8열, 모바일 1열) 그리드.
 import { createContext, useContext, useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router";
@@ -21,8 +21,10 @@ export function spanStyle(size?: CardSize, span?: number): CSSProperties | undef
 
 export interface SectionCardProps {
   title?: string;
-  /** 제목을 검정 알약으로(화면당 3개 이하) */
+  /** 알약 카드(화면당 3개 이하). 모양은 보통 카드 제목과 같고 제목 글자만 span.ws-pill[data-pill]로 감쌉니다 */
   pill?: boolean;
+  /** 제목 줄 바로 아래 13/20 흐린 한 줄 */
+  subtitle?: string;
   /** 제목 줄 오른쪽 '예시 데이터' 배지. 수치 카드는 true */
   demo?: boolean;
   actions?: ReactNode;
@@ -42,7 +44,7 @@ export interface SectionCardProps {
   children: ReactNode;
 }
 
-export function SectionCard({ title, pill, demo, actions, more, size, span, variant = "default", as = "section", caption, className, ariaLabel, children }: SectionCardProps) {
+export function SectionCard({ title, pill, subtitle, demo, actions, more, size, span, variant = "default", as = "section", caption, className, ariaLabel, children }: SectionCardProps) {
   const nested = useContext(NestCtx);
   if (nested && import.meta.env.DEV) console.error("[SectionCard] 카드 안에 카드를 넣지 마세요(빌드 스펙 3.0절 2번). 구분선이나 간격으로 나눠 주세요.");
   const Tag = as;
@@ -57,12 +59,11 @@ export function SectionCard({ title, pill, demo, actions, more, size, span, vari
         {...(hero ? { "data-hero": "" } : {})}
         aria-label={ariaLabel ?? (pill ? title : undefined)}
       >
-        {pill && title && <h2 className="ws-card__pillhead"><PillLabel>{title}</PillLabel></h2>}
         {head && (
           <div className="ws-card__head">
-            {((title && !pill) || demo) && (
+            {(title || demo) && (
               <div className="ws-card__titles">
-                {title && !pill && <h2 className="ws-card__title">{title}</h2>}
+                {title && <h2 className="ws-card__title">{pill ? <PillLabel>{title}</PillLabel> : title}</h2>}
                 {demo && <DemoDataBadge variant="inline" />}
               </div>
             )}
@@ -74,6 +75,7 @@ export function SectionCard({ title, pill, demo, actions, more, size, span, vari
             )}
           </div>
         )}
+        {subtitle && <p className="ws-card__sub">{subtitle}</p>}
         {children}
         {caption && <p className="ws-card__caption">{caption}</p>}
       </Tag>

@@ -292,7 +292,7 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
         tableLayout={fixedLayout ? "fixed" : "auto"}
         scroll={fixedLayout ? undefined : { x: "max-content" }}
         // pagination=false면 정렬을 눌렀을 때 antd가 빈 쪽 정보를 넘겨 Refine이 쪽 크기를 10으로 바꿔요(11~20행이 사라짐). 늘 넘기고 한 쪽이면 숨깁니다.
-        pagination={{ ...(tableProps.pagination || {}), showSizeChanger: false, position: ["bottomCenter"], hideOnSinglePage: true }}
+        pagination={{ ...(tableProps.pagination || {}), showSizeChanger: false, position: ["bottomRight"], hideOnSinglePage: true }}
         onRow={(row) => clickable ? {
           className: "is-clickable",
           // 첫 칸이 이미 링크면 행에는 초점을 두지 않아요(한 행에 탭 한 번)

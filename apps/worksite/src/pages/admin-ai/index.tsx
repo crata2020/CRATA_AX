@@ -144,7 +144,7 @@ export default function Page() {
             sorters={[{ field: "last_used_at", order: "desc" }]}
             columns={[
               { key: "member_id", title: "구성원", kind: "person" },
-              { key: "client_name", title: "AI", render: (c) => <b>{c.client_name}</b> },
+              { key: "client_name", title: "AI", render: (c) => <span className="ws-cell-name">{c.client_name}</span> },
               { key: "created_at", title: "연결일", kind: "date" },
               { key: showRevoked ? "revoked_at" : "last_used_at", title: showRevoked ? "끊은 날" : "마지막 사용", kind: "datetime" },
               { key: "scopes", title: "범위", flex: true, render: (c) => scopeText(c.scopes) },

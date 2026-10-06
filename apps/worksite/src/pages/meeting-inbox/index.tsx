@@ -94,7 +94,7 @@ export default function Page() {
         meta={<span className="wk-meta-text">남은 확인: 구간 <strong className="ws-tabular">{segRemaining}</strong>건 · 결정·액션 <strong className="ws-tabular">{otherRemaining}</strong>건</span>}
       />
       <FilterBar {...fbProps} />
-      <div style={{ marginTop: 16 }}>
+      <div>
         {loading ? <Skeleton active paragraph={{ rows: 6 }} />
           : isError ? <EmptyState kind="error" action={{ label: "다시 시도", onClick: () => { void segs.query.refetch(); void decs.query.refetch(); void aps.query.refetch(); } }} />
           : !visible.length ? (

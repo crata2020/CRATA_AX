@@ -56,7 +56,7 @@ export function SimpleTable<T>({ rows, columns, rowKey, mobileRow, ariaLabel, on
         rowKey={rowKey}
         columns={cols}
         dataSource={rows}
-        pagination={rows.length > 20 ? { pageSize: 20, showSizeChanger: false, position: ["bottomCenter"] } : false}
+        pagination={rows.length > 20 ? { pageSize: 20, showSizeChanger: false, position: ["bottomRight"] } : false}
         scroll={{ x: "max-content" }}
         onRow={(r) => onRowClick ? { className: "is-clickable", tabIndex: 0, onClick: () => onRowClick(r), onKeyDown: (e) => { if (e.key === "Enter") onRowClick(r); } } : {}}
       />

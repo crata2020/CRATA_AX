@@ -6,8 +6,10 @@ import { contrast, hexToOklch, hueDistance, oklchToHex, rgbTriplet } from "./col
 
 const STEPS = {
   brandWeak: { l: 0.945, c: 0.02 },
-  panel: { l: 0.97, c: 0.008 },
-  line: { l: 0.925, c: 0.012 },
+  // 07 Orbix 명세 4.1절: 캔버스(panel)는 거의 무채, 카드 테두리·트레이(sunken)는 한 단계 아래, line은 흰 면 위 선
+  panel: { l: 0.974, c: 0.004 },
+  sunken: { l: 0.953, c: 0.006 },
+  line: { l: 0.928, c: 0.008 },
   controlLine: { l: 0.625, c: 0.03 },
   ink: { l: 0.235, c: 0.014 },
   ink2: { l: 0.4, c: 0.02 },
@@ -50,6 +52,7 @@ export function deriveTenantTheme(seed: ThemeSeed): BrandTokens {
     onBrand2: brandWeak,
     heroLine: "rgba(255,255,255,0.24)",
     panel: at("panel"),
+    sunken: at("sunken"),
     surface: "#FFFFFF",
     line: at("line"),
     controlLine: at("controlLine"),
@@ -63,8 +66,9 @@ export function deriveTenantTheme(seed: ThemeSeed): BrandTokens {
       ? oklchToHex({ l: STEPS.chartProgress.l, c: STEPS.chartProgress.c, h: 255 })
       : at("chartProgress"),
     chartPalette: [accent, ...CATEGORICAL_TAIL] as BrandTokens["chartPalette"],
-    shadowPop: `0 8px 24px rgba(${rgbTriplet(ink)},0.12)`,
-    shadowModal: `0 16px 48px rgba(${rgbTriplet(ink)},0.18)`,
+    // 떠 있는 층: 옅은 1px 고리 + 부드러운 그림자(07 명세 4.2절)
+    shadowPop: `0 0 0 1px rgba(${rgbTriplet(ink)},0.06), 0 8px 24px rgba(${rgbTriplet(ink)},0.08)`,
+    shadowModal: `0 0 0 1px rgba(${rgbTriplet(ink)},0.06), 0 24px 48px rgba(${rgbTriplet(ink)},0.16)`,
   };
 }
 

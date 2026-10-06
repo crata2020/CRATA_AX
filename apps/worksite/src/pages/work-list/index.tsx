@@ -80,7 +80,7 @@ export default function Page() {
         }
       />
       <FilterBar {...fbProps} />
-      <ul className="wk-summary-links" aria-label="빠른 필터" style={{ marginTop: 12 }}>
+      <ul className="wk-summary-links" aria-label="빠른 필터">
         <li><button type="button" className="wk-linkbtn" aria-pressed={status === "in_progress" && !due} onClick={() => setFilter({ status: "in_progress", due: null })}>진행 중 <strong>{counts.inProgress}</strong></button></li>
         <li><button type="button" className="wk-linkbtn" aria-pressed={due === "today" && !status} onClick={() => setFilter({ due: "today", status: null })}>오늘 마감 <strong>{counts.dueToday}</strong></button></li>
         <li><button type="button" className="wk-linkbtn" aria-pressed={status === "changes_requested" && !due} onClick={() => setFilter({ status: "changes_requested", due: null })}>수정 요청 <strong>{counts.changes}</strong></button></li>

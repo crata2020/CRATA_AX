@@ -121,7 +121,7 @@ export default function Page() {
               <p className="as-text-2">아직 나눈 이야기가 없어요. 요즘 일하면서 편했던 순간부터 이야기해 볼까요?</p>
             )}
             <div>
-              <Button type="primary" icon={<MessageOutlined aria-hidden />} onClick={() => nav("/ara/coach")}>{last ? "이어서 이야기하기" : "이야기 시작하기"}</Button>
+              <Button className="ws-rowact" icon={<MessageOutlined aria-hidden />} onClick={() => nav("/ara/coach")}>{last ? "이어서 이야기하기" : "이야기 시작하기"}</Button>
             </div>
             <p className="as-caption">대화는 나만 볼 수 있어요. 회사·관리자는 내용도, 이용 시각도 볼 수 없어요.</p>
             {ara.consent?.privacy_consent_at && (

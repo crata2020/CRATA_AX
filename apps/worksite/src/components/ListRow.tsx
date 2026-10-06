@@ -1,4 +1,5 @@
-// ListRow: 목록 한 줄(높이 56, compact 44). to를 주면 링크, onClick이면 버튼. 여러 줄은 <ListRows>로 감싸 1px 구분선.
+// ListRow: 목록 한 줄(최소 높이 --ws-row-h 52, compact 40). to를 주면 링크, onClick이면 버튼. 여러 줄은 <ListRows>로 감싸 1px --ws-sunken 구분선.
+// 행 안 버튼은 채우지 않아요: 주 동작 Button className="ws-rowact"(흰 알약, 브랜드 글자), 보조 type="text" className="ws-rowact-text".
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 

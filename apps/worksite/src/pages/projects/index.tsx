@@ -143,7 +143,7 @@ export default function Page() {
     <>
       {header}
       <FilterBar {...fbProps} />
-      <div style={{ marginTop: 16 }}>
+      <div>
         {!showTree ? table : (
           <CardGrid>
             <SectionCard span={4} title="구조">

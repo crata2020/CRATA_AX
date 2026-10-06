@@ -138,7 +138,7 @@ export default function Page() {
                   rowKey={(r) => r.code}
                   columns={[
                     { key: "code", title: "역할코드", render: (r) => <code className="as-code" translate="no">{r.code}</code> },
-                    { key: "title", title: "직함", render: (r) => <b>{r.title}</b> },
+                    { key: "title", title: "직함", render: (r) => <span className="ws-cell-name">{r.title}</span> },
                     { key: "unit", title: "소속", render: (r) => unitName(r.unitId) },
                     { key: "role", title: "플랫폼 역할", render: (r) => roleLabel(r.platformRole) },
                     { key: "home", title: "홈 구성", render: (r) => homeText(r) },

@@ -90,7 +90,7 @@ export default function Page() {
               secondaryAction={demoMailPersona ? { label: `예시 메일 보기: ${demoMailPersona.displayName}로 바꾸기`, onClick: () => switchPersona(demoMailPersona.roleCode) } : undefined}
             />
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <DisabledAction label="}>메일 연결하기" reason={"메일 연결은 2단계에서 열려요"}><Button disabled icon={<ApiOutlined aria-hidden />}>메일 연결하기</Button></DisabledAction>
+              <DisabledAction label="메일 연결하기" reason={"메일 연결은 2단계에서 열려요"}><Button disabled icon={<ApiOutlined aria-hidden />}>메일 연결하기</Button></DisabledAction>
             </div>
           </SectionCard>
           {policyCard}
@@ -153,10 +153,10 @@ export default function Page() {
                         </span>
                       </div>
                       <div className="cb-row__actions">
-                        <Button disabled={!!busy} onClick={() => void dismiss(l)}>건너뛰기</Button>
+                        <Button type="text" className="ws-rowact-text" disabled={!!busy} onClick={() => void dismiss(l)}>건너뛰기</Button>
                         {l.project_id
-                          ? <Button type="primary" disabled={!!busy} loading={busy === l.id && createTask.isPending} onClick={() => void accept(l)}>업무로 만들기</Button>
-                          : <DisabledAction label="업무로 만들기" reason={"먼저 미분류 탭에서 프로젝트를 골라 주세요"}><Button type="primary" disabled>업무로 만들기</Button></DisabledAction>}
+                          ? <Button className="ws-rowact" disabled={!!busy} loading={busy === l.id && createTask.isPending} onClick={() => void accept(l)}>업무로 만들기</Button>
+                          : <DisabledAction label="업무로 만들기" reason={"먼저 미분류 탭에서 프로젝트를 골라 주세요"}><Button className="ws-rowact" disabled>업무로 만들기</Button></DisabledAction>}
                       </div>
                     </div>
                   </li>

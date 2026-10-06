@@ -1,6 +1,8 @@
 // TopBar(빌드 스펙 2.4절): [회사 ▾][누구로 보기 ▾] …… [검색 Ctrl K][AI 연결 n][종][사용자][예시 데이터]
 // 모바일(56): [메뉴][모노그램·회사명][예시 데이터] …… (검색)(종)(사용자 → 사용자 시트)
-// 스크롤되면 아래 1px 선. 아이콘만 있는 버튼은 aria-label + 툴팁. Ctrl/Cmd+K → CommandMenu(pages/search/CommandMenu.tsx).
+// 07 명세 5.3: 흰 바, 아래 1px 선은 늘 보임. 회사·누구로 보기·검색은 테두리 없는 채운 알약, 종은 40 원 + 1px 선.
+// 태블릿은 AI 칩 글자를 숨기고(aria-label에 이름) 예시 데이터 배지를 짧게. 아이콘만 있는 버튼은 aria-label + 툴팁.
+// Ctrl/Cmd+K → CommandMenu(pages/search/CommandMenu.tsx).
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Dropdown, Popover, Select, Tooltip } from "antd";
@@ -30,7 +32,8 @@ export function TenantSwitcher({ block }: { block?: boolean }) {
     <Select
       aria-label="회사"
       value={tenant.slug}
-      style={{ width: block ? "100%" : 200 }}
+      variant={block ? undefined : "filled"}
+      style={{ width: block ? "100%" : "clamp(160px, 14vw, 200px)" }}
       popupMatchSelectWidth={false}
       options={TENANT_ORDER.map((s) => ({ value: s, label: `${TENANTS[s].displayName}(예시)` }))}
       onChange={(v) => switchTenant(v)}
@@ -47,7 +50,8 @@ export function PersonaSwitcher({ block }: { block?: boolean }) {
     <Select
       aria-label="누구로 보기"
       value={persona.roleCode}
-      style={{ width: block ? "100%" : "clamp(180px, 18vw, 240px)" }}
+      variant={block ? undefined : "filled"}
+      style={{ width: block ? "100%" : "clamp(160px, 17vw, 240px)" }}
       popupMatchSelectWidth={false}
       options={personas.map((p) => {
         const role = tenant.roles.find((r) => r.code === p.roleCode)!;
@@ -74,7 +78,7 @@ export function AiStatusChip() {
   const text = !enabled ? "회사에서 AI 연결을 꺼 두었어요" : count > 0 ? `AI 연결 ${count}` : "AI 연결 전";
   return (
     <button type="button" className="ws-aichip" data-tone={enabled && count > 0 ? "good" : "neutral"} onClick={() => nav("/me/ai")} aria-label={`${text}. 내 AI 연결 열기`}>
-      <ApiOutlined aria-hidden />{text}
+      <ApiOutlined aria-hidden /><span className="ws-aichip__text">{text}</span>
     </button>
   );
 }
@@ -256,7 +260,8 @@ export function TopBar({ bp, navOpen = false, onOpenNav }: { bp: Breakpoint; nav
             <AiStatusChip />
             <NotificationBell />
             <UserMenu />
-            <DemoDataBadge variant="topbar" />
+            {/* 태블릿: 오른쪽 묶음이 왼쪽 선택 상자와 겹치지 않게 짧은 '예시' */}
+            <DemoDataBadge variant="topbar" compact={bp === "tablet"} />
           </div>
         </>
       )}

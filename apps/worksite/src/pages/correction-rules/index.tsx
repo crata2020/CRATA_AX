@@ -128,8 +128,8 @@ function PendingTab({ rules, canApprove, onOpen }: { rules: Rule[]; canApprove: 
                 </div>
                 {canApprove && (
                   <div className="cb-row__actions">
-                    <Button disabled={approve.isPending || reject.isPending} onClick={() => void reject.run({ ruleId: r.id }).catch(() => undefined)}>반려하기</Button>
-                    <Button type="primary" disabled={approve.isPending || reject.isPending} onClick={() => void approve.run({ ruleId: r.id }).catch(() => undefined)}>승인하기</Button>
+                    <Button type="text" className="ws-rowact-text" disabled={approve.isPending || reject.isPending} onClick={() => void reject.run({ ruleId: r.id }).catch(() => undefined)}>반려하기</Button>
+                    <Button className="ws-rowact" disabled={approve.isPending || reject.isPending} onClick={() => void approve.run({ ruleId: r.id }).catch(() => undefined)}>승인하기</Button>
                   </div>
                 )}
               </div>

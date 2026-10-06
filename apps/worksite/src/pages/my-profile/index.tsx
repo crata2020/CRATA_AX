@@ -30,7 +30,7 @@ function EditableField({ label, value, placeholder, hint, onSave, maxLength, inp
     return (
       <span className="as-row">
         <span>{value || "—"}</span>
-        <Button size="small" type="text" icon={<EditOutlined aria-hidden />} aria-label={`${label} 고치기`} onClick={() => { setDraft(value ?? ""); setEdit(true); }}>고치기</Button>
+        <Button type="text" className="ws-rowact-text" icon={<EditOutlined aria-hidden />} aria-label={`${label} 고치기`} onClick={() => { setDraft(value ?? ""); setEdit(true); }}>고치기</Button>
       </span>
     );
   }

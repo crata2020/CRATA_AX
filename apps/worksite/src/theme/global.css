@@ -1,14 +1,25 @@
-/* 전역 스타일: 글꼴·초점·타이포 토큰·움직임 줄이기(빌드 스펙 4.2·4.6절).
-   색은 모두 CSS 변수(--ws-*)로만 씁니다. 그라데이션·블러·점선·그림자(떠 있는 층 제외) 금지. 굵기는 400·600·700만. */
+/* 전역 스타일: 글꼴·초점·타이포 토큰·움직임 줄이기(빌드 스펙 4.2·4.6절, 시각 값은 07 Orbix 명세 4.4~4.6절).
+   색은 모두 CSS 변수(--ws-*)로만 씁니다. 그라데이션·블러·점선·그림자(떠 있는 층 제외) 금지. 굵기는 400·600·700만.
+   600은 제목·숫자·주 버튼·목록 제목·켜진 상태에만, 나머지는 400. */
 
+/* 밀도·간격 변수. --ws-gap = 카드·묶음 사이, --ws-card-pad = 카드 안쪽 */
 :root {
-  --ws-body-size: 16px;
-  --ws-body-line: 24px;
-  --ws-row-h: 56px;
+  --ws-body-size: 15px;
+  --ws-body-line: 22px;
+  --ws-row-h: 52px;
+  --ws-gap: 20px;
+  --ws-card-pad: 24px;
   color-scheme: light;
 }
+@media (max-width: 1279px) {
+  :root { --ws-gap: 16px; }
+}
+@media (max-width: 767px) {
+  :root { --ws-body-size: 16px; --ws-body-line: 24px; --ws-gap: 12px; --ws-card-pad: 20px; }
+}
+/* 공개 밀도는 모든 폭에서 17/26. 특이도 (0,2,0)이라 위 모바일 :root(0,1,0)보다 셉니다 */
 :root[data-density="public"] { --ws-body-size: 17px; --ws-body-line: 26px; }
-:root[data-density="compact"] { --ws-row-h: 44px; }
+:root[data-density="compact"] { --ws-row-h: 40px; }
 
 html, body, #root { min-height: 100%; }
 html { -webkit-text-size-adjust: 100%; }
@@ -20,7 +31,7 @@ body {
   font-weight: 400;
   /* 테마 변수가 붙기 전(첫 화면 로딩)에도 바탕이 비지 않게 기본값을 둬요 */
   color: var(--ws-ink, #1d2230);
-  background: var(--ws-surface, #f6f7fa);
+  background: var(--ws-panel, #f5f6f9);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0;
@@ -39,7 +50,9 @@ html :focus-visible, html a:focus-visible, html button:focus-visible { outline: 
 html :focus:not(:focus-visible) { outline: none; }
 /* antd 선택 상자: 초점은 안쪽 검색 input에 가서 선이 안 보여요 → 키보드 초점일 때 상자 바깥에 같은 초점 선.
    antd가 .ant-select-selector에 outline: 0을 (0,6,0)으로 걸어서, antd가 꾸미지 않는 바깥 상자(.ant-select)에 그려요 */
-html .ant-select:has(input:focus-visible) { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: 10px; }
+html .ant-select:has(input:focus-visible) { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: 8px; }
+/* 알약 문맥(상단 바·필터 줄·카드 머리·페이지 머리·툴바·히어로)의 선택 상자는 초점 선도 알약. 특이도 (0,3,2) > 위 (0,2,2) */
+html :is(.ws-topbar, .ws-filterbar, .ws-card__actions, .ws-page-header__side, .ws-toolbar, .ws-card--hero) .ant-select:has(input:focus-visible) { border-radius: 999px; }
 /* 정렬 가능한 표 머리: antd의 th.ant-table-column-has-sorters { outline: none }(0,3,1)보다 세게 */
 html .ant-table-wrapper .ant-table-thead > tr > th.ant-table-column-has-sorters:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: -2px; transition: none; }
 /* 글자 입력칸·숫자칸·날짜칸: 테마가 초점 그림자를 껐으니(activeShadow none) 키보드 초점일 때 바깥 상자에 같은 초점 선 */
@@ -63,22 +76,27 @@ html .ws-on-brand button:focus-visible, html [data-hero] button:focus-visible { 
 .ws-tabular, .ws-tabular * { font-variant-numeric: tabular-nums; }
 .ant-table, .ant-table * { font-variant-numeric: tabular-nums; }
 
-/* 타이포 토큰(4.2절) */
-.ws-t-title-page { font-size: 28px; line-height: 38px; font-weight: 700; letter-spacing: -0.01em; color: var(--ws-ink); }
-.ws-t-title-card { font-size: 18px; line-height: 26px; font-weight: 700; letter-spacing: -0.01em; color: var(--ws-ink); }
-.ws-t-figure-hero { font-size: 48px; line-height: 56px; font-weight: 700; letter-spacing: -0.01em; }
-.ws-t-figure { font-size: 28px; line-height: 36px; font-weight: 700; letter-spacing: -0.01em; }
+/* 타이포 토큰(07 명세 4.5절). 한글 제목은 자간 0, 숫자 클래스만 -0.01em */
+.ws-t-title-page { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: 0; color: var(--ws-ink); }
+/* 인사말 h1(h1.ws-t-title-page.ws-t-greeting): 두 클래스 선택자라 선언 순서와 상관없이 .ws-t-title-page를 이겨요 */
+.ws-t-title-page.ws-t-greeting { font-size: 28px; line-height: 36px; font-weight: 600; }
+.ws-t-title-card { font-size: 17px; line-height: 24px; font-weight: 600; letter-spacing: 0; color: var(--ws-ink); }
+.ws-t-subhead { font-size: 15px; line-height: 22px; font-weight: 600; letter-spacing: 0; color: var(--ws-ink); }
+.ws-t-figure-hero { font-size: 36px; line-height: 44px; font-weight: 600; letter-spacing: -0.01em; }
+.ws-t-figure { font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: -0.01em; }
 .ws-t-body { font-size: var(--ws-body-size); line-height: var(--ws-body-line); font-weight: 400; }
 .ws-t-body-strong { font-size: var(--ws-body-size); line-height: var(--ws-body-line); font-weight: 600; }
 .ws-t-label { font-size: 14px; line-height: 22px; font-weight: 600; }
 .ws-t-table { font-size: 14px; line-height: 22px; font-weight: 400; font-variant-numeric: tabular-nums; }
 .ws-t-caption { font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ws-muted); }
+.ws-t-eyebrow { font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ws-muted); }
 .ws-ink-2 { color: var(--ws-ink-2); }
 .ws-muted { color: var(--ws-muted); }
 @media (max-width: 767px) {
   .ws-t-title-page { font-size: 22px; line-height: 30px; }
-  .ws-t-title-card { font-size: 17px; line-height: 24px; }
-  .ws-t-figure-hero { font-size: 40px; line-height: 48px; }
+  .ws-t-title-page.ws-t-greeting { font-size: 24px; line-height: 32px; }
+  .ws-t-title-card { font-size: 16px; line-height: 24px; }
+  .ws-t-figure-hero { font-size: 32px; line-height: 40px; }
   .ws-t-figure { font-size: 24px; line-height: 32px; }
 }
 
@@ -87,16 +105,19 @@ html .ws-on-brand button:focus-visible, html [data-hero] button:focus-visible { 
   clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-/* antd 보정: 굵기 600, 그림자 없음, 표 머리 글자 */
-.ant-btn { font-weight: 600; }
-.ant-table-wrapper .ant-table-thead > tr > th { font-weight: 600; font-size: 14px; color: var(--ws-ink-2); }
+/* antd 보정: 버튼은 400(주 버튼만 600), 그림자 없음, 표 머리는 13/20/400 ink-2 */
+.ant-btn { font-weight: 400; }
+.ant-btn-primary { font-weight: 600; }
+.ant-table-wrapper .ant-table-thead > tr > th { font-weight: 400; font-size: 13px; line-height: 20px; color: var(--ws-ink-2); }
 .ant-table-wrapper .ant-table-thead > tr > th::before { display: none; }
 .ant-typography strong { font-weight: 600; }
 .ant-message .ant-message-notice-content { font-weight: 600; }
-.ant-drawer .ant-drawer-title { font-size: 18px; line-height: 26px; font-weight: 700; }
-.ant-modal .ant-modal-title { font-size: 18px; line-height: 26px; font-weight: 700; }
-.ant-segmented .ant-segmented-item-selected { font-weight: 700; }
-.ant-segmented .ant-segmented-item-label { font-weight: 600; }
+.ant-drawer .ant-drawer-title { font-size: 18px; line-height: 26px; font-weight: 600; }
+.ant-modal .ant-modal-title { font-size: 18px; line-height: 26px; font-weight: 600; }
+.ant-segmented .ant-segmented-item-label { font-weight: 400; }
+/* 글자는 안쪽 .ant-segmented-item-label에 있어서, 선택 칸 굵기는 그 글자에도 직접 걸어요 */
+.ant-segmented .ant-segmented-item-selected,
+.ant-segmented .ant-segmented-item-selected .ant-segmented-item-label { font-weight: 600; }
 .ant-tooltip-inner { font-size: 13px; line-height: 20px; }
 .ant-select-selector, .ant-input, .ant-input-affix-wrapper, .ant-picker { border-color: var(--ws-control-line); }
 

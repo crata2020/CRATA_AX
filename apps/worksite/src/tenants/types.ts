@@ -20,7 +20,10 @@ export interface BrandTokens {
   brandText: string;
   /** info 상태색(진행·검토 대기). 브랜드가 good 초록과 색상이 가까우면(±60°) 고정 파랑 묶음 — 초록 '정상' 알약과 나란히 구별되게 */
   info: { mark: string; bg: string; fg: string };
-  panel: string; surface: string; line: string; controlLine: string;
+  panel: string;
+  /** 캔버스 위 카드 테두리·트레이·트랙·카드 안 구분선(panel보다 한 단계 짙은 무채 면) */
+  sunken: string;
+  surface: string; line: string; controlLine: string;
   ink: string; ink2: string; muted: string;
   chartAccent: string; chartMuted: string;
   /** 업무 상태 막대의 '진행 중'(브랜드 밝은 단계). '검토 대기'(브랜드)와 나란히 구별되게 validate_palette로 확인한 값 */

@@ -147,7 +147,7 @@ export default function Page() {
       />
 
       {task.status === "changes_requested" && latest?.review_comment && (
-        <div style={{ marginBottom: 16 }}><Banner tone="warning" title="수정 요청">{latest.review_comment}</Banner></div>
+        <Banner tone="warning" title="수정 요청">{latest.review_comment}</Banner>
       )}
 
       <CardGrid>

@@ -85,7 +85,8 @@ function StatusButton({ m, size = "small" }: { m: Member; size?: "small" | "midd
     } catch { /* 토스트 */ }
   };
   const reason = self ? "내 계정은 비활성화할 수 없어요" : ownerBlocked ? "소유자는 소유자만 바꿀 수 있어요" : null;
-  const btn = <Button size={size} disabled={!!reason} loading={isPending} onClick={(e) => { e.stopPropagation(); void toggle(); }}>{m.status === "active" ? "비활성화" : "다시 활성화"}</Button>;
+  const inRow = size === "small";
+  const btn = <Button size={size} type={inRow ? "text" : "default"} className={inRow ? "ws-rowact-text" : undefined} disabled={!!reason} loading={isPending} onClick={(e) => { e.stopPropagation(); void toggle(); }}>{m.status === "active" ? "비활성화" : "다시 활성화"}</Button>;
   return <span onClick={stop} onKeyDown={stop}>{reason ? <DisabledAction label={`${m.display_name} ${m.status === "active" ? "비활성화" : "다시 활성화"}`} reason={reason}>{btn}</DisabledAction> : btn}</span>;
 }
 
@@ -251,8 +252,8 @@ function InvitesTab() {
   };
   const actions = (i: Invitation) => i.status === "pending" || i.status === "expired" ? (
     <span className="as-row" onClick={stop} onKeyDown={stop}>
-      <Button size="small" onClick={() => void resend(i)}>다시 보내기</Button>
-      {i.status === "pending" && <Button size="small" danger onClick={() => void cancel(i)}>취소</Button>}
+      <Button className="ws-rowact" onClick={() => void resend(i)}>다시 보내기</Button>
+      {i.status === "pending" && <Button type="text" className="ws-rowact-text" danger onClick={() => void cancel(i)}>취소</Button>}
     </span>
   ) : null;
   return (

@@ -29,15 +29,17 @@ export const FONT_STACK = '"Pretendard Variable", Pretendard, -apple-system, Bli
 /** 간격 4px 단위(4.3절) */
 export const SPACE = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48, 16: 64 } as const;
 
-/** 라운드 위계(4.4절) */
-export const RADIUS = { panel: 28, card: 20, bubble: 16, control: 12, input: 10, chip: 8, pill: 999, barEnd: 4 } as const;
+/** 라운드 위계(07 Orbix 명세 4.3절). 카드 12, 컨트롤·입력 8, 알약 999는 알약 문맥(툴바·머리·카드 머리·행 동작·히어로)에서만.
+ *  panel 16은 아래 시트 위 모서리·큰 떠 있는 면(본문 패널은 라운드 없음), barEnd는 막대 데이터 끝 */
+export const RADIUS = { panel: 16, card: 12, bubble: 12, control: 8, input: 8, chip: 6, pill: 999, barEnd: 6 } as const;
 
 /** 브레이크포인트(4.5절). useBreakpoint()가 이 값을 씁니다 */
 export const BREAKPOINTS = { mobileMax: 767, tabletMax: 1279, desktopMax: 1439 } as const;
 
+/** 셸 치수(07 명세 4.4절). contentMax = 본문(.ws-panel-inner) 최대 폭, 가운데 정렬. topBar 64는 DataTable sticky offset·메시지 top 72가 가정하는 값 */
 export const LAYOUT = {
   sideNav: 240, sideNavCollapsed: 72, navRail: 80, topBar: 64, topBarMobile: 56,
-  tabBar: 64, rightRail: 320, contentMax: 1200, drawer: 480,
+  tabBar: 64, rightRail: 320, contentMax: 1320, drawer: 480,
 } as const;
 
 /** 재질 견본 색(I-15·I-17 MaterialGradeTag). 늘 코드 글자와 함께 씁니다(색만으로 구별하지 않음) */

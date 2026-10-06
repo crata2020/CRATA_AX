@@ -145,7 +145,7 @@ export default function Page() {
     return (
       <div style={{ maxWidth: 360 }}>
         <div className="as-row" style={{ gap: 6 }}>
-          <b>{m.nameKo}</b>
+          <span className="ws-cell-name">{m.nameKo}</span>
           {!WITH_SCREEN.has(m.id) && <span className="ws-tag">화면 없음</span>}
         </div>
         {reason && !LOCKED_MODULES.includes(m.id) && <div className="as-caption">{reason}</div>}
@@ -203,7 +203,7 @@ export default function Page() {
             rows={myPacks}
             rowKey={(p) => p.id}
             columns={[
-              { key: "name", title: "팩 이름", render: (p) => <b>{p.name}</b> },
+              { key: "name", title: "팩 이름", render: (p) => <span className="ws-cell-name">{p.name}</span> },
               { key: "count", title: "모듈 수", render: (p) => `${p.count}개`, align: "right" },
               { key: "state", title: "상태", render: (p) => <span className="as-row"><Switch checked={p.on} disabled aria-label={`${p.name} 상태`} /><span>{p.on ? "켜짐" : "꺼짐"}</span></span> },
             ]}

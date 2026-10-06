@@ -142,7 +142,7 @@ export default function Page() {
                 leading: <ApiOutlined />,
                 title: c.client_name,
                 subtitle: `${c.last_used_at ? `${formatDate(c.last_used_at, false)} 사용` : "아직 쓰지 않았어요"} · 범위 ${c.scopes.length}개 · ${formatDate(c.created_at, false)} 연결`,
-                trailing: <Button size="small" icon={<DisconnectOutlined aria-hidden />} onClick={() => void onRevoke(c)} aria-label={`${c.client_name} 연결 끊기`}>연결 끊기</Button>,
+                trailing: <Button type="text" className="ws-rowact-text" icon={<DisconnectOutlined aria-hidden />} onClick={() => void onRevoke(c)} aria-label={`${c.client_name} 연결 끊기`}>연결 끊기</Button>,
               }))}
             />
           ) : (

@@ -19,7 +19,7 @@ const PERIODS = [{ value: "30", label: "최근 30일" }, { value: "90", label: "
 
 function ConfirmButton({ id }: { id: string }) {
   const { run, isPending } = useRpc("confirm_decision", { successMessage: "결정을 확정했어요" });
-  return <Button size="small" type="primary" loading={isPending} onClick={() => void run({ decisionId: id }).catch(() => undefined)}>확정하기</Button>;
+  return <Button className="ws-rowact" loading={isPending} onClick={() => void run({ decisionId: id }).catch(() => undefined)}>확정하기</Button>;
 }
 
 export default function Page() {
@@ -72,7 +72,7 @@ export default function Page() {
     <>
       <PageHeader title="결정 모음" description="회의에서 정한 것을 프로젝트별로 모았어요. 바뀐 결정은 새 결정으로 이어져요." />
       <FilterBar {...fbProps} />
-      <div style={{ marginTop: 16 }}>
+      <div>
         {decs.query.isLoading ? <Skeleton active paragraph={{ rows: 6 }} />
           : decs.query.isError ? <EmptyState kind="error" action={{ label: "다시 시도", onClick: () => void decs.query.refetch() }} />
           : !list.length ? (fb.active ? <EmptyState kind="filtered" action={{ label: "필터 지우기", onClick: fb.clear }} />
@@ -103,7 +103,7 @@ export default function Page() {
                               <span style={{ marginRight: 8 }}>{d.statement}</span>
                               <StatusTag {...s} />
                             </div>
-                            <div className="wk-dec-links" style={{ marginTop: 4 }}>
+                            <div className="wk-dec-links">
                               {d.decided_by_role && <span className="wk-caption">결정 역할 · {d.decided_by_role}</span>}
                               {m ? <Link to={`/meetings/${m.id}?tab=decisions`}>{m.title_prefix ? `${m.title_prefix} ` : ""}{meetingTitle(m)}</Link> : <span className="wk-caption">볼 수 없는 회의예요</span>}
                               {newer && <button type="button" className="wk-textlink" onClick={() => { const el = document.getElementById(newer.id); el?.scrollIntoView({ block: "center" }); el?.focus(); }}>{newer.status === "confirmed" ? "이 결정으로 바뀌었어요" : "바꾸자는 제안이 있어요"}: {newer.statement}</button>}

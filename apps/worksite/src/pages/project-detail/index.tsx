@@ -135,7 +135,7 @@ export default function Page() {
             <Divider />
             <div className="ws-row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
               <h3 className="wk-section-title" style={{ margin: 0 }}>파트</h3>
-              {canAddPart && <Button size="small" icon={<PlusOutlined />} onClick={() => setPartOpen(true)}>파트 추가</Button>}
+              {canAddPart && <Button className="ws-rowact" icon={<PlusOutlined />} onClick={() => setPartOpen(true)}>파트 추가</Button>}
             </div>
             <ListRows
               ariaLabel="파트"
@@ -186,7 +186,7 @@ export default function Page() {
       {tab === "tasks" && (
         <>
           {perms.canCreateTask && (
-            <div className="ws-row" style={{ justifyContent: "flex-end", marginBottom: 12 }}>
+            <div className="ws-toolbar wk-toolbar-end">
               <Button type="primary" icon={<PlusOutlined />} onClick={() => setSelected("new-task")}>업무 만들기</Button>
             </div>
           )}

@@ -100,7 +100,7 @@ export default function Page() {
         footer={current?.status === "draft" ? (
           approve.can
             ? <Button type="primary" icon={<SendOutlined />} loading={mutation.isPending} onClick={() => void send(current)}>발송 처리하기</Button>
-            : <DisabledAction label="} disabled>발송 처리하기" reason={"발송 처리는 검토자 이상이 해요"}><Button type="primary" icon={<SendOutlined />} disabled>발송 처리하기</Button></DisabledAction>
+            : <DisabledAction label="발송 처리하기" reason={"발송 처리는 검토자 이상이 해요"}><Button type="primary" icon={<SendOutlined />} disabled>발송 처리하기</Button></DisabledAction>
         ) : undefined}
       >
         {quotes.isLoading ? null : current ? (

@@ -157,9 +157,9 @@ export function SegmentRow({ seg, st, canAct, onDone, fading, meetingLabel, onCo
         <ConfidenceTag seg={seg} aiOff={aiOff} />
         {canAct && !fading && (open || seg.review_status === "auto") && (
           <>
-            <Button size="small" onClick={() => onCorrect(seg)}>고치기</Button>
+            <Button type="text" className="ws-rowact-text" onClick={() => onCorrect(seg)}>고치기</Button>
             {seg.business_line_code && (
-              <Button size="small" type={open ? "primary" : "default"} loading={isPending}
+              <Button className="ws-rowact" loading={isPending}
                 onClick={() => { onDone?.(seg.id); void run({ segmentId: seg.id }).catch(() => undefined); }}>맞아요</Button>
             )}
           </>
@@ -190,7 +190,7 @@ export function DecisionRow({ dec, canAct, onDone, fading, meetingLabel, superse
       <div className="wk-row__actions">
         <StatusTag {...statusOf("decisions.status", dec.status)} />
         {canAct && !fading && dec.status === "proposed" && (confirm.can ? (
-          <Button size="small" type="primary" loading={isPending} onClick={() => { onDone?.(dec.id); void run({ decisionId: dec.id }).catch(() => undefined); }}>확정하기</Button>
+          <Button className="ws-rowact" loading={isPending} onClick={() => { onDone?.(dec.id); void run({ decisionId: dec.id }).catch(() => undefined); }}>확정하기</Button>
         ) : confirm.reason ? <span className="wk-caption">{confirm.reason}</span> : null)}
       </div>
     </li>
@@ -220,8 +220,8 @@ export function ProposalRow({ ap, canAct, onDone, fading, meetingLabel, onAccept
         <StatusTag {...statusOf("action_proposals.status", ap.status)} />
         {canAct && !fading && ap.status === "proposed" && (
           <>
-            <Button size="small" loading={mutation.isPending} onClick={() => void dismiss().catch(() => undefined)}>안 만들기</Button>
-            <Button size="small" type="primary" onClick={() => onAccept(ap)}>업무로 만들기</Button>
+            <Button type="text" className="ws-rowact-text" loading={mutation.isPending} onClick={() => void dismiss().catch(() => undefined)}>안 만들기</Button>
+            <Button className="ws-rowact" onClick={() => onAccept(ap)}>업무로 만들기</Button>
           </>
         )}
       </div>

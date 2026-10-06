@@ -96,7 +96,7 @@ export default function MorePage() {
             <span className="ws-t-body">변경 내용 이 브라우저에 저장</span>
             <Switch checked={persist} onChange={setPersist} aria-label="변경 내용 이 브라우저에 저장" />
           </div>
-          <div className="ws-row" style={{ marginTop: 8 }}>
+          <div className="ws-row wh-demo-actions" style={{ marginTop: 8 }}>
             <Button danger onClick={() => void reset()}>데모 초기화</Button>
             <Link className="wh-linkbtn" to="/login">데모 시작 화면</Link>
           </div>

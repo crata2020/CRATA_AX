@@ -178,7 +178,7 @@ export default function Page() {
                           </div>
                           <div className="cb-row__actions">
                             {canReason && (
-                              <Button size="small" icon={<EditOutlined aria-hidden />} onClick={() => { setReason(c.reason ?? ""); setSelected(c.id); }}>
+                              <Button className="ws-rowact" icon={<EditOutlined aria-hidden />} onClick={() => { setReason(c.reason ?? ""); setSelected(c.id); }}>
                                 {c.reason ? "사유 고치기" : "사유 남기기"}
                               </Button>
                             )}

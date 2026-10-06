@@ -95,28 +95,35 @@ function Body({ ctx }: { ctx: WidgetContext }) {
                         </span>
                         <span className="wa-row__sub">{it.subtitle}</span>
                       </div>
+                      {/* 동작: 위 줄 = 주 동작(흰 알약) + 보조 RPC(글자 버튼), 아래 줄 = 고치기 링크 + 나중에. DOM·Tab 순서는 주 → 보조 → 고치기 → 나중에 */}
                       <div className="wa-row__acts">
-                        <Button
-                          type="primary"
-                          loading={busy === `${it.key}|${it.primary.rpc}`}
-                          disabled={pending && busy !== `${it.key}|${it.primary.rpc}`}
-                          onClick={() => void act(it, it.primary)}
-                          aria-label={`${it.primary.label}: ${it.title}`}
-                        >
-                          {it.primary.label}
-                        </Button>
-                        {it.secondary && (
+                        <div className="wa-row__primary">
                           <Button
-                            loading={busy === `${it.key}|${it.secondary.rpc}`}
-                            disabled={pending && busy !== `${it.key}|${it.secondary.rpc}`}
-                            onClick={() => void act(it, it.secondary!)}
-                            aria-label={`${it.secondary.label}: ${it.title}`}
+                            className="ws-rowact"
+                            loading={busy === `${it.key}|${it.primary.rpc}`}
+                            disabled={pending && busy !== `${it.key}|${it.primary.rpc}`}
+                            onClick={() => void act(it, it.primary)}
+                            aria-label={`${it.primary.label}: ${it.title}`}
                           >
-                            {it.secondary.label}
+                            {it.primary.label}
                           </Button>
-                        )}
-                        <Link className="wa-link" to={it.to} aria-label={`${it.editLabel}: ${it.title}`}>{it.editLabel}</Link>
-                        <Button type="text" className="wa-later" disabled={pending} onClick={() => snooze(it.key)} aria-label={`나중에(내일 다시): ${it.title}`}>나중에</Button>
+                          {it.secondary && (
+                            <Button
+                              type="text"
+                              className="ws-rowact-text"
+                              loading={busy === `${it.key}|${it.secondary.rpc}`}
+                              disabled={pending && busy !== `${it.key}|${it.secondary.rpc}`}
+                              onClick={() => void act(it, it.secondary!)}
+                              aria-label={`${it.secondary.label}: ${it.title}`}
+                            >
+                              {it.secondary.label}
+                            </Button>
+                          )}
+                        </div>
+                        <div className="wa-row__minor">
+                          <Link className="wa-link ws-rowact-text" to={it.to} aria-label={`${it.editLabel}: ${it.title}`}>{it.editLabel}</Link>
+                          <Button type="text" className="wa-later ws-rowact-text" disabled={pending} onClick={() => snooze(it.key)} aria-label={`나중에(내일 다시): ${it.title}`}>나중에</Button>
+                        </div>
                       </div>
                     </li>
                   );

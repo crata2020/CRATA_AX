@@ -9,7 +9,7 @@ const LIST = (rows: number) => 140 + rows * 59;
 export const WIDGET_LAYOUT: Record<WidgetId, { size: CardSize; est: number }> = {
   "admin-health": { size: "S", est: 260 },
   "ai-connect-status": { size: "S", est: LIST(3) },
-  "approval-inbox": { size: "M", est: LIST(4) + 120 },
+  "approval-inbox": { size: "M", est: 620 },
   "approvals-pending": { size: "S", est: LIST(3) },
   "ara-aggregate": { size: "M", est: 300 },
   "ara-card": { size: "S", est: 260 },

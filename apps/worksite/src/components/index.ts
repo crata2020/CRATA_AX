@@ -5,8 +5,9 @@ export { SectionCard, HeroCard, CardGrid, GridCell, Divider, spanStyle, useInsid
 export { MasonryGrid, type MasonryItem } from "./MasonryGrid";
 export { SegmentedPills, type SegmentedPillsProps } from "./SegmentedPills";
 export { StatusTag, TONE_ICON, toneMarkVar, type StatusTagProps, type Tone } from "./StatusTag";
-export { StatTile, StatRow, BigNumber, DeltaText, type StatTileProps, type BigNumberProps, type DeltaTextProps } from "./figures";
-export { SimpleBarChart, StackedShareBar, LineSpark, Meter, ChartFrame, niceTicks, type SimpleBarChartProps, type StackedShareBarProps, type LineSparkProps, type MeterProps, type ChartFrameProps } from "./charts";
+export { StatTile, StatRow, BigNumber, DeltaText, KpiStrip, KpiCard, type StatTileProps, type BigNumberProps, type DeltaTextProps, type KpiStripProps, type KpiCardProps } from "./figures";
+export { SimpleBarChart, StackedShareBar, LineSpark, Meter, ChartFrame, niceTicks, segmentColor, type SimpleBarChartProps, type StackedShareBarProps, type LineSparkProps, type MeterProps, type ChartFrameProps } from "./charts";
+export { DonutChart, Gauge, type DonutChartProps, type GaugeProps } from "./ringCharts";
 export { PersonChip, type PersonChipProps } from "./PersonChip";
 export { EmptyState, type EmptyStateProps, type EmptyKind } from "./EmptyState";
 export { ListRow, ListRows, type ListRowProps } from "./ListRow";

@@ -96,7 +96,7 @@ export default function Page() {
           />
         </SectionCard>
       )}
-      <div style={pinned.length > 0 && !fb.active ? { marginTop: 24 } : undefined}>
+      <div className={pinned.length > 0 && !fb.active ? "cb-gap-top" : undefined}>
         {!allQ.query.isLoading && (
           <DataTable<Notice>
         resource="notices"

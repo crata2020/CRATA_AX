@@ -155,9 +155,12 @@ export default function Page() {
 - **예시 데이터 표시:** 수치가 있는 카드는 `SectionCard demo`. 상단 바 배지는 늘 있습니다.
 
 ### 'AI 티' 금지(검사됨: `npm run check`, 스모크)
-그라데이션·글로·블러 없음 · 카드 안 카드 없음(`SectionCard` 안에 `SectionCard` 금지, 구분선은 `<Divider />`) · 평상시 카드 그림자·테두리 없음 ·
-색 hex·그림자는 `src/theme/`에만(컴포넌트는 `var(--ws-*)`) · 히어로(`HeroCard`)는 화면당 1장(H-01·I-06·I-18만) · 검정 알약(`pill`)은 화면당 3개 이하 ·
-숫자를 색으로 칠하지 않음(증감은 `DeltaText`) · 상태는 늘 아이콘 + 글자(`StatusTag`) · 파이·도넛·이중 축·점선 없음 · 이모지 없음 · 굵기 400·600·700만 · 아이콘은 `@ant-design/icons`의 Outlined만.
+그라데이션·글로·블러 없음 · 카드 안 카드 없음(`SectionCard` 안에 `SectionCard` 금지, 구분선은 `<Divider />`) · 카드: 그림자 없음, 캔버스 위 1px `--ws-sunken` 선, 라운드 12 ·
+색 hex·그림자는 `src/theme/`에만(컴포넌트는 `var(--ws-*)`) · 히어로(`HeroCard`)는 화면당 1장(H-01·I-06·I-18만) · 알약(`pill`, 핵심 카드 표시 — 모양은 보통 카드 제목)은 화면당 3개 이하 ·
+목록 행·표 칸의 동작은 채운 버튼 대신 `.ws-rowact`(흰 알약) ·
+숫자를 색으로 칠하지 않음(증감은 `DeltaText`) · 상태는 늘 아이콘 + 글자(`StatusTag`) · 파이·이중 축·점선 없음(도넛은 상태 구성 한눈에만: 5조각 이하·범례 %와 값·[표로 보기], 반원 게이지는 비율 하나만) · 이모지 없음 · 굵기 400·600·700만 · 아이콘은 `@ant-design/icons`의 Outlined만.
+
+시각 값(색·라운드·타이포·antd 테마)은 [`docs/worksite/07_orbix-redesign.md`](../../docs/worksite/07_orbix-redesign.md)(Orbix 스타일 리디자인 명세)를 따릅니다.
 
 ---
 
@@ -166,15 +169,18 @@ export default function Page() {
 | 컴포넌트 | 핵심 props |
 |---|---|
 | `PageHeader` | `title`, `description?`, `greeting?{name,dateText,summary?}`, `period?: SegmentedPillsProps`, `tabs?{key,label,to,badge?}[]`, `actions?`, `back?{label,to}`, `meta?` |
-| `SectionCard` / `HeroCard` | `title?`, `pill?`, `demo?`, `actions?`, `more?{label,to}`, `size?: "S"\|"M"\|"L"`, `span?`, `variant?: "default"\|"hero"`, `caption?`, `as?` — 그리드는 `CardGrid`, 카드 아닌 칸은 `GridCell`, 구분선 `Divider` |
+| `SectionCard` / `HeroCard` | `title?`, `subtitle?`, `pill?`, `demo?`, `actions?`, `more?{label,to}`, `size?: "S"\|"M"\|"L"`, `span?`, `variant?: "default"\|"hero"`, `caption?`, `as?` — 그리드는 `CardGrid`, 카드 아닌 칸은 `GridCell`, 구분선 `Divider` |
 | `PillLabel` | `children: string` |
-| `StatTile` / `StatRow` | `label`, `value`, `unit?`, `delta?: DeltaTextProps`, `trend?: number[]`, `hero?`, `caption?`, `tone?`+`toneLabel?` |
+| `StatTile` / `StatRow` | `label`, `value`, `unit?`, `delta?: DeltaTextProps`, `trend?: number[]`, `hero?`, `caption?`, `tone?`+`toneLabel?`, `icon?`, `iconTone?: Tone\|"brand"` |
+| `KpiStrip` / `KpiCard` | `title?`, `demo?`, `ariaLabel?`, children `KpiCard` / `children` — 페이지 위 지표 카드 띠 |
 | `BigNumber` | `value`, `unit?`, `label` (히어로 안 흰 숫자) |
 | `DeltaText` | `value`(부호 포함), `unit?`, `period`("지난주보다"), `goodWhen: "up"\|"down"\|"none"` |
 | `SegmentedPills` | `options{value,label}[]`, `value`, `onChange`, `ariaLabel`, `urlParam?` |
 | `SimpleBarChart` | `data{key,label,value,previous?}[]`, `unit`, `highlightKey?`, `compare?{currentLabel,previousLabel}`, `target?{value,label}`, `height?`, `ariaLabel`, `tableCaption` |
 | `StackedShareBar` | `segments{key,label,value,slot?,tone?}[]`, `unit`, `height?`, `legend?: "list"\|"none"`, `ariaLabel` |
 | `LineSpark` · `Meter` · `ChartFrame` | `values, ariaLabel` · `value, max, label, tone?, valueText?` · `title?, table, children`(모든 차트에 [표로 보기]) |
+| `DonutChart` | `segments`, `unit`, `ariaLabel`, `centerValue?`, `centerLabel?`, `size?`(160), `thickness?`(20) — 상태 구성 한눈에만 |
+| `Gauge` | `value`, `max`, `label`, `valueText?`, `caption?`, `tone?`, `width?`(160) — 반원, 비율 하나만 |
 | `StatusTag` | `tone`, `label`, `icon?`, `size?` — `<StatusTag {...statusOf("tasks.status", v)} />` |
 | `PersonChip` | `memberId?`, `kind?: "member"\|"ai"\|"system"`, `clientName?`, `size?`, `showUnit?` |
 | `EmptyState` | `kind: empty\|filtered\|error\|forbidden\|module_off\|not_found`, `title?`, `description?`, `action?{label,to?,onClick?}`, `compact?`, `headingLevel?` |

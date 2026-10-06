@@ -78,7 +78,7 @@ export default function Page() {
         actions={canCreate && <Button type="primary" icon={<PlusOutlined />} onClick={() => setSelected("new")}>회의 기록 추가</Button>}
       />
       <FilterBar {...fbProps} />
-      <div style={{ marginTop: 16 }}>
+      <div>
         <DataTable<Meeting>
           resource="meetings"
           ariaLabel="회의 목록"

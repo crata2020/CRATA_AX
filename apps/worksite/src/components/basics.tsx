@@ -8,7 +8,7 @@ import { ddayInfo } from "@/lib/format";
 import { MATERIAL_SWATCHES } from "@/theme/tokens";
 import { StatusTag } from "./StatusTag";
 
-/** 검정(ink) 알약 제목. 화면당 3개 이하, 카드 왼쪽 위 모서리에 반쯤 걸침(SectionCard pill이 배치) */
+/** 알약 표시(화면당 3개 이하, [data-pill]로 셈). 카드 제목 안에서는 글자만(보통 카드 제목), 제목 밖에서는 조용한 회색 태그 */
 export function PillLabel({ children }: { children: string }) {
   return <span className="ws-pill" data-pill>{children}</span>;
 }

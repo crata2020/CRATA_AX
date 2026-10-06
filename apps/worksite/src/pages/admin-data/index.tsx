@@ -44,7 +44,7 @@ export default function Page() {
             rowKey={(r) => r.level}
             columns={[
               { key: "level", title: "등급", render: (r) => <span className="ws-tag">{(r.level === "L2" || r.level === "P") && <LockOutlined aria-hidden />}{r.level === "P" ? "P 영역" : r.level}</span> },
-              { key: "meaning", title: "뜻", render: (r) => <b>{r.meaning}</b> },
+              { key: "meaning", title: "뜻", render: (r) => <span className="ws-cell-name">{r.meaning}</span> },
               { key: "examples", title: "예", render: (r) => <span style={{ display: "inline-block", maxWidth: 280, whiteSpace: "normal" }}>{r.examples.join(", ") || "없음"}</span> },
               { key: "storage", title: "저장 위치", render: (r) => <span style={{ display: "inline-block", maxWidth: 220, whiteSpace: "normal" }}>{r.storage}</span> },
               { key: "ai", title: "AI 처리 경로", render: (r) => <span style={{ display: "inline-block", maxWidth: 260, whiteSpace: "normal" }}>{r.aiRoute}</span> },

@@ -107,12 +107,12 @@ export default function Page() {
         period={{ ariaLabel: "보기", urlParam: "view", value: "week", onChange: () => undefined, options: [{ value: "week", label: "주" }, { value: "month", label: "월" }] }}
         actions={<Button type="primary" icon={<PlusOutlined aria-hidden />} onClick={() => setSelected("new")}>일정 추가</Button>}
       />
-      <div className="ws-row" style={{ marginBottom: 16, justifyContent: "space-between" }}>
+      <div className="ws-toolbar">
         <div className="ws-row" role="group" aria-label="기간 이동">
           <Button onClick={() => setQuery({ date: null })} aria-label={!dateParam || anchor === today ? "오늘(지금 보고 있어요)" : "오늘로 가기"}>오늘</Button>
-          <Button icon={<LeftOutlined aria-hidden />} aria-label={view === "month" ? "이전 달" : "이전 주"} onClick={() => move(-1)} />
+          <Button shape="circle" icon={<LeftOutlined aria-hidden />} aria-label={view === "month" ? "이전 달" : "이전 주"} onClick={() => move(-1)} />
           <span className="ws-t-title-card cb-tabular" aria-live="polite" style={{ minWidth: 0 }}>{rangeLabel}</span>
-          <Button icon={<RightOutlined aria-hidden />} aria-label={view === "month" ? "다음 달" : "다음 주"} onClick={() => move(1)} />
+          <Button shape="circle" icon={<RightOutlined aria-hidden />} aria-label={view === "month" ? "다음 달" : "다음 주"} onClick={() => move(1)} />
         </div>
       </div>
       <FilterBar {...fbProps} />

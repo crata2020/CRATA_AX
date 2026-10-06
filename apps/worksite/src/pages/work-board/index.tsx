@@ -139,7 +139,7 @@ export default function Page() {
         }
       />
       <FilterBar {...fbProps} />
-      <div style={{ marginTop: 16 }}>
+      <div>
         {tasksQ.query.isLoading ? <Skeleton active paragraph={{ rows: 6 }} />
           : tasksQ.query.isError ? <EmptyState kind="error" action={{ label: "다시 시도", onClick: () => void tasksQ.query.refetch() }} />
           : !items.length ? (fb.active ? <EmptyState kind="filtered" action={{ label: "필터 지우기", onClick: fb.clear }} />
