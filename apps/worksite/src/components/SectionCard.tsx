@@ -78,6 +78,13 @@ export function SectionCard({ title, pill, subtitle, demo, actions, more, size, 
         {subtitle && <p className="ws-card__sub">{subtitle}</p>}
         {children}
         {caption && <p className="ws-card__caption">{caption}</p>}
+        {/* 꼬리 더보기 줄: 평소엔 숨김. MasonryGrid가 줄기 끝을 맞추려고 48px 넘게 늘린 카드(.is-roomy)에서만 아래 끝에 보이고,
+            그때 머리의 더보기 알약은 숨겨요(components.css) — 한 카드에 같은 곳으로 가는 링크는 늘 하나, 글자·모양도 머리와 같아요(리뷰 6차) */}
+        {more && !hero && (
+          <div className="ws-card__foot">
+            <Link className="ws-card__more" to={more.to} aria-label={title ? `${title} ${more.label}` : undefined}>{more.label}<RightOutlined aria-hidden style={{ fontSize: 11 }} /></Link>
+          </div>
+        )}
       </Tag>
     </NestCtx.Provider>
   );

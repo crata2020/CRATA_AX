@@ -10,7 +10,7 @@ import { useBreakpoint } from "@/lib/useBreakpoint";
 import { useScrollFade } from "@/lib/useScrollFade";
 import { usePageReady } from "@/app/pageReady";
 import { formatDate, formatDateTime, formatQty, formatWon } from "@/lib/format";
-import { labelOf, statusOf, type StatusDomain } from "@/lib/status";
+import { STATUS, labelOf, statusOf, type StatusDomain } from "@/lib/status";
 import { getPath } from "@/providers/filters";
 import { StatusTag } from "./StatusTag";
 import { PersonChip } from "./PersonChip";
@@ -36,7 +36,7 @@ export interface ColumnDef<T> {
   /** 데스크톱 고정 폭(px). 안 주면 종류별 기본 폭(이름·글자 칸은 남는 폭을 나눠 가짐) */
   width?: number | string;
   sortable?: boolean;
-  /** 낮은 우선순위 칸: 넓은 화면(1600 이상)에서만 보여요. 좁으면 잘리는 대신 빠집니다(표시·적용 규칙·등급·버전 등) */
+  /** 낮은 우선순위 칸: 표 상자에 다 안 들어가면 먼저 빠져요(뒤 칸부터). 좁으면 잘리는 대신 빠집니다(표시·적용 규칙·등급·버전 등) */
   low?: boolean;
   /** 남는 폭을 가져갈 칸(기본: kind "name" 칸). 이름 칸에 width를 주고 다른 칸을 flex로 할 수 있어요 */
   flex?: boolean;
@@ -48,12 +48,35 @@ export interface ColumnDef<T> {
 const KIND_WIDTH: Record<ColumnKind, number | undefined> = { name: undefined, text: 152, number: 112, price: 128, date: 128, datetime: 172, status: 136, person: 200, dday: 132, tag: 148 };
 /** 사람 칸 최소 폭: 칸 안쪽 16 × 2 + 아바타 20 + 간격 8 + 보통 이름('품질보증 담당 A(예시)') ≈ 200. 화면이 준 더 좁은 폭(160~184)도 여기까지 올려요 */
 const PERSON_MIN = 200;
-/** 이름 칸이 최소한 가져야 할 폭. 다른 칸 폭의 합이 이걸 남기지 못하면 가로 스크롤(+ 오른쪽 끝 흐림)로 바꿔요 */
+/** 이름 칸이 보통 가져야 할 폭. 다른 칸 폭의 합이 이걸 남기지 못하면 먼저 낮은 우선순위 칸을 빼요 */
 const NAME_MIN = 160;
+/** 넘칠 때 이름 칸이 먼저 내줄 수 있는 아래 한도(말줄임). 이름 칸이 여기까지 줄고, 다른 칸이 최소 폭까지 줄어도 안 되면 가로 스크롤 */
+const NAME_FLOOR = 120;
+/** 좁은 상자에서 칸을 줄일 때 종류별 최소 폭(내용이 잘리지 않는 폭: 칸 안쪽 32 포함). 글자 칸은 말줄임이라 더 줄어요 */
+// 날짜 '10월 16일(목)' ≈ 84 + 32, 상태 알약 4글자('수정 요청') ≈ 89 + 32, 사람 = 아바타 + 이름 말줄임
+const KIND_FLOOR: Record<ColumnKind, number> = { name: 112, text: 72, number: 80, price: 112, date: 116, datetime: 160, status: 120, person: 168, dday: 96, tag: 104 };
+/** 상태 칸: 도메인에 공백 뺀 6글자 이상 상태가 있으면('분류 확인 완료' 알약 ≈ 119 + 칸 안쪽 32) 이 폭 아래로 두지 않아요(가로 스크롤 때 붙인 상태 칸 포함) */
+const STATUS_LONG_FLOOR = 152;
+const statusFloorCache = new Map<string, number>();
+function statusFloor(domain: StatusDomain | undefined): number {
+  if (!domain) return KIND_FLOOR.status;
+  let f = statusFloorCache.get(domain);
+  if (f === undefined) {
+    const labels = Object.values(STATUS[domain] as Record<string, readonly [string, ...unknown[]]>).map((d) => d[0]);
+    f = labels.some((l) => l.replace(/\s/g, "").length >= 6) ? STATUS_LONG_FLOOR : KIND_FLOOR.status;
+    statusFloorCache.set(domain, f);
+  }
+  return f;
+}
+/** 직접 그리는 칸(render)은 내용을 몰라서 정한 폭의 이만큼까지만 줄여요 */
+const RENDER_FLOOR = 0.9;
+/** 가로 스크롤 때 오른쪽에 붙여 둘 칸(상태부터 끝까지)의 폭 한도(상자 폭 대비) */
+const PIN_MAX = 0.4;
 const warnedNoFlex = new Set<string>();
+/** 상자 폭을 재기 전 첫 그림: 이 창 폭 이상이면 낮은 우선순위 칸도 보여요 */
 const WIDE_MIN = 1600;
 
-/** 표 상자 폭(고정 레이아웃이 들어가는지 판단). 감싸는 요소가 바뀔 때만 다시 구독해요(로딩 → 표처럼 요소가 새로 생길 때) */
+/** 표가 쓸 수 있는 폭(표 상자의 안쪽 폭: 테두리·안쪽 여백 뺌). 감싸는 요소가 바뀔 때만 다시 구독해요(로딩 → 표처럼 요소가 새로 생길 때) */
 function useBoxWidth(ref: React.RefObject<HTMLElement | null>) {
   const [w, setW] = useState(0);
   const [el, setEl] = useState<HTMLElement | null>(null);
@@ -61,7 +84,12 @@ function useBoxWidth(ref: React.RefObject<HTMLElement | null>) {
   useLayoutEffect(() => { if (ref.current !== el) setEl(ref.current); });
   useEffect(() => {
     if (!el) return;
-    const update = () => setW(Math.floor(el.getBoundingClientRect().width));
+    const update = () => {
+      const cs = getComputedStyle(el);
+      const side = (a: string, b: string) => (parseFloat(a) || 0) + (parseFloat(b) || 0);
+      const inner = el.getBoundingClientRect().width - side(cs.paddingLeft, cs.paddingRight) - side(cs.borderLeftWidth, cs.borderRightWidth);
+      setW(Math.max(0, Math.floor(inner)));
+    };
     update();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(update);
@@ -120,7 +148,7 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
   const initialSorters: CrudSort[] = urlSort && urlSort.includes(":")
     ? [{ field: urlSort.split(":")[0]!, order: urlSort.split(":")[1] === "desc" ? "desc" : "asc" }]
     : sorters ?? [];
-  const { tableProps, tableQuery, currentPage, setCurrentPage, sorters: curSorters, setSorters, result, searchFormProps } = useTable<T>({
+  const { tableProps, tableQuery, currentPage, setCurrentPage, sorters: curSorters, setSorters, setFilters, result, searchFormProps } = useTable<T>({
     resource,
     syncWithLocation: false,
     pagination: { pageSize, currentPage: urlPage },
@@ -129,12 +157,16 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
     meta,
     dataProviderName,
   });
-  // 조건이 바뀌면 1쪽으로
+  // 조건이 바뀌면 1쪽으로 + Refine 필터 상태를 지금 조건으로 바꿔요.
+  // Refine useTable은 첫 그림의 permanent 조건을 상태로 들고 있다가 새 permanent와 합쳐(union) 물어요 → 처음 조건(예: 담당 = 나,
+  // 상태 ∉ 완료·취소)이 뒤의 모든 조건에 AND로 남아 '내가 검토'·'완료' 칩이 빈 목록이 되던 문제(리뷰 5차). replace로 상태를 비우면
+  // 상태 = 지금 permanent뿐이라 props.filters만 걸려요.
   const filterKey = JSON.stringify(filters ?? []);
   const firstFilterKey = useRef(filterKey);
   useEffect(() => {
     if (filterKey === firstFilterKey.current) return;
     firstFilterKey.current = filterKey;
+    setFilters([], "replace");
     if (currentPage !== 1) setCurrentPage(1);
   }, [filterKey]);
   // 상태 → URL
@@ -215,8 +247,13 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
     );
   }
 
-  // 데스크톱(1280 이상)은 고정 레이아웃: 코드·날짜·상태·사람 칸은 정해진 폭, 이름 칸이 남는 폭 + 말줄임(전체는 칸 title).
-  // 태블릿은 내용 폭 + 가로 스크롤 + 오른쪽 끝 흐림.
+  // 고정 레이아웃(태블릿·데스크톱 모두, 휴대폰은 위의 ListRow): 코드·날짜·상태·사람 칸은 정해진 폭, 이름 칸이 남는 폭 + 말줄임(전체는 칸 title).
+  // 칸 고르기는 창 폭이 아니라 표 상자 폭으로(리뷰 5차 — 1280·1024에서 표가 카드 밖으로 넘쳐 오른쪽 칸이 잘리던 문제):
+  //   ① 다 안 들어가면 낮은 우선순위(low) 칸을 뒤에서부터 빼요.
+  //   ② 그래도 넘치면 이름 칸이 먼저 NAME_FLOOR(120)까지 내주고(말줄임), 모자란 만큼만 다른 칸을 최소 폭(KIND_FLOOR,
+  //      직접 그리는 칸은 90%)까지 고르게 줄여요 — 몇 px 넘쳤다고 가로 스크롤이 되지 않게(리뷰 6차, 클레임 1024에서 5px).
+  //   ③ 그래도 안 되면 가로 스크롤: 표 폭 = 칸 폭 합 + 이름 최소 폭(이름 칸이 글자 길이만큼 부풀지 않게), 상태 칸부터 끝까지는 오른쪽에 붙여요.
+  //      상태 칸은 내용보다 좁게 두지 않아요(긴 상태 도메인은 152).
   const firstIsLink = !!rowHref && columns[0]?.kind === "name" && !columns[0].render;
   const flexIdx = columns.findIndex((c) => c.flex);
   const nameKindIdx = columns.findIndex((c) => c.kind === "name" && c.width == null);
@@ -227,37 +264,70 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
   const nameIdx = flexIdx >= 0 ? flexIdx : Math.max(0, nameKindIdx);
   const widthOf = (c: ColumnDef<T>, i: number) => {
     const w = c.width ?? (i === nameIdx ? undefined : KIND_WIDTH[c.kind ?? "text"]);
-    return c.kind === "person" && typeof w === "number" ? Math.max(w, PERSON_MIN) : w;
+    if (typeof w !== "number") return w;
+    if (c.kind === "person") return Math.max(w, PERSON_MIN);
+    if (c.kind === "status" && !c.render) return Math.max(w, statusFloor(c.statusDomain));
+    return w;
   };
-  const wideScreen = typeof window !== "undefined" && window.innerWidth >= WIDE_MIN;
-  const visible = columns.filter((c) => !c.low || wideScreen);
-  const fixedSum = visible.reduce((sum, c) => { const w = widthOf(c, columns.indexOf(c)); return sum + (typeof w === "number" ? w : 0); }, 0);
-  const fixedLayout = (bp === "desktop" || bp === "wide") && (boxWidth === 0 || fixedSum + NAME_MIN <= boxWidth - 16);
-  const lastIsStatus = columns[columns.length - 1]?.kind === "status";
+  const numWidth = (c: ColumnDef<T>) => { const w = widthOf(c, columns.indexOf(c)); return typeof w === "number" ? w : 0; };
+  const floorOf = (c: ColumnDef<T>) => {
+    const w = numWidth(c);
+    const f = c.kind === "status" && !c.render ? statusFloor(c.statusDomain) : c.kind ? KIND_FLOOR[c.kind] : c.render ? Math.round(w * RENDER_FLOOR) : KIND_FLOOR.text;
+    return Math.min(w, Math.max(64, f));
+  };
+  const sumOf = (cs: ColumnDef<T>[]) => cs.reduce((sum, c) => sum + numWidth(c), 0);
+  // 남는 폭을 가질 칸(이름 칸)에 남겨 둘 폭. 그 칸에도 정한 폭이 있으면(모든 칸이 정한 폭) 남겨 두지 않아요
+  const nameCol = columns[nameIdx];
+  const reserve = nameCol && typeof widthOf(nameCol, nameIdx) === "number" ? 0 : NAME_MIN;
+  // 나머지 칸들이 쓸 수 있는 폭(재기 전에는 0 → 창 폭으로 어림)
+  const budget = boxWidth - reserve;
+  let visible: ColumnDef<T>[];
+  if (boxWidth === 0) {
+    const wideScreen = typeof window !== "undefined" && window.innerWidth >= WIDE_MIN;
+    visible = columns.filter((c) => !c.low || wideScreen);
+  } else {
+    visible = [...columns];
+    for (let j = visible.length - 1; j >= 0 && sumOf(visible) > budget; j -= 1) {
+      if (visible[j]!.low) visible.splice(j, 1);
+    }
+  }
+  const over = boxWidth === 0 ? 0 : sumOf(visible) - budget;
+  const slack = visible.reduce((sum, c) => sum + numWidth(c) - floorOf(c), 0);
+  // 이름 칸이 내줄 수 있는 폭(160 → 120). 남겨 둔 폭이 없으면(모든 칸이 정한 폭) 0
+  const nameGive = reserve > 0 ? reserve - NAME_FLOOR : 0;
+  const scrollMode = over > 0 && over > slack + nameGive;
+  // 이름 칸이 먼저 내주고(이름 칸은 남는 폭을 가지므로 다른 칸을 그대로 두면 저절로 줄어요), 모자란 만큼만 다른 칸을 줄여요
+  const rest = scrollMode ? 0 : Math.max(0, over - nameGive);
+  const shrink = rest > 0 && slack > 0 ? rest / slack : 0;
+  const finalWidth = (c: ColumnDef<T>) => {
+    const w = widthOf(c, columns.indexOf(c));
+    if (typeof w !== "number" || !shrink) return w;
+    return Math.floor(w - (w - floorOf(c)) * shrink);
+  };
+  // 가로 스크롤일 때: 보이는 칸 중 마지막 상태 칸부터 끝까지 오른쪽에 붙여 둬요(상태가 스크롤 밖으로 밀려나지 않게). 너무 넓으면 붙이지 않음
+  const pinFrom = scrollMode ? visible.map((c) => c.kind).lastIndexOf("status") : -1;
+  const pinOn = pinFrom >= 0 && sumOf(visible.slice(pinFrom)) <= boxWidth * PIN_MAX;
   const sortOrderOf = (field: string): "ascend" | "descend" | null => {
     const s = curSorters.find((x) => x.field === field);
     return s ? (s.order === "desc" ? "descend" : "ascend") : null;
   };
-  const antdColumns: TableColumnType<T>[] = columns.map((c, i) => {
+  const antdColumns: TableColumnType<T>[] = visible.map((c, vi) => {
+    const i = columns.indexOf(c);
     const field = c.field ?? c.key;
     const numeric = c.kind === "number" || c.kind === "price";
-    const width = widthOf(c, i);
-    const shrinkable = true;
     return {
       key: field,
       dataIndex: field.includes(".") ? field.split(".") : field,
       title: c.title,
-      width: fixedLayout ? width : c.width,
-      // 가로 스크롤일 때 마지막 상태 칸은 오른쪽에 붙여 둬요(상태 글자가 잘리지 않게)
-      fixed: !fixedLayout && lastIsStatus && i === columns.length - 1 ? "right" : undefined,
+      width: finalWidth(c),
+      fixed: pinOn && vi >= pinFrom ? "right" : undefined,
       align: c.align ?? (numeric ? "right" : undefined),
       sorter: c.sortable ? true : undefined,
       // 정렬 머리는 늘 현재 정렬(기본 정렬·URL ?sort 포함)을 보여 주고(aria-sort), 눌러도 정렬이 풀리지 않게 오름·내림만 오가요
       sortOrder: c.sortable ? sortOrderOf(field) : undefined,
       // antd는 마지막 방향 다음을 '정렬 없음'으로 넘겨요 → 끝에 ascend를 한 번 더 둬서 오름·내림만 돌게(antd 문서의 방법)
       sortDirections: c.sortable ? ["ascend", "descend", "ascend"] : undefined,
-      ellipsis: fixedLayout && shrinkable && !c.render && c.kind !== "status" && c.kind !== "person" && c.kind !== "tag" && c.kind !== "dday" ? { showTitle: true } : undefined,
-      responsive: c.low ? ["xxl"] : undefined,
+      ellipsis: !c.render && c.kind !== "status" && c.kind !== "person" && c.kind !== "tag" && c.kind !== "dday" ? { showTitle: true } : undefined,
       render: (_: unknown, row: T) => {
         if (c.render) return c.render(row);
         const v = getPath(row, field) as unknown;
@@ -286,7 +356,7 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
 
   const clickable = !!(onRowClick || rowHref);
   return wrap(
-    <div className={`${inCard ? "" : "ws-table-card "}ws-table ws-scroll-fade${fixedLayout ? " ws-table--fixed" : ""}${refetching ? " is-refetching" : ""}`} data-table={resource} ref={fade.wrapRef} style={{ ["--ws-fade" as string]: "var(--ws-surface)" }}>
+    <div className={`${inCard ? "" : "ws-table-card "}ws-table ws-scroll-fade ws-table--fixed${refetching ? " is-refetching" : ""}`} data-table={resource} ref={fade.wrapRef} style={{ ["--ws-fade" as string]: "var(--ws-surface)" }}>
       <Table<T>
         {...tableProps}
         aria-label={ariaLabel}
@@ -294,8 +364,8 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
         columns={antdColumns}
         loading={false}
         sticky={{ offsetHeader: 64 }}
-        tableLayout={fixedLayout ? "fixed" : "auto"}
-        scroll={fixedLayout ? undefined : { x: "max-content" }}
+        tableLayout="fixed"
+        scroll={scrollMode ? { x: sumOf(visible) + reserve } : undefined}
         // pagination=false면 정렬을 눌렀을 때 antd가 빈 쪽 정보를 넘겨 Refine이 쪽 크기를 10으로 바꿔요(11~20행이 사라짐). 늘 넘기고 한 쪽이면 숨깁니다.
         pagination={{ ...(tableProps.pagination || {}), showSizeChanger: false, position: ["bottomRight"], hideOnSinglePage: true }}
         onRow={(row) => clickable ? {

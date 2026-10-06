@@ -3,7 +3,6 @@
 // 히어로(오늘 라인)는 sel:ops.today, 나머지 카드는 홈 위젯(home 그룹 구현)을 WidgetSlot으로 씁니다. 배치는 홈과 같은 5:7 MasonryGrid.
 // 생산 작업자(R_OPERATOR)는 숫자 대시보드 대신 '오늘 작업지시 · 점검 미완료'와 현장 등록만 봅니다. 개인별 작업량은 어디에도 없습니다.
 import { Link } from "react-router";
-import { RightOutlined } from "@ant-design/icons";
 import { BigNumber, CardGrid, HeroCard, MasonryGrid, PageHeader, WidgetSlot } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
@@ -52,12 +51,12 @@ export default function Page() {
             <li><Link className="in-hero-link" to="/ops/equipment?tab=today">점검 미완료 설비 {data.checksMissing}대</Link></li>
             <li><Link className="in-hero-link" to="/ops/production/board">설비 현황판</Link></li>
           </ul>
-          <div className="in-hero-cta"><Link to="/ops/report">현장 등록하기 <RightOutlined aria-hidden /></Link></div>
+          <div className="in-hero-cta"><Link to="/ops/report">현장 등록하기</Link></div>
         </>
       ) : !data.hasLogs ? (
         <>
           <p className="in-hero-text">오늘 설비 기록이 아직 없어요. 근무조 시작 때 현황판에서 상태를 눌러 주세요.</p>
-          <div className="in-hero-cta"><Link to="/ops/production/board">설비 현황판 열기 <RightOutlined aria-hidden /></Link></div>
+          <div className="in-hero-cta"><Link to="/ops/production/board">설비 현황판 보기</Link></div>
         </>
       ) : (
         <>
@@ -69,7 +68,7 @@ export default function Page() {
               <Link className="in-hero-link" to={reviewer ? "/ops/report?tab=feed&status=new" : "/ops/report"}>미배정 현장 등록 {data.unassignedReports}건</Link>
             </li>
           </ul>
-          <div className="in-hero-cta"><Link to="/ops/production/board">설비 현황판 보기 <RightOutlined aria-hidden /></Link></div>
+          <div className="in-hero-cta"><Link to="/ops/production/board">설비 현황판 보기</Link></div>
         </>
       )}
     </HeroCard>

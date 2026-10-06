@@ -2,7 +2,7 @@
 // 사진은 파일 이름만 남기고 이미지 데이터는 저장하지 않습니다(미리보기는 이 화면에서만).
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Button, Input, Select, Switch } from "antd";
+import { Button, Input, Select, Switch, type InputRef } from "antd";
 import { CameraOutlined, CheckCircleOutlined, ExceptionOutlined, FormOutlined, SafetyOutlined, ToolOutlined } from "@ant-design/icons";
 import { EmptyState, ListRows, SectionCard, StatusTag } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
@@ -46,8 +46,12 @@ export function Register() {
   const [eqId, setEqId] = useState<string | null>(params.get("equipment"));
   const [anonymous, setAnonymous] = useState(false);
   const [done, setDone] = useState<{ id: string; notified: number } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ field: "kind" | "note"; text: string } | null>(null);
   const mineRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+  // 막힌 자리로 데려가기: 아래에 붙은 '등록하기'(.in-cta)는 어디서든 누를 수 있어서, 이유가 화면 밖에 있으면 아무 일도 안 일어난 것처럼 보여요
+  const kindsRef = useRef<HTMLDivElement>(null);
+  const noteFieldRef = useRef<HTMLDivElement>(null);
+  const noteRef = useRef<InputRef>(null);
   const { run, isPending } = useRpc<{ ok: boolean; id: string; notified: number }>("create_field_report");
 
   // ?equipment=로 들어오면 종류도 맞춰 둠
@@ -73,10 +77,25 @@ export function Register() {
     setKind(null); setNote(""); setPhoto(null); setStepId(null); setEqKind(null); setEqId(null); setAnonymous(false); setDone(null); setError(null);
   };
 
+  const reveal = (el: HTMLElement | null) => {
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    el?.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+  };
   const submit = async () => {
     setError(null);
-    if (!kind) { setError("무엇인지 먼저 골라 주세요"); return; }
-    if (note.trim().length < 2) { setError("한 줄 설명을 적어 주세요"); return; }
+    if (!kind) {
+      setError({ field: "kind", text: "무엇인지 먼저 골라 주세요" });
+      reveal(kindsRef.current);
+      kindsRef.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+      return;
+    }
+    if (note.trim().length < 2) {
+      setError({ field: "note", text: "한 줄 설명을 적어 주세요" });
+      // 초점을 먼저(스크롤 없이) 옮기고 칸을 화면 가운데로: 휴대폰에서는 자판이 올라와 바로 적을 수 있어요
+      noteRef.current?.focus({ cursor: "end", preventScroll: true });
+      reveal(noteFieldRef.current);
+      return;
+    }
     try {
       const res = await run({ kind, note: note.trim(), photoName: photo?.name ?? null, processStepId: stepId, equipmentId: eqId, anonymous: kind === "near_miss" && anonymous });
       if (eqId) writeJson(RECENT_KEY, [eqId, ...recent.filter((x) => x !== eqId)].slice(0, 3));
@@ -108,14 +127,15 @@ export function Register() {
     <div className="in-narrow in-stack in-has-cta">
       <SectionCard ariaLabel="현장 등록">
         <StepHead no={1}>무엇인가요?</StepHead>
-        <div className="in-kinds" role="group" aria-label="종류">
+        <div className="in-kinds" role="group" aria-label="종류" ref={kindsRef}>
           {KINDS.map((k) => (
-            <button key={k.value} type="button" className="in-kind" aria-pressed={kind === k.value} onClick={() => setKind(k.value)}>
+            <button key={k.value} type="button" className="in-kind" aria-pressed={kind === k.value} onClick={() => { setKind(k.value); if (error?.field === "kind") setError(null); }}>
               {k.icon}
               <span>{k.label}</span>
             </button>
           ))}
         </div>
+        {error?.field === "kind" && <p className="in-note" role="alert" style={{ color: "var(--ws-critical-fg)", margin: "8px 0 0" }}>{error.text}</p>}
 
         {kind && (
           <div className="in-stack in-mt">
@@ -141,9 +161,19 @@ export function Register() {
               </div>
               <span className="in-caption">파일 이름만 남겨요. 사진은 회사 저장소에 따로 올려 주세요.</span>
             </div>
-            <div className="in-field">
+            <div className="in-field" ref={noteFieldRef}>
               <label className="in-field__label" htmlFor="fr-note">한 줄 설명</label>
-              <Input id="fr-note" size="large" value={note} maxLength={60} onChange={(e) => setNote(e.target.value)} placeholder="예: 프레스 작업 중 이상 소음" />
+              <Input
+                id="fr-note" ref={noteRef} size="large" value={note} maxLength={60} placeholder="예: 프레스 작업 중 이상 소음"
+                status={error?.field === "note" ? "error" : undefined}
+                aria-invalid={error?.field === "note" || undefined}
+                aria-describedby={error?.field === "note" ? "fr-error" : undefined}
+                onChange={(e) => {
+                  setNote(e.target.value);
+                  if (error?.field === "note" && e.target.value.trim().length >= 2) setError(null);
+                }}
+              />
+              {error?.field === "note" && <p className="in-note" id="fr-error" role="alert" style={{ color: "var(--ws-critical-fg)", margin: 0 }}>{error.text}</p>}
               <span className="in-count" aria-live="polite">{note.length}/60</span>
             </div>
             <div className="in-field">
@@ -172,7 +202,6 @@ export function Register() {
               </label>
             )}
             {kind === "near_miss" && anonymous && <p className="in-caption">이름 없이 보낸 기록은 내 목록에도 남지 않아요.</p>}
-            {error && <p className="in-note" role="alert" style={{ color: "var(--ws-critical-fg)" }}>{error}</p>}
           </div>
         )}
         <div className="in-cta">

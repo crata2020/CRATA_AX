@@ -1,7 +1,7 @@
 // collab 그룹 화면이 함께 쓰는 도우미(소유: collab 그룹). 같은 그룹 폴더(docs·artifact-detail·templates·correction-rules·knowledge·
 // glossary·mail-inbox·notices·notice-detail·calendar·approvals·people·org-chart·company-about)에서만 import합니다.
 // 공통 승격 후보: KeyValue(정보 표), SummaryLinks(글자 링크 요약), ExternalLink — notes/collab.md 참고
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { Tooltip } from "antd";
 import { ExportOutlined } from "@ant-design/icons";
 import { useWorksite } from "@/app/TenantBoundary";
@@ -111,6 +111,12 @@ export function SummaryLinks({ items, ariaLabel }: { items: { key: string; label
       ))}
     </ul>
   );
+}
+
+const subscribeResize = (cb: () => void) => { window.addEventListener("resize", cb); return () => window.removeEventListener("resize", cb); };
+/** 창 폭이 px 이상인지. 태블릿 구간(768~1279) 안에서 표 칸을 더 둘지 고를 때(예: 1024 이상이면 담당 칸) */
+export function useMinWidth(px: number): boolean {
+  return useSyncExternalStore(subscribeResize, () => window.innerWidth >= px, () => true);
 }
 
 /** 작은 설명 글 */

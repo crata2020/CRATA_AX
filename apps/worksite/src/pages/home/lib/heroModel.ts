@@ -3,7 +3,7 @@
 //   검토자 이상·구성원: 기한 지남 + 오늘 마감 + 수정 요청(+ 검토 요청: 검토자 이상, 내가 지정 검토자인 것만)
 //     한 업무는 한 줄에만 들어가요(기한 지남 → 오늘 마감 → 수정 요청 순)
 //   TR 생산 작업자: 오늘 작업지시를 공정별(편조 · 가공)로. 한 공정뿐이면 줄 없이 큰 숫자만(같은 말을 두 번 쓰지 않게)
-//   aside(합에 넣지 않는 참고): 남은 내 업무, 회사 전체 검토 대기(소유자·관리자), 점검 전 내 설비(대)·오늘 마감 업무(작업자)
+//   aside(합에 넣지 않는 참고, 0이면 숨김): 남은 내 업무, 회사 전체 검토 대기(소유자·관리자), 점검 전 내 설비(대)·오늘 마감 업무(작업자)
 import type { HomeToday } from "./types";
 
 export interface HeroRow { key: string; label: string; value: number; unit: string; to: string }
@@ -28,7 +28,8 @@ export function heroModel(d: HomeToday): HeroModel {
       ? parts.map((p) => ({ key: `wo-${p.key}`, label: `${p.label} 작업지시`, value: p.count, unit: "건", to: "/ops/production?tab=work-orders" }))
       : [];
     const aside: HeroRow[] = [];
-    if (d.checksPending != null) aside.push({ key: "chk", label: "점검 전 내 설비", value: d.checksPending, unit: "대", to: "/ops/production/board" });
+    // 점검할 설비가 남았을 때만(0대 링크는 갈 곳이 없고, 히어로의 단 하나의 주 동작 '현장 등록하기'와 다투기만 해요)
+    if (d.checksPending != null && d.checksPending > 0) aside.push({ key: "chk", label: "점검 전 내 설비", value: d.checksPending, unit: "대", to: "/ops/production/board" });
     if (d.dueToday > 0) aside.push({ key: "due", label: "오늘 마감 업무", value: d.dueToday, unit: "건", to: "/work?due=today" });
     return { total, label: "오늘 작업지시", rows, aside, button: { label: "현장 등록하기", to: "/ops/report" } };
   }

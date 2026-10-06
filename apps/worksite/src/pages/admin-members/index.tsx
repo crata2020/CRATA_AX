@@ -86,7 +86,10 @@ function StatusButton({ m, size = "small" }: { m: Member; size?: "small" | "midd
   };
   const reason = self ? "내 계정은 비활성화할 수 없어요" : ownerBlocked ? "소유자는 소유자만 바꿀 수 있어요" : null;
   const inRow = size === "small";
-  const btn = <Button size={size} className={inRow ? "ws-rowact" : undefined} disabled={!!reason} loading={isPending} onClick={(e) => { e.stopPropagation(); void toggle(); }}>{m.status === "active" ? "비활성화" : "다시 활성화"}</Button>;
+  // 행 안(3.6): 되돌릴 수 있는 위험 동작 '비활성화'는 글자 버튼(ink-2, 32h, hover·초점 때만 1px line 테두리 — as.css).
+  // 브랜드 글자 흰 알약은 긍정 동작 '다시 활성화'에만
+  const rowClass = m.status === "active" ? "ws-rowact-text as-rowact-quiet" : "ws-rowact";
+  const btn = <Button size={size} type={inRow && m.status === "active" ? "text" : undefined} className={inRow ? rowClass : undefined} disabled={!!reason} loading={isPending} onClick={(e) => { e.stopPropagation(); void toggle(); }}>{m.status === "active" ? "비활성화" : "다시 활성화"}</Button>;
   return <span onClick={stop} onKeyDown={stop}>{reason ? <DisabledAction label={`${m.display_name} ${m.status === "active" ? "비활성화" : "다시 활성화"}`} reason={reason}>{btn}</DisabledAction> : btn}</span>;
 }
 
@@ -210,14 +213,16 @@ function MembersTab() {
         sorters={[{ field: "display_name", order: "asc" }]}
         pageSize={30}
         onRowClick={(m) => setSelected(m.id)}
+        // 칸 폭(1280 표 상자 ≈ 942): 조직 144 + 직함 160 + 플랫폼 역할 136 + 상태 104 + 관리 128 = 672 + 이름 최소 160 ≤ 926.
+        // 역할코드(R_ADMIN_PUR_ACC ≈ 168)는 낮은 우선순위: 표 상자가 넉넉할 때만 칸으로(1280에서는 빠져 이름이 잘리지 않아요. 상세 서랍에는 늘 있어요)
         columns={[
           { key: "display_name", title: "이름", flex: true, render: (m) => <PersonChip memberId={m.id} size="sm" fallbackName={m.display_name} /> },
-          { key: "org_unit_id", title: "조직", render: (m) => unitName.get(m.org_unit_id) ?? "—" },
-          { key: "job_title", title: "직함" },
-          { key: "role_code", title: "역할코드", render: (m) => <code className="as-code" translate="no">{m.role_code}</code> },
-          { key: "role", title: "플랫폼 역할", render: (m) => <RoleSelect m={m} guard={guard} /> },
-          { key: "status", title: "상태", kind: "status", statusDomain: "members.status" },
-          { key: "actions", title: "관리", render: (m) => <StatusButton m={m} /> },
+          { key: "org_unit_id", title: "조직", width: 144, render: (m) => { const n = unitName.get(m.org_unit_id) ?? "—"; return <span className="ws-ellipsis" title={n}>{n}</span>; } },
+          { key: "job_title", title: "직함", width: 160 },
+          { key: "role_code", title: "역할코드", width: 168, low: true, render: (m) => <code className="as-code" translate="no">{m.role_code}</code> },
+          { key: "role", title: "플랫폼 역할", width: 136, render: (m) => <RoleSelect m={m} guard={guard} /> },
+          { key: "status", title: "상태", kind: "status", statusDomain: "members.status", width: 104 },
+          { key: "actions", title: "관리", width: 128, render: (m) => <StatusButton m={m} /> },
         ]}
         mobileRow={(m) => ({
           title: person(m.id)?.displayName ?? m.display_name,

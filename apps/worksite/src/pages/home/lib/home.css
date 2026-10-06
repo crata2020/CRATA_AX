@@ -138,15 +138,35 @@
 html .wh-action:focus-visible, html .wh-linkbtn:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: 2px; }
 
 /* ── 승인 대기(approval-inbox): 한 번 눌러 끝내는 줄. 채운 버튼 없음(주 동작 = .ws-rowact 흰 알약, 나머지 = .ws-rowact-text 글자 버튼) */
-.wa-counts { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 0 0 4px; }
+/* 종류 칩: 언제나 한 줄(줄바꿈하면 1440 7fr 칸(안쪽 414)에서 '작성 규칙 2' 하나만 둘째 줄에 남고 카드가 32px 길어져요).
+   들어가는 칩만 두고 나머지를 '외 N종 M ▾' 칩(<details>)으로 접어요(approval-inbox.tsx KindCounts) — 마우스·손가락·휴대폰 모두 칩 숫자의 합 = 머리 건수.
+   칩 줄은 가로만 잘라요(overflow-x: clip): 잰 값이 늦게 와도 카드 밖으로 넘치지 않고, 펼친 목록은 아래로 보여요 */
+.wa-counts-wrap { position: relative; margin: 0 0 4px; }
+.wa-counts { display: flex; flex-wrap: nowrap; gap: 4px; overflow-x: clip; overflow-y: visible; }
+/* 칩 폭을 재는 숨은 줄(읽기·누르기 대상 아님). 폭 0 상자 안에서 칩이 제 폭으로 놓이고 잘려요(페이지 가로 넘침 없음) */
+.wa-counts__measure {
+  position: absolute; top: 0; left: 0; display: flex; gap: 4px; width: 0; height: 0; overflow: hidden;
+  visibility: hidden; pointer-events: none;
+}
+html .wa-counts .wa-count:focus-visible { outline-offset: -2px; }
 .wa-count {
-  display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; box-sizing: border-box; white-space: nowrap;
+  flex: none; display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; box-sizing: border-box; white-space: nowrap;
   border: 1px solid var(--ws-line); border-radius: 999px; background: var(--ws-surface); color: var(--ws-ink-2);
   font-size: 13px; line-height: 20px; font-weight: 400; text-decoration: none; transition: background-color 120ms linear, border-color 120ms linear;
 }
 .wa-count b { color: var(--ws-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 .wa-count:hover { background: var(--ws-brand-weak); border-color: var(--ws-brand-weak); color: var(--ws-brand-text); }
 .wa-count:hover b { color: var(--ws-brand-text); }
+.wa-more { position: relative; flex: none; }
+.wa-count--more { margin: 0; cursor: pointer; list-style: none; user-select: none; }
+.wa-count--more::-webkit-details-marker { display: none; }
+.wa-count--more .anticon { font-size: 10px; color: var(--ws-muted); transition: transform 120ms linear; }
+.wa-count--more:hover .anticon, .wa-more[open] > .wa-count--more .anticon { color: var(--ws-brand-text); }
+.wa-more[open] > .wa-count--more { background: var(--ws-brand-weak); border-color: var(--ws-brand-weak); color: var(--ws-brand-text); }
+.wa-more[open] > .wa-count--more b { color: var(--ws-brand-text); }
+.wa-more[open] > .wa-count--more .anticon { transform: rotate(180deg); }
+/* 펼친 목록(모양은 theme components.css .ws-popmenu): 칩 오른쪽 끝에 맞춰 아래로, 아래 카드 위에 */
+.wa-more__menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 20; }
 .wa-list { container-type: inline-size; }
 .wa-list > li + li { border-top: 1px solid var(--ws-sunken); }
 .wa-row {
@@ -170,6 +190,9 @@ html .wh-action:focus-visible, html .wh-linkbtn:focus-visible { outline: 2px sol
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
   white-space: normal; word-break: keep-all; overflow-wrap: anywhere;
 }
+/* 짧은 ' · ' 조각('어제 16:30 제출', '대표이사 확정', '확신 73%')과 사람 이름·'추천 담당 …'은 한 덩어리로 다음 줄에(approval-inbox.tsx SubSegments).
+   덩어리 안에서는 꺾지 않고, 줄보다 길면 말줄임(전체 글은 부제 title). 구분점은 앞 조각에 붙은 빈칸(U+00A0)이라 줄 첫머리에 '·'만 오지 않아요 */
+.wa-row__seg { display: inline-block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: top; }
 .wa-row__acts { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
 .wa-row__primary, .wa-row__minor { display: flex; align-items: center; gap: 4px; }
 /* 두 줄 동작(카드 안쪽 400~519, 1440·1280의 7fr 칸): 위 32h 알약 + 아래 28h 글자 버튼(고치기·나중에, 안쪽 8 = .ws-rowact-text와 같음),
@@ -203,14 +226,9 @@ html .wh-action:focus-visible, html .wh-linkbtn:focus-visible { outline: 2px sol
   .wa-row__primary .ws-rowact { flex: 1; }
   .wa-row__acts .ant-btn, .wa-list .wa-row__minor .ws-rowact-text { min-height: 44px; }
   /* 첫 화면에 첫 줄의 '승인'이 탭 바 위로 보이게 머리를 줄여요(390×844 기준 카드 머리 237 → 약 160, 첫 승인 약 y 721~765, 탭 바 780).
-     종류 칩: 44h 한 줄 가로 스크롤(카드 안쪽 여백까지 끝에서 끝으로, 스크롤바 숨김). 설명 문장은 목록 아래로(.wa-guide-m) */
-  .wa-counts {
-    flex-wrap: nowrap; gap: 8px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
-    margin: 0 calc(var(--ws-card-pad) * -1) 4px; padding: 0 var(--ws-card-pad); scroll-padding-inline: var(--ws-card-pad);
-  }
-  .wa-counts::-webkit-scrollbar { display: none; }
-  .wa-count { flex: none; height: 44px; min-height: 44px; padding: 0 14px; font-size: 14px; }
-  html .wa-counts > .wa-count:focus-visible { outline-offset: -2px; }
+     종류 칩: 44h 한 줄(들어가지 않는 종류는 '외 N종'으로 접힘 — 위 .wa-counts). 설명 문장은 목록 아래로(.wa-guide-m) */
+  .wa-counts { gap: 8px; }
+  .wa-count { height: 44px; min-height: 44px; padding: 0 14px; font-size: 14px; }
   .wh-head__note.wa-guide { display: none; }
   .wa-guide-m { display: block; }
 }

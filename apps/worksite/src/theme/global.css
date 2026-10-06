@@ -48,6 +48,14 @@ button { font-family: inherit; }
 /* antd·Refine 리셋의 `a:focus { outline: 0 }`(0,1,1)보다 세게 걸리도록 html을 앞에 붙여요. 장식 테두리(outline)를 쓰는 버튼도 초점 때는 이 선으로 바뀌어요. */
 html :focus-visible, html a:focus-visible, html button:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: 2px; }
 html :focus:not(:focus-visible) { outline: none; }
+/* antd 버튼·스위치·세그먼트·쪽 넘김도 같은 2px 브랜드 선(antd 기본 3px colorPrimaryBorder 회색 선 대신).
+   antd 초점 선택자 특이도: 버튼 (0,3,0), 스위치·세그먼트 (0,2,0), 쪽 넘김 숫자 (0,4,0)·앞뒤 화살표 안쪽 링크 (0,5,0) → 각각보다 세게.
+   세그먼트는 칸 안 숨은 radio에 초점이 가서 칸(.ant-segmented-item)에 그려요. 쪽 넘김 앞뒤는 li에 그리고 antd가 안쪽 링크에 긋는 선은 꺼요 */
+html .ant-btn:not(:disabled):focus-visible,
+html .ant-switch:not(.ant-switch-disabled):focus-visible,
+html .ant-segmented .ant-segmented-item:is(.ant-segmented-item-focused, :has(input:focus-visible)),
+html .ant-pagination:not(.ant-pagination-disabled) :is(.ant-pagination-item, .ant-pagination-prev, .ant-pagination-next, .ant-pagination-jump-prev, .ant-pagination-jump-next):focus-visible { outline: 2px solid var(--ws-brand); outline-offset: 2px; }
+html .ant-pagination:not(.ant-pagination-disabled) :is(.ant-pagination-prev, .ant-pagination-next):focus-visible .ant-pagination-item-link { outline: none; }
 /* antd 선택 상자: 초점은 안쪽 검색 input에 가서 선이 안 보여요 → 키보드 초점일 때 상자 바깥에 같은 초점 선.
    antd가 .ant-select-selector에 outline: 0을 (0,6,0)으로 걸어서, antd가 꾸미지 않는 바깥 상자(.ant-select)에 그려요 */
 html .ant-select:has(input:focus-visible) { outline: 2px solid var(--ws-brand); outline-offset: 2px; border-radius: 8px; }
@@ -70,6 +78,11 @@ html h1[tabindex="-1"]:focus, html main[tabindex="-1"]:focus { outline: none; }
 html .ws-on-brand :focus-visible, html [data-hero] :focus-visible,
 html .ws-on-brand a:focus-visible, html [data-hero] a:focus-visible,
 html .ws-on-brand button:focus-visible, html [data-hero] button:focus-visible { outline-color: var(--ws-on-brand); }
+/* 위 antd 컨트롤 초점 선(특이도 최고 (0,4,1))보다 한 단계 세게: 히어로·브랜드 바탕 안에서는 on-brand 색 */
+html :is(.ws-on-brand, [data-hero]) .ant-btn:not(:disabled):focus-visible,
+html :is(.ws-on-brand, [data-hero]) .ant-switch:not(.ant-switch-disabled):focus-visible,
+html :is(.ws-on-brand, [data-hero]) .ant-segmented .ant-segmented-item:is(.ant-segmented-item-focused, :has(input:focus-visible)),
+html :is(.ws-on-brand, [data-hero]) .ant-pagination:not(.ant-pagination-disabled) :is(.ant-pagination-item, .ant-pagination-prev, .ant-pagination-next, .ant-pagination-jump-prev, .ant-pagination-jump-next):focus-visible { outline-color: var(--ws-on-brand); }
 
 /* 본문 안 링크: 색만으로 구분하지 않게 밑줄(WCAG 1.4.1). 버튼처럼 생긴 링크(목록 줄·더보기·메뉴)는 빼요.
    antd 목록 항목(li.ant-pagination-item > a 같은 쪽 넘김 숫자)은 원형 버튼이라 밑줄 없음 */
@@ -127,6 +140,12 @@ html :is(.ws-panel-inner, .ant-drawer-body, .ant-modal-body) .ant-btn-link:not(.
 .ant-table-wrapper .ant-table-thead > tr > th::before { display: none; }
 .ant-typography strong { font-weight: 600; }
 .ant-message .ant-message-notice-content { font-weight: 600; }
+/* 모바일 토스트: 위(top 72, App.tsx 인라인)에 쌓이면 다음에 누를 줄 제목을 가려요 → 하단 탭 바(64 + 안전 영역) 바로 위에 하나만.
+   가장 새 알림이 맨 끝이에요. 앞선 알림은 display:none 대신 높이를 0으로 접어요(숨기면 퇴장 애니메이션 끝 신호가 안 와 DOM에 남아요) */
+@media (max-width: 767px) {
+  .ant-message { top: auto !important; bottom: calc(64px + 8px + env(safe-area-inset-bottom)); }
+  .ant-message .ant-message-notice-wrapper:not(:last-child) { max-height: 0 !important; padding: 0 !important; overflow: hidden; visibility: hidden; }
+}
 .ant-drawer .ant-drawer-title { font-size: 18px; line-height: 26px; font-weight: 600; }
 .ant-modal .ant-modal-title { font-size: 18px; line-height: 26px; font-weight: 600; }
 .ant-segmented .ant-segmented-item-label { font-weight: 400; }

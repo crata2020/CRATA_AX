@@ -10,6 +10,7 @@ import { DataTable, DdayBadge, DetailDrawer, EmptyState, KanbanBoard, PageHeader
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
 import { useRpc } from "@/lib/refine";
+import { isDesktopUp, useBreakpoint } from "@/lib/useBreakpoint";
 import { useSelectedParam, useUrlParam } from "@/lib/url";
 import { ddayInfo, formatDate, formatNumber } from "@/lib/format";
 import { labelOf, optionsOf, statusOf } from "@/lib/status";
@@ -22,6 +23,7 @@ interface NewValues { partnerId: string; itemId: string; customerRefNo?: string;
 
 export default function Page() {
   const { can, today } = useWorksite();
+  const bp = useBreakpoint();
   const nav = useNavigate();
   const [view] = useUrlParam("view", "list");
   const [selected, setSelected] = useSelectedParam();
@@ -108,16 +110,21 @@ export default function Page() {
           ariaLabel="고객 클레임 목록"
           sorters={[{ field: "received_on", order: "desc" }]}
           rowHref={(c) => `/ops/quality/claims/${c.id}`}
+          // 1280(표 상자 약 942px)에서도 고정 레이아웃에 들어가게: 116+152+92+76+128+104+112 = 780 + 품목 최소 160 = 940 ≤ 942.
+          // 클레임 번호 116 = 'CL-2026-03'(약 80) + 칸 안쪽 32. 고객 152 = 가장 긴 '예시배기시스템(주)'(약 106) + 32 + 여유.
+          // 접수일·종결 줄 8D 기한은 요일 없이('9월 18일', 가장 긴 '12월 31일' 약 60)라 92·104에 들어가요(같은 줄에서 날짜 꼴이 같아요).
+          // 수량·임시 조치 기한·등급은 낮은 우선순위(남는 폭이 있을 때만, 상세에는 늘 있음).
+          // 1280 미만(태블릿)은 심각도를 빼요(상세에 있어요): 116+152+92+128+104+112 = 704 + 160 = 864 ≤ 1024의 표 상자(약 878) → 가로 스크롤 없음
           columns={[
             { key: "claim_no", title: "클레임 번호", kind: "name", width: 116 },
-            { key: "partner_id", title: "고객", width: 140, render: (c) => <span className="ws-ellipsis">{partnerName(c.partner_id)}</span> },
+            { key: "partner_id", title: "고객", width: 152, render: (c) => <span className="ws-ellipsis" title={partnerName(c.partner_id)}>{partnerName(c.partner_id)}</span> },
             { key: "item_id", title: "품목", flex: true, render: (c) => <span className="ws-ellipsis" title={itemName(c.item_id)}>{itemName(c.item_id)}</span> },
-            { key: "received_on", title: "접수일", kind: "date", width: 120 },
-            { key: "qty_affected", title: "수량", kind: "number", unit: "개", width: 88 },
-            { key: "severity", title: "심각도", width: 80, render: (c) => <span className="ws-tag">{labelOf("customer_claims.severity", c.severity)}</span> },
-            { key: "step", title: "현재 단계", width: 140, render: stepTag },
+            { key: "received_on", title: "접수일", kind: "date", width: 92, render: (c) => <span className="ws-date">{formatDate(c.received_on, false)}</span> },
+            { key: "qty_affected", title: "수량", kind: "number", unit: "개", width: 88, low: true },
+            ...(isDesktopUp(bp) ? [{ key: "severity", title: "심각도", width: 76, render: (c: CustomerClaim) => <span className="ws-tag">{labelOf("customer_claims.severity", c.severity)}</span> }] : []),
+            { key: "step", title: "현재 단계", width: 128, render: stepTag },
             { key: "containment_due", title: "임시 조치 기한", low: true, width: 132, render: (c) => (c.status === "received" ? <DdayBadge date={c.containment_due} /> : formatDate(c.containment_due)) },
-            { key: "report_8d_due", title: "8D 기한", width: 124, render: (c) => (c.status === "closed" ? formatDate(c.report_8d_due) : <DdayBadge date={c.report_8d_due} />) },
+            { key: "report_8d_due", title: "8D 기한", width: 104, render: (c) => (c.status === "closed" ? <span className="ws-date">{formatDate(c.report_8d_due, false)}</span> : <DdayBadge date={c.report_8d_due} />) },
             { key: "status", title: "상태", kind: "status", statusDomain: "customer_claims.status", width: 112 },
             { key: "l2", title: "등급", low: true, width: 120, render: () => <SensitivityTag level="L2" /> },
           ]}

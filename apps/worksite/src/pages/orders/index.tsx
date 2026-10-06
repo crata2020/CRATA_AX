@@ -92,16 +92,25 @@ function Orders() {
         // 지연(약속일이 있는 줄)을 맨 위에, 그다음 납기가 가까운 순
         sorters={[{ field: "promised_date", order: "asc" }, { field: "due_date", order: "asc" }]}
         onRowClick={(l) => setSelected(l.id)}
-        // 1440(표 상자 약 1100px)에서 고정 레이아웃에 들어가게: 고정 폭 합 124+144+96+96+216+160 = 836 + 품목 최소 160 ≤ 1088.
-        // 납기 216 = 가장 긴 '12월 31일 + D-1 내일 납기'(약 182) + 칸 안쪽 32. 상태 160 = '지연 예상(+12일)'(약 130) + 32.
-        // 단가는 낮은 우선순위(1600 이상에서만, 서랍에는 늘 있음)이고 상태 앞에 둬요 → 상태가 마지막 칸이라 가로 스크롤(태블릿)일 때 오른쪽에 붙어요
+        // 1280(표 상자 약 942px)에서도 고정 레이아웃에 들어가게: 고정 폭 합 168+136+200+160 = 664 + 품목 최소 160 = 824 ≤ 942(품목은 약 278).
+        // 발주번호·고객 168 = 한 칸 두 줄(위 발주번호 '26-0902-33' 약 86, 아래 고객 13px '예시배기시스템(주)' 약 98) + 칸 안쪽 32.
+        //   발주번호는 줄을 가르는 열쇠라 뒷자리('-33')까지 다 보여야 해요 → 칸을 따로 두어 둘 다 잘리던 것(112·128)을 한 칸으로 합쳤어요.
+        // 출하/수량 136 = 가장 긴 '7,200 / 7,200개'(약 100) + 칸 안쪽 32. 납기 200 = 왼쪽 안쪽 16 + 날짜 자리 4.6em(약 64) + 8 + 'D-1 내일 납기'(약 110).
+        // 상태 160 = '지연 예상(+12일)'(약 130) + 32. 1440(약 1118)에서는 단가 112까지 776 → 품목 약 340('…120mm'까지).
+        // 단가는 낮은 우선순위(상자에 남는 폭이 있을 때만, 서랍에는 늘 있음)이고 상태 앞에 둬요 → 상태가 마지막 칸이라 가로 스크롤(태블릿)일 때 오른쪽에 붙어요
         columns={[
-          { key: "po", title: "고객 발주번호", width: 124, render: (l) => <span className="ws-cell-name in-num">{orderById.get(l.order_id)?.customer_po_no ?? "—"}</span> },
-          { key: "customer", title: "고객", width: 144, render: (l) => <span className="ws-ellipsis">{lk.partner.get(orderById.get(l.order_id)?.partner_id ?? "")?.name ?? "—"}</span> },
-          { key: "item_id", title: "품목", flex: true, render: (l) => <span className="ws-ellipsis" title={itemLabel(l.item_id)}>{itemLabel(l.item_id)}</span> },
-          { key: "qty", title: "수량", width: 96, align: "right", render: (l) => <span className="in-num">{formatQty(l.qty, unit(l.item_id))}</span> },
-          { key: "shipped_qty", title: "출하 수량", width: 96, align: "right", render: (l) => <span className="in-num">{formatQty(l.shipped_qty, unit(l.item_id))}</span> },
-          { key: "due_date", title: "납기", width: 216, render: (l) => <span className="in-row" style={{ flexWrap: "nowrap" }}><span className="ws-date">{formatDate(l.due_date, false)}</span>{open(l) && <DdayBadge date={l.due_date} noun="납기" />}</span> },
+          // 발주번호(위, 14 ink · tabular · 줄바꿈 없음)와 고객(아래, 13 muted · 이 줄만 말줄임)을 한 칸 두 줄로(품목 칸과 같은 .in-cell2)
+          { key: "po", title: "발주번호 · 고객", width: 168, render: (l) => {
+            const o = orderById.get(l.order_id);
+            const customer = lk.partner.get(o?.partner_id ?? "")?.name ?? "—";
+            return <span className="in-cell2" title={`${o?.customer_po_no ?? "—"} · ${customer}`}><span className="in-cell2__main in-cell2__key in-num">{o?.customer_po_no ?? "—"}</span><span className="in-cell2__sub">{customer}</span></span>;
+          } },
+          // 품번(위, 13 muted)과 이름(아래, 14 ink)을 두 줄로: 이름이 칸 폭을 다 써서 크기·규격 끝('120mm', 'W120')까지 보여요
+          { key: "item_id", title: "품목", flex: true, render: (l) => { const it = lk.item.get(l.item_id); return it ? <span className="in-cell2" title={itemLabel(l.item_id)}><span className="in-cell2__sub">{it.item_no}</span><span className="in-cell2__main">{it.name}</span></span> : "—"; } },
+          // 수량·출하 수량을 한 칸으로: '출하 / 수량'(예: 2,200 / 4,400개). 칸 하나가 줄어 1280에서도 납기 D-day와 상태가 다 보여요
+          { key: "qty", title: "출하/수량", width: 136, align: "right", render: (l) => <span className="in-num ws-nowrap">{formatNumber(l.shipped_qty)} / {formatQty(l.qty, unit(l.item_id))}</span> },
+          // 날짜는 같은 폭 자리(.in-date-slot)에: '10월 2일'과 '10월 10일' 뒤의 D-day 칩이 같은 x에서 시작해요
+          { key: "due_date", title: "납기", width: 200, render: (l) => <span className="in-row" style={{ flexWrap: "nowrap" }}><span className="ws-date in-date-slot">{formatDate(l.due_date, false)}</span>{open(l) && <DdayBadge date={l.due_date} noun="납기" />}</span> },
           // 단가는 볼 권한이 있을 때만 칸을 둬요(대시 한 줄 대신)
           ...(canSeePrice ? [{ key: "unit_price", title: "단가", kind: "price" as const, width: 112, low: true }] : []),
           { key: "status", title: "상태", kind: "status", width: 160, render: (l) => <StatusTag {...orderLineStatus(l, today)} /> },

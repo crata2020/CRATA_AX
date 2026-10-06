@@ -21,9 +21,22 @@ const widget: WidgetDef = {
           <div className="wh-split">
             {/* 왼쪽: 큰 숫자(PPM) 아래 가는 선으로 뗀 묶음 KPI(클레임·시정조치) — home.css .wh-ppm */}
             <div className="wh-ppm">
-              {d.stat && (
-                <StatTile label={d.stat.label} value={d.stat.value} unit={d.stat.unit} caption={d.stat.caption ?? undefined} delta={d.stat.delta ?? undefined} />
-              )}
+              {/* 목표 달성 여부 태그는 품질 현황(/ops/quality '고객 PPM')과 같은 규칙·글자: 목표 미만이면 good, 아니면 warning.
+                  ▼ 증감 칩(지난달보다)만 초록이면 목표를 못 넘긴 달도 좋아 보여서, 숫자 줄에 목표 태그를 함께 둬요 */}
+              {d.stat && (() => {
+                const met = typeof d.stat.value === "number" ? d.stat.value < d.target : null;
+                return (
+                  <StatTile
+                    label={d.stat.label}
+                    value={d.stat.value}
+                    unit={d.stat.unit}
+                    caption={d.stat.caption ?? undefined}
+                    delta={d.stat.delta ?? undefined}
+                    tone={met == null ? undefined : met ? "good" : "warning"}
+                    toneLabel={met == null ? undefined : met ? "목표 달성" : "목표 미달성"}
+                  />
+                );
+              })()}
               <StatRow>
                 <StatTile label="이번 달 클레임" value={d.claimsThisMonth} unit="건" />
                 <StatTile label="미결 시정조치" value={d.openActions} unit="건" />

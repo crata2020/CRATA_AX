@@ -6,6 +6,7 @@ import { CardGrid, DataTable, DdayBadge, EmptyState, FilterBar, Gauge, KpiCard, 
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
 import { useUrlParam } from "@/lib/url";
+import { isDesktopUp, useBreakpoint } from "@/lib/useBreakpoint";
 import { formatDate, formatMonth, formatNumber } from "@/lib/format";
 import { labelOf, optionsOf, statusOf } from "@/lib/status";
 import type { CorrectiveAction, Gauge as GaugeEntity, Inspection, Item, Kpi, KpiValue } from "@/types/entities";
@@ -22,6 +23,7 @@ const KPI_IDS = ["K06", "K03", "K04"];
 
 export default function Page() {
   const { person, isModuleOn } = useWorksite();
+  const bp = useBreakpoint();
   const [period] = useUrlParam("period", "month");
   const [tab] = useUrlParam("tab", "inspections");
   const kpis = useModuleRows<Kpi>("reports", "kpis", { filters: [{ field: "id", operator: "in", value: KPI_IDS }] });
@@ -69,10 +71,11 @@ export default function Page() {
       />
       {hasKpi ? (
         <CardGrid>
-          {/* 고객 PPM 수치(왼쪽 5)와 월별 막대(오른쪽 7)를 한 카드에(홈 '품질 지표'와 같은 두 갈래). 두 카드로 나누면 짧은 수치 카드 아래가 비어요 */}
+          {/* 고객 PPM 수치(왼쪽 5)와 월별 막대(오른쪽 7)를 한 카드에(홈 '품질 지표'와 같은 두 갈래). 두 카드로 나누면 짧은 수치 카드 아래가 비어요.
+              수치는 카드 머리 바로 아래에서 시작(.in-split__lead), 목표 문구는 홈 위젯과 같은 수치 캡션 → 숫자·증감·목표 태그·목표가 한 덩어리, 카드 높이는 막대가 정해요 */}
           <SectionCard title="고객 PPM" pill span={12} demo>
             <div className="in-split">
-              <div>
+              <div className="in-split__lead">
                 {ppmCur ? (
                   <StatTile
                     hero
@@ -80,7 +83,7 @@ export default function Page() {
                     value={three ? ppmAvg ?? "—" : ppmCur.value}
                     unit="PPM"
                     delta={!three && ppmPrev ? { value: Math.round((ppmCur.value - ppmPrev.value) * 10) / 10, period: "지난달보다", goodWhen: "down" } : undefined}
-                    caption={`목표 Single PPM(${formatNumber(target)} 미만)`}
+                    caption={`Single PPM 목표 ${formatNumber(target)} 미만`}
                     tone={ppmCur.value < target ? "good" : "warning"}
                     toneLabel={ppmCur.value < target ? "목표 달성" : "목표 미달성"}
                   />
@@ -143,12 +146,20 @@ export default function Page() {
                 onClearFilters={insFb.clear}
                 syncWithLocation={false}
                 sorters={[{ field: "inspected_on", order: "desc" }, { field: "id", order: "desc" }]}
-                columns={[
+                // 데스크톱(고정 레이아웃): 검사일 128 + 종류 120 + LOT 176 + 검사자 140 + 판정 136 = 700 + 품목 최소 160 ≤ 1280의 표 상자(약 970).
+                // 태블릿(고정 레이아웃): 종류는 품목 칸 앞 태그로 합치고 검사자는 빼요. 검사일 128 + LOT 168 + 판정 136 = 432 + 품목 최소 160 = 592 ≤ 768의 표 상자(약 622).
+                // LOT 168 = 'F-PR12-260929-005'(tabular 14px 약 130) + 칸 안쪽 32. LOT은 추적 열쇠라 폭을 늘 정해 두고, 더 긴 값은 글자 중간이 아니라 '…'로 끝나요(전체는 title)
+                columns={isDesktopUp(bp) ? [
                   { key: "inspected_on", title: "검사일", kind: "date" },
                   { key: "kind", title: "종류", width: 120, render: (i) => <span className="ws-tag">{labelOf("inspections.kind", i.kind)}</span> },
-                  { key: "item_id", title: "품목", flex: true, render: (i) => <span className="ws-cell-name">{itemById.get(i.item_id)?.name ?? "—"}</span> },
-                  { key: "lot_no", title: "LOT", width: 176, render: (i) => <span className="ws-nowrap">{i.lot_no ?? "—"}</span> },
-                  { key: "inspector_id", title: "검사자(역할)", low: true, render: (i) => roleOf(i.inspector_id) },
+                  { key: "item_id", title: "품목", flex: true, render: (i) => { const name = itemById.get(i.item_id)?.name ?? "—"; return <span className="ws-cell-name" title={name}>{name}</span>; } },
+                  { key: "lot_no", title: "LOT", width: 176, render: (i) => <span className="ws-ellipsis in-num" title={i.lot_no ?? undefined}>{i.lot_no ?? "—"}</span> },
+                  { key: "inspector_id", title: "검사자(역할)", width: 140, render: (i) => <span className="ws-ellipsis">{roleOf(i.inspector_id)}</span> },
+                  { key: "result", title: "판정", kind: "status", statusDomain: "inspections.result" },
+                ] : [
+                  { key: "inspected_on", title: "검사일", kind: "date" },
+                  { key: "item_id", title: "품목", flex: true, render: (i) => { const name = itemById.get(i.item_id)?.name ?? "—"; return <span className="in-namecell"><span className="ws-tag">{labelOf("inspections.kind", i.kind)}</span><span className="ws-cell-name" title={name}>{name}</span></span>; } },
+                  { key: "lot_no", title: "LOT", width: 168, render: (i) => <span className="ws-ellipsis in-num" title={i.lot_no ?? undefined}>{i.lot_no ?? "—"}</span> },
                   { key: "result", title: "판정", kind: "status", statusDomain: "inspections.result" },
                 ]}
                 mobileRow={(i) => ({ title: `${labelOf("inspections.kind", i.kind)} · ${itemById.get(i.item_id)?.name ?? "—"}`, subtitle: `${formatDate(i.inspected_on)} · ${i.lot_no ?? "LOT 없음"}`, trailing: <StatusTag {...statusOf("inspections.result", i.result)} /> })}

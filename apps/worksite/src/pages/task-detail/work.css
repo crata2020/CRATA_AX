@@ -1,6 +1,6 @@
 /* work 그룹 화면 전용 배치(소유: work 그룹). 색은 모두 --ws-* 변수만, 그림자·점선·그라데이션 없음.
    07 명세(Orbix): 카드 안 행 구분선 --ws-sunken, 행 제목 14/22/600, 메타 13/20/400 muted, 라벨은 보통 굵기.
-   공통 승격 후보: .wk-rows(카드 안 줄 목록), .wk-kv(정보 표), .wk-summary-links(빠른 필터 알약) — notes/work.md 참고 */
+   공통 승격 후보: .wk-rows(카드 안 줄 목록), .wk-kv(정보 표), .wk-summary-links(빠른 필터 캡션 줄) — notes/work.md 참고 */
 
 .wk-stack { display: flex; flex-direction: column; gap: var(--ws-gap); }
 .wk-section-title { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink); margin: 0 0 12px; }
@@ -13,16 +13,19 @@
 /* 툴바 줄(오른쪽 끝 정렬) */
 .ws-toolbar.wk-toolbar-end { justify-content: flex-end; }
 
-/* 빠른 필터 요약: "진행 중 4 · 오늘 마감 2 · 수정 요청 1" = 32h 흰 알약(1px line), 눌림은 brand-weak. 숫자만 600 */
-.wk-summary-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+/* 빠른 필터 요약: "진행 중 4 · 오늘 마감 2 · 수정 요청 1" = 칩이 아닌 캡션 한 줄(바로 위 상태 칩과 겹쳐 보이지 않게).
+   조각마다 28h 글자 버튼(테두리 없음, 13/20 ink-2, 숫자만 600), hover --ws-hover, 눌림은 brand-weak. 왼쪽 글자 끝은 표 카드 끝과 맞춰요(-8px) */
+.wk-summary-links { display: flex; flex-wrap: wrap; align-items: center; margin: 0 0 12px -8px; padding: 0; list-style: none; }
+.wk-summary-links > li { display: inline-flex; align-items: center; }
+.wk-summary-links > li + li::before { content: "·"; margin: 0 2px; color: var(--ws-muted); font-size: 13px; line-height: 20px; }
 .wk-linkbtn {
-  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; box-sizing: border-box;
-  border: 1px solid var(--ws-line); border-radius: 999px; background: var(--ws-surface);
+  display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 8px; box-sizing: border-box;
+  border: 0; border-radius: 999px; background: transparent;
   font: inherit; font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ws-ink-2); cursor: pointer; white-space: nowrap;
   transition: background-color 120ms linear;
 }
-.wk-linkbtn:hover { background: var(--ws-hover); border-color: var(--ws-control-line); color: var(--ws-ink); }
-.wk-linkbtn[aria-pressed="true"] { background: var(--ws-brand-weak); border-color: var(--ws-brand-weak); color: var(--ws-brand-text); font-weight: 600; }
+.wk-linkbtn:hover { background: var(--ws-hover); color: var(--ws-ink); }
+.wk-linkbtn[aria-pressed="true"] { background: var(--ws-brand-weak); color: var(--ws-brand-text); }
 .wk-linkbtn strong { font-weight: 600; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
 .wk-linkbtn[aria-pressed="true"] strong { color: var(--ws-brand-text); }
 @media (max-width: 767px) { .wk-linkbtn { min-height: 44px; } }
@@ -107,3 +110,21 @@ a.wk-row__title:hover { color: var(--ws-brand-text); text-decoration: underline;
 .wk-cell2 { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .wk-cell2 .ws-cell-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wk-cell2__sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+/* 둘째 줄을 늘 한 줄로(태블릿 회의 목록): 첫 프로젝트 태그만 남는 폭에서 말줄임, '외 N'·길이는 제 폭 */
+.wk-cell2__sub--line { flex-wrap: nowrap; }
+.wk-tag-fit { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+/* 이름 아래 한 줄 보조 글자(프로젝트 · AI 연결 경로 등): 13/20 muted, 한 줄 말줄임(전체는 칸 title) */
+.wk-cell-sub { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ws-muted); }
+.wk-cell2:has(> .wk-cell-sub) { gap: 0; }
+/* 내용 폭 표(고정 레이아웃이 아닐 때)에서 이름 칸이 글자 길이만큼 부풀지 않게: 남는 폭(100vw - 나머지 칸 --wk-room)까지만 */
+.ws-table:not(.ws-table--fixed) .wk-room { max-width: calc(100vw - var(--wk-room, 520px)); }
+/* 이름 옆 16px 표시 아이콘(고객 비밀 자물쇠): 글자 대신 아이콘 + aria-label + 툴팁 */
+.wk-flag { display: inline-flex; align-items: center; flex: none; font-size: 16px; line-height: 1; color: var(--ws-ink-2); }
+/* 이름 + 표시 아이콘 한 줄: 이름은 남는 폭에서 말줄임, 아이콘은 제 폭 */
+.wk-namecell { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.wk-namecell > .ws-cell-name { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 행 메타 조각(제안 담당 · 제안 마감 · 링크): 조각마다 한 덩어리(줄바꿈 없음), 줄은 조각 사이에서만 바뀌고
+   가운뎃점 대신 간격으로 나눠요(줄 첫머리에 '·'만 남지 않게) */
+.wk-meta-items { display: flex; flex-wrap: wrap; align-items: center; column-gap: 16px; row-gap: 4px; min-width: 0; }
+.wk-meta-items > * { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; min-width: 0; }

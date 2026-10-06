@@ -21,7 +21,8 @@ const widget: WidgetDef = {
           <>
             <ListHead count={d.active} unit="개" label="진행 중 프로젝트" note={d.lines.map((l) => `${l.name} ${l.count}`).join(" · ")} />
             <div className="wh-tags" aria-label="신호별 프로젝트 수">
-              {d.health.map((h) => <StatusTag key={h.label} tone={h.tone} label={`${h.label} ${h.count}개`} />)}
+              {/* 0개인 신호는 색 없이(neutral): 빨간 '위험 0개'가 경보처럼 읽히지 않게. 색은 수가 있을 때만 */}
+              {d.health.map((h) => <StatusTag key={h.label} tone={h.count === 0 ? "neutral" : h.tone} label={`${h.label} ${h.count}개`} />)}
             </div>
             {d.dueSoon.length > 0 ? (
               <>

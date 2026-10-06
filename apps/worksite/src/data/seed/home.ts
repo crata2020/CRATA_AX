@@ -1165,7 +1165,10 @@ W["mfg-claims-8d"] = (c): WList | null => {
       const ca = cas.find((a) => a.related_id === cl.id);
       const step = ca?.d_steps.find((d) => d.status !== "done");
       return {
-        id: cl.id, title: subOf(cl.claim_no, partnerName(c, cl.partner_id)), to: `/ops/quality/claims/${cl.id}`,
+        // 제목 '클레임 번호 고객'은 빈칸으로 이어요('CL-2026-03 예시배기시스템(주)'): '8D 기한' 칩 옆 좁은 제목 칸(390 모바일·5fr 칸, 약 200px)에서
+        // 두 줄이 될 때 'CL-2026-03 ·' 끝에 구분점만 남지 않고 번호 / 고객으로 나뉘어요(ListRow는 ' · ' 조각 끝에 구분점을 붙여요).
+        // 고객을 부제로 옮기면 부제가 세 조각이 되어 두 줄 제한에 '현재 D4' 단계가 잘려요
+        id: cl.id, title: [cl.claim_no, partnerName(c, cl.partner_id)].filter(Boolean).join(" "), to: `/ops/quality/claims/${cl.id}`,
         subtitle: subOf(items.get(cl.item_id)?.name, step ? `현재 ${step.step}(${labelOf("corrective_actions.step_status", step.status)})` : labelOf("customer_claims.status", cl.status)),
         dday: cl.report_8d_due ? { date: cl.report_8d_due, noun: "8D 기한" } : null,
       };

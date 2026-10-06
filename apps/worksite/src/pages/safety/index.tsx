@@ -5,7 +5,7 @@
 import { useEffect, useMemo } from "react";
 import { Link } from "react-router";
 import { Button, Form, Input, Select, Switch } from "antd";
-import { FormOutlined, RightOutlined } from "@ant-design/icons";
+import { FormOutlined } from "@ant-design/icons";
 import {
   Banner, BigNumber, DdayBadge, DetailDrawer, EmptyState, HeroCard, ListRows, MasonryGrid, PageHeader, SectionCard, SimpleBarChart, StatTile, StatusTag,
 } from "@/components";
@@ -94,7 +94,7 @@ export default function Page() {
                     <BigNumber label={next.title} value={days > 0 ? `D-${days}` : days === 0 ? "오늘" : `${-days}일 지남`} />
                     <p className="in-hero-text">{formatDate(next.due_on)}까지 · {labelOf("legal_calendar_items.kind", next.kind)}</p>
                     {halfRows.length > 0 && <p className="in-hero-text">SH 항목 {halfRows.length}개 중 {halfRows.filter((r) => r.result !== "pending").length}개 확인</p>}
-                    {nextLink && <div className="in-hero-cta"><Link to={nextLink}>{next.kind === "semiannual_review" ? "반기 점검 열기" : "자세히 보기"} <RightOutlined aria-hidden /></Link></div>}
+                    {nextLink && <div className="in-hero-cta"><Link to={nextLink}>{next.kind === "semiannual_review" ? "반기 점검 열기" : "자세히 보기"}</Link></div>}
                   </>
                 ) : <p className="in-hero-text">다가오는 법정 일정이 없어요.</p>}
               </HeroCard>

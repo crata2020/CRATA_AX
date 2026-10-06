@@ -12,7 +12,7 @@ import { useUrlParam } from "@/lib/url";
 import { formatDateTime, formatMinutes } from "@/lib/format";
 import { labelOf, statusOf } from "@/lib/status";
 import type { ActionProposal, Decision, Meeting, MeetingSegment } from "@/types/entities";
-import { meetingTitle, useStructure, useWorkPermissions } from "../task-detail/lib";
+import { meetingTitle, seriesLabel, useStructure, useWorkPermissions } from "../task-detail/lib";
 import { AcceptDrawer, CorrectDrawer, DecisionRow, ProposalRow, SegmentRow } from "./parts";
 import "../task-detail/work.css";
 
@@ -72,7 +72,7 @@ export default function Page() {
         back={back}
         meta={
           <div className="wk-meta">
-            {m.title_prefix && <span className="ws-tag">{m.title_prefix}</span>}
+            {m.title_prefix && <span className="ws-tag" title={m.title_prefix}>{seriesLabel(m.title_prefix)}</span>}
             <StatusTag {...statusOf("meetings.status", m.status)} />
             <SensitivityTag level={m.sensitivity} />
             <span className="wk-meta-text ws-tabular">{formatDateTime(m.started_at)} · {formatMinutes(m.duration_min)} · 참석 {m.attendee_ids.length}명 · {labelOf("meetings.meeting_type", m.meeting_type)}</span>

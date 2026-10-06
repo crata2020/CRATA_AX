@@ -80,11 +80,14 @@ export function ListHead({ count, unit, label, note, noteClassName }: { count: n
   );
 }
 
+/** 행 태그 중 브랜드 태그로 그리는 것. '필독'은 공지 목록(notices/index.tsx)과 같은 .ws-tag--brand — 홈에서만 흰 태그라 덜 중요해 보이지 않게 */
+const BRAND_TAGS = new Set(["필독"]);
+
 /** WRow → ListRowProps(오른쪽: 재질 · 태그 · AI · 상태 · D-day · 작은 글자) */
 export function toListRow(r: WRow): ListRowProps & { key: string } {
   const trailing: ReactNode[] = [];
   if (r.material) trailing.push(<MaterialGradeTag key="m" code={r.material} />);
-  if (r.tag) trailing.push(<span key="t" className="ws-tag">{r.tag}</span>);
+  if (r.tag) trailing.push(<span key="t" className={BRAND_TAGS.has(r.tag) ? "ws-tag ws-tag--brand" : "ws-tag"}>{r.tag}</span>);
   if (r.ai) trailing.push(<AiTag key="a" kind={r.ai} />);
   if (r.status) trailing.push(<StatusTag key="s" tone={r.status.tone} label={r.status.label} />);
   if (r.dday) trailing.push(<DdayBadge key="d" date={r.dday.date} noun={r.dday.noun} />);

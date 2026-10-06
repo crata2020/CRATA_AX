@@ -2,8 +2,8 @@
 // 회사의 뼈대(사업 > 프로젝트 > 파트)를 구조(트리)·목록으로 보고 프로젝트를 찾고 만듭니다. 업무·회의·문서는 모두 프로젝트에 붙어요.
 import { useMemo, type Key } from "react";
 import { useNavigate } from "react-router";
-import { Button, Skeleton, Tree } from "antd";
-import { DownOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Skeleton, Tooltip, Tree } from "antd";
+import { DownOutlined, LockOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   CardGrid, DataTable, EmptyState, FilterBar, PageHeader, PersonChip, SectionCard, SensitivityTag, StatusTag, useFilterBarState, type FilterBarProps,
 } from "@/components";
@@ -74,16 +74,21 @@ export default function Page() {
     };
   }), [st.lines, st.projects]);
 
+  // 고객 비밀은 이름 뒤 16px 자물쇠(aria-label + 툴팁). 글자 태그(≈85px)가 이름 칸 폭을 먹어 '클레임 CL-2026-…'처럼 구별하는 뒷부분이 잘리지 않게
+  const nameLine = (p: Project) => (
+    <span className="wk-namecell">
+      <span className="ws-cell-name" title={p.name}>{p.name}</span>
+      {p.sensitivity === "L2" && (
+        <Tooltip title="고객 비밀 · AI 꺼짐(국내 경로 개통 전). 해외 AI로 보내지 않아요">
+          <span className="wk-flag" role="img" aria-label="고객 비밀"><LockOutlined aria-hidden /></span>
+        </Tooltip>
+      )}
+    </span>
+  );
+  // 목록(1280 표 상자 ≈ 942): 코드 140 + 담당 200 + 기간 168 + 상태 96 + 신호 96 = 700 + 이름 최소 160 ≤ 926
   const columns = [
-    {
-      key: "name", title: "이름", kind: "name" as const,
-      render: (p: Project) => (
-        <span className="ws-row" style={{ flexWrap: "nowrap", minWidth: 0 }}>
-          <span className="ws-cell-name ws-ellipsis" title={p.name}>{p.name}</span>{p.sensitivity === "L2" && <SensitivityTag level="L2" />}
-        </span>
-      ),
-    },
-    { key: "code", title: "코드", width: 168, render: (p: Project) => <span className="ws-tabular ws-ellipsis" title={p.code}>{p.code}</span> },
+    { key: "name", title: "이름", kind: "name" as const, render: nameLine },
+    { key: "code", title: "코드", width: 140, render: (p: Project) => <span className="ws-tabular ws-ellipsis" title={p.code}>{p.code}</span> },
     { key: "owner_member_id", title: "담당", kind: "person" as const, width: 176 },
     { key: "period", title: "기간", width: 168, render: (p: Project) => <span className="ws-tabular">{formatDate(p.start_on, false)} – {formatDate(p.due_on, false)}</span> },
     { key: "parts", title: "파트", width: 64, align: "right" as const, low: true, render: (p: Project) => <span className="ws-tabular">{partCount.get(p.id) ?? 0}</span> },
@@ -118,8 +123,16 @@ export default function Page() {
   }
 
   const showTreeCols = view !== "list" && bp !== "mobile";
-  const treeColumns = columns.filter((c) => ["name", "code", "period", "status", "health"].includes(c.key)).map((c) =>
-    c.key === "period" ? { ...c, title: "마감", width: 96, render: (p: Project) => <span className="ws-tabular">{formatDate(p.due_on, false)}</span> } : c);
+  // 구조 보기(반 폭 카드 안 표, 1280에서 상자 ≈ 578): 코드 칸을 빼고 이름 아래 둘째 줄(13/20 muted)로.
+  // 마감 96 + 상태 96 + 신호 96 = 288 + 이름 최소 160 → 마감·상태가 잘리거나 신호 밑에 숨지 않아요
+  const treeColumns = [
+    {
+      key: "name", title: "이름", kind: "name" as const,
+      render: (p: Project) => <span className="wk-cell2">{nameLine(p)}<span className="wk-cell-sub ws-tabular">{p.code}</span></span>,
+    },
+    { key: "period", title: "마감", width: 96, render: (p: Project) => <span className="ws-tabular ws-nowrap">{formatDate(p.due_on, false)}</span> },
+    ...columns.filter((c) => c.key === "status" || c.key === "health"),
+  ];
   const table = (
     <DataTable<Project>
       key={`${view}-${line}`}

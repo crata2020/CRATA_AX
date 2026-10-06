@@ -60,6 +60,8 @@ export function antdTheme(t: BrandTokens, density: Density = "comfortable"): The
       boxShadowTertiary: "none",
       motionDurationMid: "0.2s",
       motionDurationSlow: "0.2s",
+      // antd 컴포넌트 초점 선 두께를 전역 초점 선(2px, global.css)과 맞춤. 색·간격은 global.css가 브랜드·2로 덮어써요
+      lineWidthFocus: 2,
       wireframe: false,
     },
     components: {

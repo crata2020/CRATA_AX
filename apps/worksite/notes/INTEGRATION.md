@@ -63,6 +63,9 @@
   - 리뷰 1차 뒤 531KB였던 까닭: 홈이 `@/components` 창구에서 카드·차트만 가져와도 창구가 표·필터·보드·서랍(rc-table, `@refinedev/antd` useTable)까지 끌고 와 `components-*.js`(96KB)를 받았어요.
   - 고친 것: `vite.config.ts`의 `treeshake.moduleSideEffects`에서 `src/components/*`를 부작용 없는 모듈로 봐요. 이제 안 쓰는 부품은 창구에서 빠지고, 표 묶음(`table-*.js` 58KB)은 목록 화면에서만 받아요.
   - 해 본 것: `codeSplitting.groups`에 표 전용 그룹을 더하면 rolldown이 그룹의 의존성(antd·refine)까지 끌어와 353KB 한 덩어리가 돼서 뺐어요.
+  - Orbix 재설계 검증(2026-10-06): 홈이 455.6~457.7KB로 예산(455)을 넘었어요. 늘어난 것부터 줄였어요 — 승인 대기 '외 N종' 접기를 antd Dropdown → `<details>`(Dropdown을 위젯에서 import하자 rc-overflow가 select 묶음에서 갈라져 나와 +0.6KB), 휴대폰 칩 가로 스크롤·가림 훅을 접기 하나로(+0.5KB), AI 칩 끊긴 플러그 아이콘 → 같은 아이콘 + CSS 사선(+0.5KB, 모든 화면), 클레임 위젯 제목 손질을 시드로(+0.2KB).
+    그래도 남는 넘침은 조각 수 때문이었어요(홈 63개, 아이콘·antd 부품마다 0.3~1KB 조각). `vite.config.ts`에 `vendor-shell` 그룹(진입점이 정적으로 받는 의존성 `.js`만 — `$initial`, `includeDependenciesRecursively: false`)을 더해 31개로: 홈 433.2KB · `/work` 531.5 · `/docs` 532.7 · `/ops/quality` 536.1KB. 화면마다 받는 모듈 목록과 CSS는 묶기 전과 같아요(빌드 두 벌의 청크→모듈 목록으로 대조).
+    재귀를 켜 두면 홈이 원래 안 받던 폼 코드까지 끌려오고(날것 +29KB), CSS까지 넣으면 antd reset이 앱 테마 CSS 앞으로 옮겨져 순서가 바뀌어서 둘 다 껐어요.
   - 남은 지렛대(다음에 꼭): 시드 묶음(`seed-*.js`, 90KB)은 두 테넌트 데이터를 늘 함께 받아요. 테넌트별로 나누면 40KB쯤 더 줄어 홈 여유가 생겨요(그룹 시드 파일 5개를 데이터 모듈과 동작 모듈로 나눠야 해서 이번엔 안 함).
 - **필드 추가 요청:** `Task.done_criteria`, `Submission.link_url`(work), `ApprovalLink.approval_line`, `ArtifactVersion.via_client`(collab). 지금은 그룹이 임시 저장 방식을 쓰고 있어요(각 notes 참고).
 - **공통 승격 후보:** 같은 모양의 KeyValue가 세 그룹에 따로 있어요(work `.wk-kv`, collab `KeyValue`, ara `KeyValue`/`.as-kv`). 그 밖에 `SimpleTable`/`ResponsiveTable`, `useFadeOut`, `ListRow` 제목의 ReactNode 허용, industry `kit/labels.ts`의 상태 도메인 9개를 `status.ts`로 옮기는 일이 남았어요.

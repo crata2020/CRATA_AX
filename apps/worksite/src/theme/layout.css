@@ -144,14 +144,41 @@ html .ws-sidenav .ws-collapse-btn.ant-btn .anticon { font-size: 12px; }
 .ws-topbar__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
 .ws-topbar__field { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .ws-topbar__field .ant-select { min-width: 0; }
-/* 회사·누구로 보기 폭(07 명세 5.3). 1024~1279는 상단 바에 빈 폭이 넉넉해서 글자가 잘리지 않게 조금 넓혀요 */
+/* 회사·누구로 보기 폭(07 명세 5.3 기본값). 가장 긴 전체 라벨 '총무·구매·경리 담당 A(예시) · 관리자'는 안쪽 여백·화살표까지 ≈265.
+   구간마다 오른쪽 묶음 폭을 빼고 남는 만큼 넓혀요(검색 알약과 24 이상 띄움). 계산은 SideNav 펼침 기준(접으면 더 넉넉).
+   - 768~1023(태블릿, 오른쪽 ≈270): 닫힌 알약은 짧은 글자 — 회사는 짧은 이름('티알'·'CRATA'), 누구로 보기는 '(예시)'·직함을 숨겨
+     '공장장 · 검토자'처럼. 768 → 120 + 178, 830부터 누구로 보기 240(짧은 라벨이 다 보임)
+   - 1024~1279(태블릿): 1024 → 184 + 324, 1040부터 누구로 보기 340(전체 라벨이 다 보임)
+   - 1280~1439(데스크톱, 검색 알약 152·'Ctrl K' 숨김(아래 .ws-searchbtn), TopBar.tsx에서 짧은 '예시' 배지 → 오른쪽 ≈440):
+     1280 → 179 + 300, 여유 ≈60 */
 .ws-topbar .ant-select.ws-switch--tenant { width: clamp(160px, 14vw, 200px); }
 .ws-topbar .ant-select.ws-switch--persona { width: clamp(160px, 17vw, 240px); }
+@media (max-width: 1023px) {
+  .ws-topbar .ant-select.ws-switch--tenant { width: 120px; }
+  .ws-topbar .ant-select.ws-switch--persona { width: clamp(160px, calc(100vw - 590px), 240px); }
+  .ws-topbar .ws-switch__wide, .ws-topbar .ws-switch__demo, .ws-topbar .ws-switch__title { display: none; }
+  .ws-topbar .ws-switch__narrow { display: block; }
+}
 @media (min-width: 1024px) and (max-width: 1279px) {
   .ws-topbar .ant-select.ws-switch--tenant { width: clamp(180px, 18vw, 210px); }
-  .ws-topbar .ant-select.ws-switch--persona { width: clamp(180px, 20vw, 240px); }
+  .ws-topbar .ant-select.ws-switch--persona { width: clamp(264px, calc(100vw - 700px), 340px); }
 }
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .ws-topbar .ant-select.ws-switch--persona { width: clamp(264px, calc(100vw - 980px), 320px); }
+}
+/* 1440 이상: 누구로 보기와 검색 알약 사이가 130px 넘게 비어 있어서 넓혀요(240이면 '… · 검토자'가 잘림).
+   1500부터는 '회사'·'누구로 보기' 라벨(≈91), 1600부터는 사용자 이름(≤128)이 붙으니 그만큼 빼서 검색 알약과 40 이상 띄워요 */
+@media (min-width: 1440px) { .ws-topbar .ant-select.ws-switch--persona { width: clamp(240px, 21vw, 320px); } }
+@media (min-width: 1500px) { .ws-topbar .ant-select.ws-switch--persona { width: clamp(240px, calc(100vw - 1210px), 320px); } }
+@media (min-width: 1600px) { .ws-topbar .ant-select.ws-switch--persona { width: clamp(240px, calc(100vw - 1330px), 320px); } }
 .ws-topbar__label { font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ws-muted); white-space: nowrap; }
+/* 닫힌 알약 글자 조각(TopBar.tsx labelRender): 넘치면 직함이 먼저 줄고(말줄임) 그다음 이름, 권한은 줄지 않아요 */
+.ws-switch__label { display: flex; min-width: 0; max-width: 100%; white-space: nowrap; }
+.ws-switch__name, .ws-switch__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ws-switch__name { flex: 0 1 auto; }
+.ws-switch__title { flex: 0 100 auto; }
+.ws-switch__role { flex: none; }
+.ws-switch__narrow { display: none; }
 
 /* 회사·누구로 보기: 테두리 없는 채운 알약(variant="filled"). antd 선택자보다 세게 html + 문맥 class */
 html .ws-topbar .ant-select .ant-select-selector { border-radius: 999px; border-color: transparent; padding-inline: 16px; }
@@ -172,6 +199,11 @@ html .ws-topbar .ant-select .ant-select-arrow { inset-inline-end: 16px; height: 
 }
 .ws-searchbtn:hover { background: var(--ws-sunken); }
 .ws-searchbtn .anticon { font-size: 16px; color: var(--ws-muted); }
+/* 1280~1439: '누구로 보기'를 넓힌 만큼 검색 알약을 152로 줄이고 'Ctrl K'는 숨겨요(aria-label·명령 메뉴에 있음) */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .ws-searchbtn { min-width: 152px; }
+  .ws-searchbtn .ws-kbd { display: none; }
+}
 @media (min-width: 1440px) { .ws-searchbtn { min-width: 240px; } }
 .ws-kbd {
   margin-left: auto; padding: 0 6px; background: var(--ws-surface); border: 1px solid var(--ws-line); border-radius: 6px;
@@ -185,7 +217,7 @@ html .ws-topbar .ant-select .ant-select-arrow { inset-inline-end: 16px; height: 
   flex: none; transition: background-color 120ms linear;
 }
 .ws-iconbtn:hover { background: var(--ws-hover); color: var(--ws-ink); }
-.ws-iconbtn .ws-count {
+.ws-iconbtn .ws-count, .ws-shell--tablet .ws-topbar .ws-aichip .ws-count {
   position: absolute; top: -2px; right: -2px; margin: 0; height: 18px; min-width: 18px; padding: 0 5px;
   font-size: 12px; line-height: 18px; box-shadow: 0 0 0 2px var(--ws-surface);
 }
@@ -203,17 +235,31 @@ html .ws-topbar .ant-select .ant-select-arrow { inset-inline-end: 16px; height: 
 @media (max-width: 1599px) { .ws-userbtn__name { display: none; } }
 @media (max-width: 1499px) { .ws-topbar__label { display: none; } }
 
-/* AI 연결 칩: 32 알약. neutral은 흰 바탕 + 1px 선(border라 초점 선은 전역 규칙 그대로) */
+/* AI 연결 칩: 32 알약. neutral은 흰 바탕 + 1px 선(border라 초점 선은 전역 규칙 그대로).
+   상태는 색만이 아니라 아이콘(플러그 / 사선 그은 플러그)과 글자·수로도 달라요 */
 .ws-aichip {
-  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; box-sizing: border-box; border-radius: 999px;
+  position: relative; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; box-sizing: border-box; border-radius: 999px;
   border: 1px solid transparent; cursor: pointer; font-family: inherit; font-size: 13px; line-height: 20px; font-weight: 600; white-space: nowrap; flex: none;
+  transition: background-color 120ms linear;
 }
 .ws-aichip[data-tone="good"] { background: var(--ws-good-bg); color: var(--ws-good-fg); }
 .ws-aichip[data-tone="neutral"] { background: var(--ws-surface); color: var(--ws-ink-2); border-color: var(--ws-line); }
-/* 태블릿 상단 바: 글자를 숨기고 32 원 아이콘만(이름은 aria-label) */
-.ws-shell--tablet .ws-topbar .ws-aichip { width: 32px; padding: 0; justify-content: center; }
+.ws-aichip[data-tone="neutral"]:hover { background: var(--ws-hover); color: var(--ws-ink); }
+/* 연결 전·꺼짐: 같은 플러그 아이콘에 사선을 그어 '끊김'으로(아이콘을 하나 더 받으면 모든 화면의 첫 JS가 0.5KB 늘어요).
+   사선 둘레는 칩 바탕색 테로 플러그 선과 떼어 읽혀요 */
+.ws-aichip[data-tone="neutral"] .anticon { position: relative; }
+.ws-aichip[data-tone="neutral"] .anticon::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 1.5px; height: 125%; border-radius: 1px;
+  background: currentColor; box-shadow: 0 0 0 1.5px var(--ws-surface); transform: translate(-50%, -50%) rotate(-45deg);
+}
+.ws-aichip[data-tone="neutral"]:hover .anticon::after { box-shadow: 0 0 0 1.5px var(--ws-hover); }
+/* 수 배지는 태블릿 상단 바에서만(글자가 있는 곳은 글자에 수가 있어요) */
+.ws-aichip .ws-count { display: none; }
+/* 태블릿 상단 바: 글자를 숨기고 종과 같은 40 원 + 같은 수 배지(이름은 aria-label·툴팁) */
+.ws-shell--tablet .ws-topbar .ws-aichip { width: 40px; height: 40px; padding: 0; justify-content: center; font-size: 18px; }
 .ws-shell--tablet .ws-topbar .ws-aichip__text { display: none; }
-.ws-shell--tablet .ws-topbar .ws-aichip .anticon { font-size: 16px; }
+.ws-shell--tablet .ws-topbar .ws-aichip .anticon { font-size: 18px; }
+.ws-shell--tablet .ws-topbar .ws-aichip .ws-count { display: inline-flex; }
 
 /* 알림 팝오버 */
 .ws-pop { width: 360px; max-width: calc(100vw - 32px); }

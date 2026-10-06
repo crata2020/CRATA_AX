@@ -14,14 +14,15 @@ export function PillLabel({ children }: { children: string }) {
 }
 
 const DEMO_HINT = "실제 회사 값이 아닌 예시예요";
-/** "예시 데이터" 표시. 상단 바(topbar, 옅은 알약·초점 가능)와 수치 카드 제목 줄(inline, 테두리 없는 작은 회색 글자)에 늘 붙입니다.
+/** "예시 데이터" 표시. 상단 바(topbar, 옅은 알약)와 수치 카드 제목 줄(inline, 테두리 없는 작은 회색 글자)에 늘 붙입니다.
+ *  둘 다 초점을 받아(Tab) 툴팁이 키보드·터치로도 열려요. 아주 좁은 카드 머리(240 이하)는 글자를 짧은 "예시"로 바꿔요(components.css).
  *  compact = 모바일 상단 바용 짧은 "예시" */
 export function DemoDataBadge({ variant, compact }: { variant: "topbar" | "inline"; compact?: boolean }) {
   if (variant === "inline") {
     return (
       <Tooltip title={DEMO_HINT}>
-        <span className="ws-demo-badge" data-demo-badge={variant}>
-          <InfoCircleOutlined aria-hidden /><span className="ws-demo-badge__text">예시 데이터</span><span className="ws-sr-only"> · {DEMO_HINT}</span>
+        <span className="ws-demo-badge" data-demo-badge={variant} tabIndex={0} role="note" aria-label={`예시 데이터 · ${DEMO_HINT}`}>
+          <InfoCircleOutlined aria-hidden /><span className="ws-demo-badge__text">예시 데이터</span><span className="ws-demo-badge__short" aria-hidden>예시</span>
         </span>
       </Tooltip>
     );

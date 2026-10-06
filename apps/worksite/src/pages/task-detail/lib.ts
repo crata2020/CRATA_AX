@@ -1,6 +1,6 @@
 // work 그룹이 함께 쓰는 도우미(소유: work 그룹). 같은 그룹 폴더(work-list·work-board·work-review·project-detail·meetings …)만 import합니다.
 // 범위(scope)·마감 필터, 설명/완료 기준 나누기, 회의 분류 라벨, 권한 판단을 한곳에 둡니다.
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import type { CrudFilter } from "@refinedev/core";
 import { useWorksite } from "@/app/TenantBoundary";
 import { addDays, kstIso, daysBetween, toKstDate } from "@/lib/clock";
@@ -28,6 +28,13 @@ export function joinDescription(body: string, criteria: string): string | null {
   const c = criteria.trim();
   if (!b && !c) return null;
   return c ? `${b}${b ? "\n" : ""}${CRITERIA_PREFIX}${c}` : b;
+}
+
+// ───────── 창 폭(태블릿 표에서 칸을 더 둘지 고를 때)
+const subscribeResize = (cb: () => void) => { window.addEventListener("resize", cb); return () => window.removeEventListener("resize", cb); };
+/** 창 폭이 px 이상인지. useBreakpoint 구간(768~1279) 안에서 한 번 더 나눌 때 씁니다(예: 1024 이상이면 담당 칸을 둠) */
+export function useMinWidth(px: number): boolean {
+  return useSyncExternalStore(subscribeResize, () => window.innerWidth >= px, () => true);
 }
 
 // ───────── 범위(내 업무 · 내가 검토 · 회사 전체)
@@ -136,6 +143,14 @@ export function meetingTitle(m: Pick<Meeting, "title" | "title_prefix">): string
   if (m.title_prefix && m.title.startsWith(m.title_prefix)) return m.title.slice(m.title_prefix.length).trim();
   return m.title;
 }
+
+/** 목록·행에서 쓰는 회의 이름: 시리즈 머리말은 글자 그대로 앞에('[AX] 업무사이트 …'). 홈 위젯·결정 목록과 같은 모양 */
+export function meetingFullTitle(m: Pick<Meeting, "title" | "title_prefix">): string {
+  return m.title_prefix ? `${m.title_prefix} ${meetingTitle(m)}` : meetingTitle(m);
+}
+
+/** 태그 안에 넣을 시리즈 이름: '[AX]' → 'AX'(태그 테두리가 이미 묶어 주니 대괄호를 겹쳐 쓰지 않음) */
+export const seriesLabel = (prefix: string) => prefix.replace(/^\[|\]$/g, "").trim();
 
 /** CRATA 회의 분류 체계 v0.2 업무 유형(config/meeting_taxonomy.yaml). TR은 자유 입력 글자를 그대로 씁니다 */
 export const TASK_TYPES: Record<string, { code: string; name: string }[]> = {

@@ -97,12 +97,14 @@ export default function Page() {
             onRowClick={(s) => setSelected(s.id)}
             columns={[
               { key: "task", title: "업무", kind: "name", render: (s) => <span className="ws-cell-name">{taskById.get(s.task_id)?.title ?? "—"}</span> },
-              { key: "version", title: "제출", width: 72, render: (s) => <span className="ws-tabular">v{s.version}</span> },
+              // 버전(v1·v2)은 넓은 화면(1600 이상)에서만 칸으로. 1280 표 상자(≈ 942): 제출자 248 + 제출 시각 168 + 처리 시각 168 + 상태 120 = 704 + 업무 최소 160 ≤ 926
+              { key: "version", title: "제출", width: 72, low: true, render: (s) => <span className="ws-tabular">v{s.version}</span> },
               {
-                // 검토자는 사람 대신 승인해요 → AI가 제출해도 '누구의' 제출인지 이름이 먼저(이니셜로 줄지 않게 넉넉한 폭)
-                key: "submitted_by", title: "제출자", width: 280,
+                // 검토자는 사람 대신 승인해요 → AI가 제출해도 '누구의' 제출인지 이름이 먼저. AI 연결 경로는 이름 아래 둘째 줄(13/20 muted)이라
+                // 이름이 '품질보증 담당 A(예…'처럼 잘리지 않아요. 248 = 안쪽 32 + 가장 긴 이름 칩('총무·구매·경리 담당 A(예시)' ≈ 205) + 여유
+                key: "submitted_by", title: "제출자", width: 248,
                 render: (s) => s.via === "ai_connection"
-                  ? <span className="ws-row" style={{ flexWrap: "nowrap", minWidth: 0 }}><PersonChip memberId={s.submitted_by} size="sm" /><span className="ws-muted ws-nowrap" style={{ fontSize: 13 }}>· AI 연결{s.via_client ? `(${s.via_client})` : ""}</span></span>
+                  ? <span className="wk-cell2"><PersonChip memberId={s.submitted_by} size="sm" /><span className="wk-cell-sub">AI 연결{s.via_client ? `(${s.via_client})` : ""}로 제출</span></span>
                   : <PersonChip memberId={s.submitted_by} size="sm" />,
               },
               { key: "submitted_at", title: "제출 시각", kind: "datetime", width: 168 },

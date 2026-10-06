@@ -5,7 +5,7 @@
 import { useMemo } from "react";
 import { PushpinOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button } from "antd";
-import { DataTable, FilterBar, ListRows, PageHeader, PersonChip, SectionCard, StatusTag, useFilterBarState, type FilterBarProps } from "@/components";
+import { DataTable, FilterBar, ListRows, PageHeader, SectionCard, StatusTag, useFilterBarState, type FilterBarProps } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
 import { useList } from "@/lib/refine";
@@ -106,13 +106,15 @@ export default function Page() {
             onClearFilters={fb.clear}
             sorters={[{ field: "published_at", order: "desc" }]}
             rowHref={(n) => `/company/notices/${n.id}`}
+            // 칸 폭(1280 표 상자 ≈ 942): 분류 112 + 작성자 224 + 게시일 112 + 내 확인 120 + 확인 현황 120 = 688 + 제목 최소 160 ≤ 926.
+            // 작성자는 사람 칸(kind person)이라 '총무·구매·경리 담당 A(예시)'(≈ 210)도 잘리지 않아요
             columns={[
               { key: "title", title: "제목", flex: true, render: titleCell },
-              { key: "category", title: "분류", render: (n) => <span className="ws-tag">{labelOf("notices.category", n.category)}</span> },
-              { key: "author_id", title: "작성자", width: 184, render: (n) => <PersonChip memberId={n.author_id} size="sm" /> },
-              { key: "published_at", title: "게시일", sortable: true, render: (n) => <span className="cb-tabular cb-nowrap">{formatDate(n.published_at, false)}</span> },
-              { key: "mine", title: "내 확인", render: myCell },
-              ...(showStatus ? [{ key: "status", title: "확인 현황", render: statusCell }] : []),
+              { key: "category", title: "분류", width: 112, render: (n) => <span className="ws-tag">{labelOf("notices.category", n.category)}</span> },
+              { key: "author_id", title: "작성자", kind: "person", width: 224 },
+              { key: "published_at", title: "게시일", sortable: true, width: 112, render: (n) => <span className="cb-tabular cb-nowrap">{formatDate(n.published_at, false)}</span> },
+              { key: "mine", title: "내 확인", width: 120, render: myCell },
+              ...(showStatus ? [{ key: "status", title: "확인 현황", width: 120, render: statusCell }] : []),
             ]}
             mobileRow={(n) => ({
               title: n.title,

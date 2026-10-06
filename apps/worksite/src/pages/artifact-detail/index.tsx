@@ -168,10 +168,11 @@ export default function Page() {
             <EmptyState kind="empty" compact title="버전이 하나뿐이라 비교할 것이 없어요" description="수정본이 올라오면 바뀐 곳을 보여 줘요." />
           ) : (
             <>
-              <div className="cb-compare" role="group" aria-label="비교할 버전">
-                <Select aria-label="앞 버전" value={String(from)} options={versionOptions} onChange={(v) => setFrom(v)} />
+              {/* 카드 안 고르기: 툴바 알약 문맥(.ws-toolbar) + 32h(size small) → 옅은 --ws-line 테두리 알약 */}
+              <div className="cb-compare ws-toolbar" role="group" aria-label="비교할 버전">
+                <Select size="small" aria-label="앞 버전" value={String(from)} options={versionOptions} onChange={(v) => setFrom(v)} />
                 <SwapRightOutlined aria-hidden />
-                <Select aria-label="뒤 버전" value={String(to)} options={versionOptions} onChange={(v) => setTo(v)} />
+                <Select size="small" aria-label="뒤 버전" value={String(to)} options={versionOptions} onChange={(v) => setTo(v)} />
               </div>
               {from >= to ? (
                 <EmptyState kind="empty" compact title="앞 버전을 뒤 버전보다 먼저로 골라 주세요" />

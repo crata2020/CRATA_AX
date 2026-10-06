@@ -208,10 +208,13 @@ export function ProposalRow({ ap, canAct, onDone, fading, meetingLabel, onAccept
       <div className="wk-row__main">
         {meetingLabel && <div className="wk-meta">{meetingLabel}</div>}
         <span className="wk-row__title">{ap.title}</span>
-        <div className="wk-meta">
-          <span className="wk-caption">제안 담당</span>
-          {ap.suggested_assignee_id ? <PersonChip memberId={ap.suggested_assignee_id} size="sm" /> : <span className="wk-caption">없음</span>}
-          {ap.suggested_due_at && <span className="wk-caption">· 제안 마감 {formatDate(ap.suggested_due_at)}</span>}
+        {/* 조각(제안 담당 · 제안 마감 · 링크)마다 한 덩어리, 줄은 조각 사이에서만. 가운뎃점 대신 간격(좁은 화면에서 줄 첫머리에 '·'만 남지 않게) */}
+        <div className="wk-meta-items">
+          <span>
+            <span className="wk-caption">제안 담당</span>
+            {ap.suggested_assignee_id ? <PersonChip memberId={ap.suggested_assignee_id} size="sm" /> : <span className="wk-caption">없음</span>}
+          </span>
+          {ap.suggested_due_at && <span className="wk-caption">제안 마감 {formatDate(ap.suggested_due_at)}</span>}
           {ap.task_id && <Link className="wk-caption" to={`/work/tasks/${ap.task_id}`}>만든 업무 보기</Link>}
         </div>
         {!canAct && ap.status === "proposed" && <span className="wk-caption">검토자가 확인하면 업무가 돼요.</span>}

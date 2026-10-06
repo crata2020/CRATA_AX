@@ -92,12 +92,14 @@ export default function Page() {
     const g = NAV_GROUPS.find((x) => x.id === m.group);
     return g ? t(`nav.${g.id}`) : "—";
   };
+  /** 켜진 다른 모듈 중 이 모듈을 쓰는 것(이름) */
+  const usersOf = (m: RegistryModule) => [...enabledModules].filter((id) => id !== m.id && MODULE_BY_ID[id]?.dependsOn.includes(m.id)).map((id) => MODULE_BY_ID[id]!.nameKo);
   /** 끌 수 없는 이유(켜진 모듈이 이 모듈을 씀) / 켤 수 없는 이유(필요한 모듈이 꺼짐) */
   const blockReason = (m: RegistryModule): string | null => {
     if (LOCKED_MODULES.includes(m.id)) return "꼭 필요해요";
     const on = enabledModules.has(m.id);
     if (on) {
-      const users = [...enabledModules].filter((id) => id !== m.id && MODULE_BY_ID[id]?.dependsOn.includes(m.id)).map((id) => MODULE_BY_ID[id]!.nameKo);
+      const users = usersOf(m);
       return users.length ? `${users.join(", ")} 모듈이 이 모듈을 써요` : null;
     }
     const missing = m.dependsOn.filter((d) => !enabledModules.has(d)).map((d) => MODULE_BY_ID[d]?.nameKo ?? d);
@@ -121,12 +123,19 @@ export default function Page() {
   const stateCell = (m: RegistryModule) => {
     const on = enabledModules.has(m.id);
     const reason = blockReason(m);
-    const locked = LOCKED_MODULES.includes(m.id);
+    // 꼭 필요한 모듈은 스위치 없이 글자로(누를 수 없는 것을 스위치로 그리지 않아요)
+    if (LOCKED_MODULES.includes(m.id)) {
+      return <span className="as-lockstate" title="꼭 필요한 모듈이라 끌 수 없어요"><LockOutlined aria-hidden />{on ? "켜짐" : "꺼짐"} · 꼭 필요해요</span>;
+    }
+    // 다른 모듈이 써서 못 끄는 켜진 모듈: 켜진 색 그대로 + 길에 작은 자물쇠(as.css .as-switch-held). 이유는 툴팁과 이름 아래 안내
+    const held = !!reason && on;
     const sw = (
       <Switch
         checked={on}
         disabled={!!reason}
         loading={pending === m.id}
+        className={held ? "as-switch-held" : undefined}
+        checkedChildren={held ? <LockOutlined aria-hidden /> : undefined}
         onChange={(v) => void toggle(m, v)}
         aria-label={`${m.nameKo} ${on ? "끄기" : "켜기"}`}
       />
@@ -135,20 +144,40 @@ export default function Page() {
       <span className="as-row" style={{ flexWrap: "nowrap" }}>
         {reason ? <DisabledAction label={m.nameKo} reason={reason}>{sw}</DisabledAction> : sw}
         <span className="as-nowrap">{on ? "켜짐" : "꺼짐"}</span>
-        {locked && <span className="ws-tag"><LockOutlined aria-hidden />꼭 필요해요</span>}
       </span>
+    );
+  };
+
+  /** 이름 아래 '쓰는 모듈' 한 줄: 앞 이름 몇 개 + '외 n개 모듈이 써요'(전체는 title). 모듈 이름은 한 덩어리로만 */
+  const usesLine = (users: string[]) => {
+    // 글자 폭 어림(13px): 한글처럼 넓은 글자 2, 나머지 1 단위(≈ 6.5px). 칸 안쪽 268px ≈ 40 단위
+    const units = (t: string) => [...t].reduce((n, ch) => n + (ch.charCodeAt(0) > 0x2e7f ? 2 : 1), 0);
+    const tail = (rest: number) => (rest > 0 ? ` 외 ${rest}개 모듈이 써요` : " 모듈이 써요");
+    let shown: string[] = [];
+    for (const name of users) {
+      const next = [...shown, name];
+      if (shown.length && units(next.join(", ")) + units(tail(users.length - next.length)) > 40) break;
+      shown = next;
+    }
+    const rest = users.length - shown.length;
+    return (
+      <div className="as-caption as-mod-uses" title={`${users.join(", ")} 모듈이 이 모듈을 써요`}>
+        {shown.map((n, i) => <Fragment key={n}>{i > 0 && ", "}<span className="ws-nowrap">{n}</span></Fragment>)}
+        <span className="ws-nowrap">{tail(rest)}</span>
+      </div>
     );
   };
 
   const nameCell = (m: RegistryModule) => {
     const reason = blockReason(m);
+    const users = enabledModules.has(m.id) && !LOCKED_MODULES.includes(m.id) ? usersOf(m) : [];
     return (
-      <div style={{ maxWidth: 360 }}>
+      <div style={{ maxWidth: 268 }}>
         <div className="as-row" style={{ gap: 6 }}>
           <span className="ws-cell-name">{m.nameKo}</span>
           {!WITH_SCREEN.has(m.id) && <span className="ws-tag">화면 없음</span>}
         </div>
-        {reason && !LOCKED_MODULES.includes(m.id) && <div className="as-caption">{reason}</div>}
+        {users.length > 0 ? usesLine(users) : reason && !LOCKED_MODULES.includes(m.id) && <div className="as-caption">{reason}</div>}
       </div>
     );
   };
@@ -181,14 +210,15 @@ export default function Page() {
             ariaLabel="공통 코어 모듈"
             rows={rows}
             rowKey={(m) => m.id}
-            // 칸 폭을 정해 둬요: '필요한 모듈'만 남는 폭을 가지고(폭 없음), 메뉴 위치는 한 줄, 모듈 이름 사이에서만 줄바꿈
+            // 칸 폭을 정해 둬요: '필요한 모듈'만 남는 폭을 가지고(폭 없음), 메뉴 위치는 한 줄, 모듈 이름 사이에서만 줄바꿈.
+            // 모듈 300(안내 한 줄 268) · 상태 176('켜짐 · 꼭 필요해요' ≈ 128 + 안쪽 32)
             columns={[
-              { key: "name", title: "모듈", width: 280, render: nameCell },
+              { key: "name", title: "모듈", width: 300, render: nameCell },
               { key: "tier", title: "단계", width: 64, render: (m) => m.tier },
               { key: "mode", title: "방식", width: 72, render: (m) => MODE_LABEL[m.buildMode] ?? "—" },
               { key: "menu", title: "메뉴 위치", width: 112, render: (m) => <span className="ws-nowrap">{menuOf(m)}</span> },
               { key: "deps", title: "필요한 모듈", render: depsCell },
-              { key: "state", title: "상태", width: 216, render: stateCell },
+              { key: "state", title: "상태", width: 176, render: stateCell },
             ]}
             mobile={(m) => ({
               title: <>{m.nameKo}{!WITH_SCREEN.has(m.id) && <span className="ws-tag">화면 없음</span>}</>,

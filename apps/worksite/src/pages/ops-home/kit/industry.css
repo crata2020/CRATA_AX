@@ -13,6 +13,8 @@
 .in-mt { margin-top: 16px; }
 .in-mb { margin-bottom: 16px; }
 .in-num { font-variant-numeric: tabular-nums; }
+/* 표의 날짜 자리: '10월 2일'·'10월 10일'이 같은 폭 → 뒤따르는 D-day 칩이 같은 x에서 시작(I-08 납기 칸) */
+.in-date-slot { display: inline-block; min-width: 4.6em; font-variant-numeric: tabular-nums; }
 .in-strong { font-weight: 600; color: var(--ws-ink); }
 /* 본문·표 칸 안 링크: 보통 굵기 + 밑줄(색만으로 구분하지 않게) */
 .in-link { color: var(--ws-brand-text); font-weight: 400; text-decoration: underline; text-underline-offset: 2px; }
@@ -31,6 +33,28 @@
 .in-summary > li + li::before { content: "·"; margin: 0 10px; color: var(--ws-muted); }
 .in-summary strong { color: var(--ws-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 
+/* 표 칸 두 줄(I-08 수주 품목): 위 품번 13/20 muted · 아래 이름 14/22 ink. 각 줄은 칸 폭에서 말줄임(전체는 칸 title) */
+.in-cell2 { display: flex; flex-direction: column; min-width: 0; }
+.in-cell2__sub, .in-cell2__main { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.in-cell2__sub { font-size: 13px; line-height: 20px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
+.in-cell2__main { font-size: 14px; line-height: 22px; color: var(--ws-ink); }
+/* 줄을 가르는 열쇠(I-08 발주번호): 말줄임 없이 끝자리까지. 칸 폭은 이 값이 다 들어가게 잡아요 */
+.in-cell2__key { overflow: visible; text-overflow: clip; }
+
+/* 태그 + 이름 칸(I-11 검사 표, 태블릿): 태그는 제 폭, 이름은 한 줄 말줄임 */
+.in-namecell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.in-namecell > .ws-tag { flex: none; }
+.in-namecell > .ws-cell-name { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* I-06 납기 임박(5 줄기, 좁은 칸): 지연 줄의 두 칩('지연 예상(+n일)' · 'D-2')은 오른쪽 끝에 위아래로 쌓아요(둘 다 보여요, 줄은 이미 두 줄 높이).
+   보조 줄(고객 · 지연 사유)은 두 줄까지 보여 줘요(사유가 '…'로 사라지지 않게). 조각(.ws-listrow__seg) 사이에서만 꺾여요 */
+.ws-masonry.in-flow [data-key="mfg-delivery-due"] .ws-listrow__trailing { flex-direction: column; align-items: flex-end; gap: 4px; }
+.ws-masonry.in-flow [data-key="mfg-delivery-due"] .ws-listrow__sub {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  white-space: normal; word-break: keep-all; overflow-wrap: anywhere; text-wrap: pretty;
+}
+.ws-masonry.in-flow [data-key="mfg-delivery-due"] .ws-listrow__seg { display: inline-block; max-width: 100%; }
+
 /* 히어로가 있는 화면(I-06 생산·품질 홈 · I-18 안전보건) 배치: 홈(.wh-flow)과 같은 5:7 두 줄기 MasonryGrid.
    히어로는 내용 높이로 끝나고 바로 아래에 다음 카드가 붙어요(줄마다 키가 달라 생기던 회색 구멍 없음). 1024 미만은 한 줄기 */
 @media (min-width: 1024px) {
@@ -40,6 +64,8 @@
 /* 카드 안 두 갈래(I-11 고객 PPM: 왼쪽 수치 5 · 오른쪽 막대 7). 홈 '품질 지표'(.wh-split)와 같은 꼴. 좁으면 위아래 */
 .in-split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
 .in-split > * { min-width: 0; }
+/* 수치 칸은 카드 머리 바로 아래에서 시작(가운데 정렬 없음). 목표 문구는 수치 타일 캡션이라 숫자와 한 덩어리 — 카드 높이는 옆 차트가 정해요 */
+.in-split > .in-split__lead { align-self: start; }
 .in-split__sub { font-size: 13px; line-height: 20px; font-weight: 600; color: var(--ws-muted); margin: 0 0 4px; }
 @media (max-width: 1023px) { .in-split { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
 
@@ -53,12 +79,14 @@
 }
 .in-hero-link:hover { background: var(--ws-hero-line); color: var(--ws-on-brand); }
 .in-hero-text { color: var(--ws-on-brand-2); font-size: 14px; line-height: 22px; margin: 8px 0 0; }
+/* CTA = 홈 히어로(.wh-hero-btn)와 같은 36h 흰 알약, 글자만(꺾쇠 없음) · 모바일 44h */
 .in-hero-cta { margin-top: 16px; }
 .in-hero-cta a {
-  display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: 999px; box-sizing: border-box; background: var(--ws-surface); color: var(--ws-brand);
-  font-size: 14px; line-height: 20px; font-weight: 600; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: 999px; box-sizing: border-box; background: var(--ws-surface); color: var(--ws-brand);
+  font-size: 14px; line-height: 20px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: background-color 120ms linear;
 }
 .in-hero-cta a:hover { background: var(--ws-brand-weak); color: var(--ws-brand); }
+@media (max-width: 767px) { .in-hero-cta a { height: 44px; padding: 0 20px; font-size: 15px; } }
 
 /* 상태 칸 그리드(설비 현황판): 데스크톱 9열 · 태블릿 6열 · 모바일 4열, 칸 최소 72×72 */
 .in-cells { display: grid; grid-template-columns: repeat(9, minmax(72px, 1fr)); gap: 8px; }

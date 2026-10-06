@@ -10,7 +10,7 @@ import { useList } from "@/lib/refine";
 import { useUrlParam } from "@/lib/url";
 import { formatDate } from "@/lib/format";
 import type { ActionProposal, Decision, Meeting, MeetingSegment } from "@/types/entities";
-import { meetingTitle, useStructure, useWorkPermissions } from "../task-detail/lib";
+import { meetingFullTitle, meetingTitle, useStructure, useWorkPermissions } from "../task-detail/lib";
 import { AcceptDrawer, CorrectDrawer, DecisionRow, ProposalRow, SegmentRow, useFadeOut } from "../meeting-detail/parts";
 import "../task-detail/work.css";
 
@@ -77,8 +77,8 @@ export default function Page() {
     if (!m) return null;
     return (
       <span className="wk-meta">
-        {m.title_prefix && <span className="ws-tag">{m.title_prefix}</span>}
-        <Link to={`/meetings/${m.id}`} className="wk-meta-text">{meetingTitle(m)}</Link>
+        {/* 시리즈 머리말은 글자 그대로('[AX] …', 회의 목록·홈 위젯과 같은 모양) */}
+        <Link to={`/meetings/${m.id}`} className="wk-meta-text">{meetingFullTitle(m)}</Link>
         <span className="wk-caption">{formatDate(m.started_at, false)}</span>
       </span>
     );

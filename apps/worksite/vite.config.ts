@@ -4,8 +4,9 @@ import react from "@vitejs/plugin-react";
 
 // 상대 경로 빌드(base "./") + 해시 라우팅: dist/를 어떤 정적 호스팅의 어느 하위 경로에 올려도 동작합니다.
 // 묶음 나누기(Vite 8 = rolldown): rollup의 manualChunks는 rolldown에서 일부만 먹혀서 output.codeSplitting.groups로 나눠요.
-//   react(+router) · refine 코어(+tanstack)는 따로, 예시 데이터(src/data/seed)는 TenantBoundary가 import()로 따로 받아요.
-//   첫 화면(홈) gzip 449KB(목표 450KB, notes/INTEGRATION.md 측정법 · tests/e2e/smoke.spec.ts '첫 화면 JS 예산'이 지켜요). 표 묶음은 목록 화면에서만,
+//   react(+router) · refine 코어(+tanstack)는 따로, 상단 바·메뉴가 처음부터 쓰는 의존성 JS는 vendor-shell 하나로(아래),
+//   예시 데이터(src/data/seed)는 TenantBoundary가 import()로 따로 받아요.
+//   첫 화면(홈) gzip 433KB(예산 455KB, notes/INTEGRATION.md 측정법 · tests/e2e/smoke.spec.ts '첫 화면 JS 예산'이 지켜요). 표 묶음은 목록 화면에서만,
 //   서랍·폼(날짜 선택)은 처음 열 때(src/lib/lazyDrawer.tsx) 받아요.
 // 경고 기준(chunkSizeWarningLimit)은 기본값(500kB) 그대로 둡니다.
 // --mode public: 외부 공유용 미리보기(실존 회사 정보 가림 · 글꼴 내장 · dist-public/). npm run build:public
@@ -41,11 +42,17 @@ export default defineConfig(({ mode }) => {
       },
       output: {
         codeSplitting: {
-          // react·refine 코어만 묶음으로 고정하고, antd·아이콘·@refinedev/antd는 묶지 않아요(묶으면 화면 어디서든 쓰는 부품이 모두
-          // 한 덩어리가 되어 첫 화면이 다 받아요. 안 묶으면 첫 화면은 상단 바·메뉴가 쓰는 부품만, 나머지는 화면별 공유 조각으로 가요)
+          // react·refine 코어는 묶음으로 고정하고, antd·아이콘·@refinedev/antd를 통째로 묶지는 않아요(묶으면 화면 어디서든 쓰는 부품이 모두
+          // 한 덩어리가 되어 첫 화면이 다 받아요. 안 묶으면 첫 화면은 상단 바·메뉴가 쓰는 부품만, 나머지는 화면별 공유 조각으로 가요).
+          // vendor-shell: 진입점이 정적으로 import하는 의존성 JS($initial — 어느 화면이든 첫 화면에서 이미 받는 것)만 한 묶음으로.
+          //   그대로 두면 아이콘·antd 부품마다 0.3~1KB 조각이 30개 넘게 생겨 조각마다 import/export 머리와 따로 압축한 손해가 쌓여요.
+          //   묶어도 화면마다 받는 모듈은 같고(홈 860개 · /work 1126개, 묶기 전과 같은 목록), 홈 gzip 455.6 → 433.2KB, 목록 화면 −23KB.
+          //   includeDependenciesRecursively: false — 켜 두면 $initial 모듈의 의존성까지 끌고 와 홈이 원래 안 받던 폼 코드 등을 더 받아요.
+          //   CSS(antd reset 등)는 넣지 않아요(.js만) — 넣으면 reset이 앱 테마 CSS보다 앞으로 옮겨져 같은 우선순위 규칙의 순서가 바뀌어요.
           groups: [
             { name: "vendor-react", test: /node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/, priority: 40 },
             { name: "vendor-refine", test: /node_modules[\\/](@refinedev[\\/](core|react-router|devtools-internal)|@tanstack)[\\/]/, priority: 30 },
+            { name: "vendor-shell", test: /node_modules[\\/].*\.[cm]?js$/, tags: ["$initial"], priority: 20, includeDependenciesRecursively: false },
           ],
         },
       },

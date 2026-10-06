@@ -2,14 +2,15 @@
 // 모바일(56): [메뉴][모노그램·회사명][예시 데이터] …… (검색)(사용자 → 사용자 시트). 아이콘 버튼 44(터치 크기).
 //   종은 두지 않아요: 하단 탭 바의 '알림' 탭이 같은 안 읽음 배지로 /notifications를 열어요(배지가 두 번 보이지 않게).
 // 07 명세 5.3: 흰 바, 아래 1px 선은 늘 보임. 회사·누구로 보기·검색은 테두리 없는 채운 알약, 종은 40 원 + 1px 선.
-// 태블릿은 AI 칩 글자를 숨기고(aria-label에 이름) 예시 데이터 배지를 짧게. 아이콘만 있는 버튼은 aria-label + 툴팁.
+// 태블릿은 AI 칩 글자를 숨기고(40 원 + 수 배지, aria-label·툴팁에 이름), 1439 이하는 예시 데이터 배지를 짧게. 아이콘만 있는 버튼은 aria-label + 툴팁.
+// 회사·누구로 보기 닫힌 알약은 labelRender로 조각을 나눠 좁은 폭에서도 권한이 잘리지 않게(layout.css .ws-switch__*).
 // Ctrl/Cmd+K → CommandMenu(pages/search/CommandMenu.tsx).
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Dropdown, Popover, Select, Tooltip } from "antd";
 import { ApiOutlined, BellOutlined, MenuOutlined, SearchOutlined, DownOutlined } from "@ant-design/icons";
 import { useWorksite } from "@/app/TenantBoundary";
-import { TENANTS, TENANT_ORDER } from "@/tenants";
+import { TENANTS, TENANT_ORDER, type TenantSlug } from "@/tenants";
 import { labelOf } from "@/lib/status";
 import { formatRelative, initialsOf } from "@/lib/format";
 import { useList, useSelector, useUpdate } from "@/lib/refine";
@@ -27,6 +28,14 @@ import type { Breakpoint } from "@/lib/useBreakpoint";
 const CommandMenu = lazy(() => import("@/pages/search/CommandMenu"));
 
 // ───────── 데모 전환기
+/** 닫힌 알약 글자에서 '(예시)'만 따로 감싸요 → 1023 이하 상단 바에서 숨겨 권한이 잘리지 않게(layout.css .ws-switch__demo).
+ *  상단 바에는 늘 '예시' 배지가 있고, 펼친 목록·hover title에는 '(예시)'까지 다 보여요 */
+function splitDemo(name: string): [string, string] {
+  const m = /^(.*?)(\(예시\))?$/.exec(name);
+  return [m?.[1] ?? name, m?.[2] ?? ""];
+}
+const SEP = "\u00a0·\u00a0"; // flex 안에서 앞뒤 공백이 사라지지 않게 줄바꿈 없는 공백
+
 export function TenantSwitcher({ block }: { block?: boolean }) {
   const { tenant, switchTenant } = useWorksite();
   return (
@@ -38,7 +47,20 @@ export function TenantSwitcher({ block }: { block?: boolean }) {
       className={block ? undefined : "ws-switch--tenant"}
       style={block ? { width: "100%" } : undefined}
       popupMatchSelectWidth={false}
-      options={TENANT_ORDER.map((s) => ({ value: s, label: `${TENANTS[s].displayName}(예시)` }))}
+      options={TENANT_ORDER.map((s) => {
+        const label = `${TENANTS[s].displayName}(예시)`;
+        return { value: s, label, title: label };
+      })}
+      // 닫힌 알약: 1023 이하 상단 바는 짧은 이름('티알', 모바일 상단 바와 같은 이름)으로 바꿔 '누구로 보기'에 폭을 줘요(layout.css)
+      labelRender={block ? undefined : ({ value }) => {
+        const t = TENANTS[String(value) as TenantSlug] ?? tenant;
+        return (
+          <span className="ws-switch__label">
+            <span className="ws-switch__name ws-switch__wide">{t.displayName}(예시)</span>
+            <span className="ws-switch__name ws-switch__narrow">{t.shortName ?? t.displayName}</span>
+          </span>
+        );
+      }}
       onChange={(v) => switchTenant(v)}
     />
   );
@@ -49,6 +71,17 @@ export function PersonaSwitcher({ block }: { block?: boolean }) {
   // 구성원 관리에서 바꾼 역할·상태를 따라요(볼 수 없으면 회사 설정 값)
   const members = useList<Member>({ resource: "members", queryOptions: { retry: false }, errorNotification: false });
   const byId = new Map((members.result?.data ?? []).map((m) => [m.id, m]));
+  const rows = personas.map((p) => {
+    const role = tenant.roles.find((r) => r.code === p.roleCode)!;
+    const row = byId.get(p.id);
+    const platform = labelOf("platform_role", p.id === persona.memberId ? persona.role : row?.role ?? role.platformRole);
+    const inactive = row?.status === "inactive";
+    // 이름에 직함이 이미 들어 있으면('품질보증 담당 A(예시)') 직함을 한 번 더 쓰지 않아요
+    const jobTitle = p.displayName.startsWith(role.title) ? undefined : role.title;
+    const label = `${[p.displayName, jobTitle, platform].filter(Boolean).join(" · ")}${inactive ? " (비활성)" : ""}`;
+    return { value: p.roleCode, name: p.displayName, jobTitle, platform, inactive, label };
+  });
+  const byRole = new Map(rows.map((r) => [r.value, r]));
   return (
     <Select
       aria-label="누구로 보기"
@@ -57,34 +90,46 @@ export function PersonaSwitcher({ block }: { block?: boolean }) {
       className={block ? undefined : "ws-switch--persona"}
       style={block ? { width: "100%" } : undefined}
       popupMatchSelectWidth={false}
-      options={personas.map((p) => {
-        const role = tenant.roles.find((r) => r.code === p.roleCode)!;
-        const row = byId.get(p.id);
-        const platform = p.id === persona.memberId ? persona.role : row?.role ?? role.platformRole;
-        const inactive = row?.status === "inactive";
-        return {
-          value: p.roleCode,
-          disabled: inactive,
-          label: `${p.displayName} · ${role.title} · ${labelOf("platform_role", platform)}${inactive ? " (비활성)" : ""}`,
-        };
-      })}
+      options={rows.map((r) => ({ value: r.value, disabled: r.inactive, label: r.label, title: r.label }))}
+      // 닫힌 알약: [이름][· 직함][· 권한]. 넘치면 직함부터 줄고(말줄임), 그다음 이름, 권한(누구로 보는지의 핵심)은 늘 다 보여요.
+      // 1023 이하는 '(예시)'와 직함을 숨겨 '공장장 · 검토자'처럼(layout.css). 펼친 목록·hover title은 전체 글자
+      labelRender={block ? undefined : ({ value, label }) => {
+        const r = byRole.get(String(value));
+        if (!r) return label;
+        const [name, demo] = splitDemo(r.name);
+        return (
+          <span className="ws-switch__label">
+            <span className="ws-switch__name">{name}<span className="ws-switch__demo">{demo}</span></span>
+            {r.jobTitle && <span className="ws-switch__title">{SEP}{r.jobTitle}</span>}
+            <span className="ws-switch__role">{SEP}{r.platform}</span>
+          </span>
+        );
+      }}
       onChange={(v) => switchPersona(v)}
     />
   );
 }
 
 // ───────── AI 연결 상태
-export function AiStatusChip() {
+// 연결됨: 플러그 아이콘 + good 바탕 + 수. 연결 전·꺼짐: 사선 그은 플러그(layout.css, neutral) + 흰 바탕(색만으로 상태를 나누지 않아요, WCAG 1.4.1).
+// 태블릿 상단 바(iconOnly)는 종과 같은 40 원 + 종과 같은 수 배지(.ws-count), 이름은 aria-label·툴팁.
+// 상단 바(topbar)에서는 꺼짐 글자를 짧게('AI 꺼짐') — 긴 문장은 aria-label·툴팁에.
+export function AiStatusChip({ topbar, iconOnly }: { topbar?: boolean; iconOnly?: boolean }) {
   const nav = useNavigate();
   const { data } = useSelector<{ enabled: boolean; count: number }>("me.ai");
   const enabled = data?.enabled ?? true;
   const count = data?.count ?? 0;
-  const text = !enabled ? "회사에서 AI 연결을 꺼 두었어요" : count > 0 ? `AI 연결 ${count}` : "AI 연결 전";
-  return (
-    <button type="button" className="ws-aichip" data-tone={enabled && count > 0 ? "good" : "neutral"} onClick={() => nav("/me/ai")} aria-label={`${text}. 내 AI 연결 열기`}>
-      <ApiOutlined aria-hidden /><span className="ws-aichip__text">{text}</span>
+  const on = enabled && count > 0;
+  const full = !enabled ? "회사에서 AI 연결을 꺼 두었어요" : on ? `AI 연결 ${count}` : "AI 연결 전";
+  const text = !enabled && topbar ? "AI 꺼짐" : full;
+  const btn = (
+    <button type="button" className="ws-aichip" data-tone={on ? "good" : "neutral"} onClick={() => nav("/me/ai")} aria-label={`${full}. 내 AI 연결 열기`}>
+      <ApiOutlined aria-hidden />
+      <span className="ws-aichip__text">{text}</span>
+      {on && <CountBadge count={count} />}
     </button>
   );
+  return iconOnly || text !== full ? <Tooltip title={full}>{btn}</Tooltip> : btn;
 }
 
 // ───────── 알림 종
@@ -259,11 +304,11 @@ export function TopBar({ bp, navOpen = false, onOpenNav }: { bp: Breakpoint; nav
               <span className="ws-searchbtn__text">검색</span>
               <span className="ws-kbd" aria-hidden>Ctrl K</span>
             </button>
-            <AiStatusChip />
+            <AiStatusChip topbar iconOnly={bp === "tablet"} />
             <NotificationBell />
             <UserMenu />
-            {/* 태블릿: 오른쪽 묶음이 왼쪽 선택 상자와 겹치지 않게 짧은 '예시' */}
-            <DemoDataBadge variant="topbar" compact={bp === "tablet"} />
+            {/* 1439 이하: 그만큼 '누구로 보기'를 넓혀 권한까지 보이게 짧은 '예시'(1440 이상만 '예시 데이터') */}
+            <DemoDataBadge variant="topbar" compact={bp !== "wide"} />
           </div>
         </>
       )}

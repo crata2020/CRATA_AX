@@ -15,6 +15,7 @@ import { lazyDrawer } from "@/lib/lazyDrawer";
 import { TopBar } from "./TopBar";
 import { MobileTabBar } from "./MobileTabBar";
 import { RailCtx } from "./RightRail";
+import type { MobileTab, NavItem } from "@/modules";
 
 const NavDrawer = lazyDrawer(() => import("./NavDrawer").then((m) => m.NavDrawer));
 
@@ -45,8 +46,19 @@ function BootNotices() {
   return null;
 }
 
+/** 하단 탭에 배지 규칙이 없으면 같은 이름(key)의 메뉴 그룹 배지를 따라요
+ *  (서랍 메뉴의 '회의 9'(분류 확인 대기)가 하단 '회의' 탭에도 보이게. 그룹 하위 항목은 이미 권한으로 걸러져 있어요) */
+function withGroupBadges(tabs: MobileTab[], nav: NavItem[]): MobileTab[] {
+  return tabs.map((t) => {
+    if (t.badgeKeys) return t;
+    const keys = nav.find((g) => g.key === t.key)?.children.flatMap((c) => (c.badgeKey ? [c.badgeKey] : []));
+    return keys?.length ? { ...t, badgeKeys: keys } : t;
+  });
+}
+
 export function AppShell() {
-  const { nav, tabs, tenant } = useWorksite();
+  const { nav, tabs: baseTabs, tenant } = useWorksite();
+  const tabs = useMemo(() => withGroupBadges(baseTabs, nav), [baseTabs, nav]);
   const bp = useBreakpoint();
   const [collapsed, setCollapsed] = useState(() => getPrefs().navCollapsed === true);
   const [drawer, setDrawer] = useState(false);
