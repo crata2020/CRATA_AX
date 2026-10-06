@@ -1,0 +1,33 @@
+.hm-flow { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 24px; align-items: stretch; height: 100%; }
+.hm-flow__side { display: flex; flex-direction: column; padding-top: 4px; }
+.hm-flow__big { font-size: 40px; line-height: 48px; font-weight: 500; letter-spacing: -0.02em; margin-top: 4px; }
+.hm-flow__big span { font-size: 18px; color: var(--muted); margin-left: 4px; }
+.hm-flow__mini { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.hm-flow__mini i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+.hm-flow__ai { margin-top: auto; padding-top: 18px; font-size: 13.5px; line-height: 21px; color: var(--muted); display: block; }
+.hm-flow__ai svg { width: 16px; height: 16px; color: var(--brand); display: block; margin-bottom: 6px; }
+.hm-flow__chart { min-width: 0; }
+
+.hm-appr > li { padding: 14px 0; border-top: 1px solid var(--line); }
+.hm-appr > li:first-child { border-top: 0; padding-top: 4px; }
+.hm-appr__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hm-appr__t { font-size: 14.5px; font-weight: 500; color: var(--ink); margin-top: 8px; }
+.hm-appr__s { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+.hm-donut { display: flex; align-items: center; gap: 28px; padding-top: 6px; }
+.hm-donut > ul { flex: 1; min-width: 0; }
+
+.hm-kind { width: 34px; height: 34px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; }
+.hm-kind svg { width: 16px; height: 16px; stroke-width: 1.8; }
+.hm-kind--task { background: var(--brand-soft); color: var(--brand-ink); }
+.hm-kind--meeting { background: var(--c-violet-soft); color: #7550d1; }
+.hm-kind--field { background: var(--c-orange-soft); color: #c4621f; }
+
+@media (max-width: 1279px) {
+  .hm-flow { grid-template-columns: 1fr; }
+  .hm-flow__ai { margin-top: 12px; }
+}
+@media (max-width: 767px) {
+  .hm-donut { flex-direction: column; align-items: stretch; }
+  .hm-donut > div:first-child { align-self: center; }
+}
