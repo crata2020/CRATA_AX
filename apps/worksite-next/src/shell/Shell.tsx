@@ -6,6 +6,7 @@ import {
   Mic, PlugZap, PlusCircle, Settings, Sparkles, Users, HeartHandshake,
 } from "lucide-react";
 import { useApp } from "@/data/store";
+import { isOpen } from "@/data/phase";
 import { Avatar, Bar, IconButton, Menu } from "@/ui";
 import type { TenantId } from "@/data/types";
 
@@ -52,14 +53,15 @@ export function Shell() {
       { to: "/settings", label: "설정", icon: <Settings />, adminOnly: true },
     ] },
   ];
-  const visible = sections.map((s) => ({ ...s, items: s.items.filter((i) => (!i.pack || i.pack === d.pack) && (!i.adminOnly || isAdmin)) })).filter((s) => s.items.length);
+  const visible = sections.map((s) => ({ ...s, items: s.items.filter((i) => (!i.pack || i.pack === d.pack) && (!i.adminOnly || isAdmin) && isOpen(d, i.to)) })).filter((s) => s.items.length);
   const done = d.rollout.steps.filter((s) => s.done).length;
   const [title, group] = PAGE_TITLE[loc.pathname] ?? ["", ""];
 
   const switchTenant = (t: TenantId) => { setTenant(t); nav("/"); };
-  const tabs = d.pack === "manufacturing"
+  const allTabs = d.pack === "manufacturing"
     ? [{ to: "/", label: "홈", icon: <Home /> }, { to: "/tasks", label: "내 업무", icon: <ClipboardCheck />, n: myOpen }, { to: "/report", label: "현장 등록", icon: <PlusCircle />, main: true }, { to: "/meetings", label: "회의", icon: <Mic /> }, { to: "/ara", label: "ARA", icon: <HeartHandshake /> }]
     : [{ to: "/", label: "홈", icon: <Home /> }, { to: "/tasks", label: "내 업무", icon: <ClipboardCheck />, n: myOpen }, { to: "/meetings", label: "회의", icon: <Mic /> }, { to: "/docs", label: "문서", icon: <FileText /> }, { to: "/ara", label: "ARA", icon: <HeartHandshake /> }];
+  const tabs = allTabs.filter((t) => isOpen(d, t.to));
 
   return (
     <div className="app">
@@ -94,12 +96,12 @@ export function Shell() {
               ))}
             </div>
           ))}
-          <div className="navsec">
+          {isOpen(d, "/ara") && <div className="navsec">
             <div className="navsec__t">복지</div>
             <NavLink to="/ara" className={({ isActive }) => `navlink${isActive ? " active" : ""}`}>
               <HeartHandshake />ARA<span className="navlink__lock"><Lock />나만 보여요</span>
             </NavLink>
-          </div>
+          </div>}
         </nav>
         <div className="side__foot">
           <div className="promo">
@@ -141,7 +143,7 @@ export function Shell() {
         <main className="content" id="main"><Outlet /></main>
       </div>
 
-      <nav className="tabbar" aria-label="아래 탭">
+      <nav className="tabbar" aria-label="아래 탭" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}>
         {tabs.map((t) => (
           <NavLink key={t.to} to={t.to} end={t.to === "/"} className={({ isActive }) => `${isActive ? "active" : ""}${"main" in t && t.main ? " tabbar__main" : ""}`}>
             {t.icon}{t.label}{"n" in t && t.n ? <span className="tabbar__n num">{t.n}</span> : null}

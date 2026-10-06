@@ -63,5 +63,5 @@
   --brand: #3b4fd8; --brand-ink: #2f40b8; --brand-soft: #eef0fd; --brand-line: #d9ddfa;
 }
 :root[data-tenant="crata"] {
-  --brand: #0e9384; --brand-ink: #0b766a; --brand-soft: #e6f6f4; --brand-line: #c4ebe6;
+  --brand: #0a7d70; --brand-ink: #08665b; --brand-soft: #e6f6f4; --brand-line: #c4ebe6;
 }

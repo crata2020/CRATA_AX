@@ -42,7 +42,8 @@
   border: 1px solid var(--line-2); background: var(--surface); color: var(--muted); font-size: 14px; cursor: text; box-shadow: 0 0 0 4px var(--surface-2);
 }
 .ask svg { width: 18px; height: 18px; color: var(--brand); flex: none; }
-.ask__k { margin-left: auto; font-size: 12px; color: var(--faint); border: 1px solid var(--line-2); border-radius: 7px; padding: 2px 7px; }
+.ask > span:not(.ask__k) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ask__k { flex: none; white-space: nowrap; margin-left: auto; font-size: 12px; color: var(--faint); border: 1px solid var(--line-2); border-radius: 7px; padding: 2px 7px; }
 .top__right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .me { display: flex; align-items: center; gap: 10px; padding: 4px 8px 4px 4px; border-radius: var(--r-md); border: 0; background: none; cursor: pointer; text-align: left; }
 .me:hover { background: var(--sunken); }
@@ -57,6 +58,7 @@
 
 @media (max-width: 1100px) {
   .ask { width: 260px; }
+  .ask__k { display: none; }
   .me__txt, .demo { display: none; }
 }
 @media (max-width: 900px) {
