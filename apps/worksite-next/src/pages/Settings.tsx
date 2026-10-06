@@ -178,7 +178,7 @@ function SettingsView() {
                 </label>
                 <label className="st-field">
                   <span className="st-field__l">모노그램 <em className="num">{draft.monogram.length}/3</em></span>
-                  <input className="st-input num" value={draft.monogram} onChange={(e) => set("monogram", e.target.value.toUpperCase())} maxLength={3} placeholder="TR" />
+                  <input className="st-input num" value={draft.monogram} onChange={(e) => set("monogram", e.target.value.toUpperCase())} maxLength={3} placeholder="AB" />
                 </label>
               </div>
               <div className="st-two">

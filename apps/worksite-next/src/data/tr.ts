@@ -188,7 +188,7 @@ export const TR: TenantData = {
   ],
   dna: {
     layers: [
-      { code: "L1", name: "정체성·비주얼", group: "스타일", progress: 80, confidence: 0.6, found: ["브랜드 남색(홈페이지 로고)", "모노그램 TR"], todo: ["CI 가이드 확인"] },
+      { code: "L1", name: "정체성·비주얼", group: "스타일", progress: 80, confidence: 0.6, found: ["브랜드 남색(홈페이지 로고)", `모노그램 ${TR_IDENTITY.monogram}`], todo: ["CI 가이드 확인"] },
       { code: "L2", name: "보이스·톤", group: "스타일", progress: 35, confidence: 0.4, found: ["고객 회신은 간결한 합니다체"], todo: ["제안서·공지 20건 수집"] },
       { code: "L3", name: "조직 언어·용어집", group: "스타일", progress: 55, confidence: 0.55, found: ["편조·크림핑·스파이럴링", "초중종물", "4M 변경"], todo: ["약어 확인 12개"] },
       { code: "L4", name: "문서 원형·서식", group: "경계", progress: 45, confidence: 0.5, found: ["8D 보고서", "4M 변경 신청서", "월간 PPM 보고"], todo: ["결재란·파일명 규칙"] },
