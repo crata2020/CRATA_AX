@@ -31,6 +31,18 @@
 .in-summary > li + li::before { content: "·"; margin: 0 10px; color: var(--ws-muted); }
 .in-summary strong { color: var(--ws-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 
+/* 히어로가 있는 화면(I-06 생산·품질 홈 · I-18 안전보건) 배치: 홈(.wh-flow)과 같은 5:7 두 줄기 MasonryGrid.
+   히어로는 내용 높이로 끝나고 바로 아래에 다음 카드가 붙어요(줄마다 키가 달라 생기던 회색 구멍 없음). 1024 미만은 한 줄기 */
+@media (min-width: 1024px) {
+  .ws-masonry.in-flow { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+}
+
+/* 카드 안 두 갈래(I-11 고객 PPM: 왼쪽 수치 5 · 오른쪽 막대 7). 홈 '품질 지표'(.wh-split)와 같은 꼴. 좁으면 위아래 */
+.in-split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
+.in-split > * { min-width: 0; }
+.in-split__sub { font-size: 13px; line-height: 20px; font-weight: 600; color: var(--ws-muted); margin: 0 0 4px; }
+@media (max-width: 1023px) { .in-split { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
+
 /* 히어로 안(I-06 오늘 라인 · I-18 법정 일정). 히어로는 내용 높이로 끝나요(늘이지 않음) */
 .in-hero-figure { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .in-hero-links { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -75,18 +87,22 @@ html .in-cell[data-tone]:focus-visible, html button.in-cell:focus-visible { outl
 .in-cell__st .anticon { font-size: 13px; }
 @media (max-width: 767px) { .in-cell { padding: 8px; min-height: 64px; } .in-cell__no { font-size: 13px; } .in-cell__st { font-size: 12px; } }
 
-/* 현장 등록: 종류 버튼(높이 88, 흰 바탕 + 1px 선, 눌림은 brand-weak + 브랜드 2px 선. border-box라 크기는 그대로) */
+/* 현장 등록: 종류 버튼(높이 88, 흰 바탕 + 1px 선, 눌림은 brand-weak + 브랜드 2px 선. border-box라 크기는 그대로). 글자 16/24/600(현장에서 한눈에) */
 .in-narrow { max-width: 560px; margin: 0 auto; width: 100%; }
 .in-kinds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .in-kind {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 88px; box-sizing: border-box; padding: 0 12px;
   border-radius: var(--ws-radius-card); border: 1px solid var(--ws-line); background: var(--ws-surface); color: var(--ws-ink);
-  font: inherit; font-size: 14px; line-height: 20px; font-weight: 600; cursor: pointer;
+  font: inherit; font-size: 16px; line-height: 24px; font-weight: 600; cursor: pointer;
 }
-.in-kind .anticon { font-size: 24px; color: var(--ws-ink-2); }
+/* 아이콘은 홈 '현장 등록' 위젯(.wh-action)과 같은 40 원(brand-weak 바탕 + 브랜드 글자). 40 + 8 + 24 = 72 ≤ 88 */
+.in-kind .anticon {
+  width: 40px; height: 40px; border-radius: 999px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ws-brand-weak); color: var(--ws-brand-text); font-size: 18px;
+}
 .in-kind:hover { background: var(--ws-hover); border-color: var(--ws-control-line); }
 .in-kind[aria-pressed="true"] { background: var(--ws-brand-weak); border: 2px solid var(--ws-brand); color: var(--ws-ink); }
-.in-kind[aria-pressed="true"] .anticon { color: var(--ws-brand); }
+.in-kind[aria-pressed="true"] .anticon { background: var(--ws-surface); color: var(--ws-brand); }
 .in-step { display: flex; align-items: center; gap: 8px; font-size: 17px; line-height: 24px; font-weight: 600; color: var(--ws-ink); margin: 0 0 12px; }
 .in-step__no { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 24px; height: 24px; border-radius: 999px; background: var(--ws-brand-weak); color: var(--ws-brand-text); font-size: 13px; line-height: 20px; font-weight: 600; }
 .in-field { display: flex; flex-direction: column; gap: 8px; }
@@ -189,3 +205,5 @@ html .in-scroll:focus-visible { outline: 2px solid var(--ws-brand); outline-offs
 
 /* 폼 안 칩은 모바일에서도 줄바꿈(FilterBar의 가로 스크롤 칩과 다름) */
 .in-field .ws-chips, .in-wrap-chips.ws-chips { flex-wrap: wrap; }
+/* 폼 안 칩은 모바일에서 다른 입력(44~48h)과 같은 터치 크기 */
+@media (max-width: 767px) { .in-field .ws-chips { gap: 8px; } .in-field .ws-chip { height: 44px; min-height: 44px; padding: 0 16px; font-size: 15px; } }

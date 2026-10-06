@@ -92,16 +92,19 @@ function Orders() {
         // 지연(약속일이 있는 줄)을 맨 위에, 그다음 납기가 가까운 순
         sorters={[{ field: "promised_date", order: "asc" }, { field: "due_date", order: "asc" }]}
         onRowClick={(l) => setSelected(l.id)}
+        // 1440(표 상자 약 1100px)에서 고정 레이아웃에 들어가게: 고정 폭 합 124+144+96+96+216+160 = 836 + 품목 최소 160 ≤ 1088.
+        // 납기 216 = 가장 긴 '12월 31일 + D-1 내일 납기'(약 182) + 칸 안쪽 32. 상태 160 = '지연 예상(+12일)'(약 130) + 32.
+        // 단가는 낮은 우선순위(1600 이상에서만, 서랍에는 늘 있음)이고 상태 앞에 둬요 → 상태가 마지막 칸이라 가로 스크롤(태블릿)일 때 오른쪽에 붙어요
         columns={[
-          { key: "po", title: "고객 발주번호", width: 140, render: (l) => <span className="ws-cell-name in-num">{orderById.get(l.order_id)?.customer_po_no ?? "—"}</span> },
-          { key: "customer", title: "고객", width: 168, render: (l) => <span className="ws-ellipsis">{lk.partner.get(orderById.get(l.order_id)?.partner_id ?? "")?.name ?? "—"}</span> },
+          { key: "po", title: "고객 발주번호", width: 124, render: (l) => <span className="ws-cell-name in-num">{orderById.get(l.order_id)?.customer_po_no ?? "—"}</span> },
+          { key: "customer", title: "고객", width: 144, render: (l) => <span className="ws-ellipsis">{lk.partner.get(orderById.get(l.order_id)?.partner_id ?? "")?.name ?? "—"}</span> },
           { key: "item_id", title: "품목", flex: true, render: (l) => <span className="ws-ellipsis" title={itemLabel(l.item_id)}>{itemLabel(l.item_id)}</span> },
-          { key: "qty", title: "수량", width: 104, align: "right", render: (l) => <span className="in-num">{formatQty(l.qty, unit(l.item_id))}</span> },
-          { key: "shipped_qty", title: "출하 수량", width: 104, align: "right", render: (l) => <span className="in-num">{formatQty(l.shipped_qty, unit(l.item_id))}</span> },
-          { key: "due_date", title: "납기", width: 220, render: (l) => <span className="in-row" style={{ flexWrap: "nowrap" }}><span className="ws-date">{formatDate(l.due_date, false)}</span>{open(l) && <DdayBadge date={l.due_date} noun="납기" />}</span> },
-          { key: "status", title: "상태", width: 140, render: (l) => <StatusTag {...orderLineStatus(l, today)} /> },
+          { key: "qty", title: "수량", width: 96, align: "right", render: (l) => <span className="in-num">{formatQty(l.qty, unit(l.item_id))}</span> },
+          { key: "shipped_qty", title: "출하 수량", width: 96, align: "right", render: (l) => <span className="in-num">{formatQty(l.shipped_qty, unit(l.item_id))}</span> },
+          { key: "due_date", title: "납기", width: 216, render: (l) => <span className="in-row" style={{ flexWrap: "nowrap" }}><span className="ws-date">{formatDate(l.due_date, false)}</span>{open(l) && <DdayBadge date={l.due_date} noun="납기" />}</span> },
           // 단가는 볼 권한이 있을 때만 칸을 둬요(대시 한 줄 대신)
-          ...(canSeePrice ? [{ key: "unit_price", title: "단가", kind: "price" as const, width: 112 }] : []),
+          ...(canSeePrice ? [{ key: "unit_price", title: "단가", kind: "price" as const, width: 112, low: true }] : []),
+          { key: "status", title: "상태", kind: "status", width: 160, render: (l) => <StatusTag {...orderLineStatus(l, today)} /> },
         ]}
         mobileRow={(l) => ({
           title: `${lk.item.get(l.item_id)?.name ?? "품목"} · ${formatQty(l.qty, unit(l.item_id))}`,
@@ -205,7 +208,7 @@ function Shipments() {
         sorters={[{ field: "ship_date", order: "asc" }, { field: "id", order: "asc" }]}
         columns={[
           { key: "no", title: "출하 번호", width: 168, render: (s) => <span className="ws-cell-name in-num">{s.delivery_note_no ?? s.lot_ids[0] ?? "—"}</span> },
-          { key: "order", title: "수주", width: 140, render: (s) => <span className="ws-nowrap">{orderById.get(s.order_id)?.customer_po_no ?? "—"}</span> },
+          { key: "order", title: "수주", width: 124, render: (s) => <span className="ws-nowrap">{orderById.get(s.order_id)?.customer_po_no ?? "—"}</span> },
           { key: "item", title: "품목", flex: true, render: (s) => <span className="ws-ellipsis">{itemOf(s)?.name ?? "—"}</span> },
           { key: "qty", title: "수량", align: "right", width: 112, render: (s) => <span className="in-num ws-nowrap">{formatQty(s.qty, itemOf(s)?.unit ?? "")}</span> },
           { key: "lot_ids", title: "LOT", width: 190, render: (s) => <span className="ws-row">{s.lot_ids.map((l) => <Link key={l} className="in-link ws-nowrap" to={`/ops/trace?lot=${encodeURIComponent(l)}`}>{l}</Link>)}</span> },

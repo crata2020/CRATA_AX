@@ -14,6 +14,8 @@ import "../lib/home.css";
 
 /** 한 번에 보이는 줄 수(처리하면 다음 건이 올라와요). 히어로 옆 칸에서 히어로보다 너무 길어지지 않게 4 */
 const VISIBLE = 4;
+/** 머리 설명(데스크톱·태블릿은 머리에, 모바일은 첫 줄의 '승인'이 첫 화면에 보이게 목록 아래에 — home.css .wa-guide) */
+const GUIDE = "AI가 담당·분류를 미리 채웠어요. 맞으면 누르고, 다르면 '고치기'로 열어요.";
 
 /** '나중에': 이 브라우저에서 오늘 하루 숨김(기준 날짜가 바뀌면 다시 보여요). 저장이 막혀 있으면 이번 화면에서만 */
 function useSnooze(storageKey: string, today: string) {
@@ -73,7 +75,8 @@ function Body({ ctx }: { ctx: WidgetContext }) {
               count={open.length}
               unit="건"
               label="한 번 눌러 끝나요"
-              note={open.length ? "AI가 담당·분류를 미리 채웠어요. 맞으면 누르고, 다르면 '고치기'로 열어요." : "지금 승인할 건 모두 처리했어요."}
+              note={open.length ? GUIDE : "지금 승인할 건 모두 처리했어요."}
+              noteClassName={open.length ? "wa-guide" : undefined}
             />
             {d.counts.length > 0 && (
               <nav className="wa-counts" aria-label="종류별로 보기">
@@ -93,9 +96,10 @@ function Body({ ctx }: { ctx: WidgetContext }) {
                           <span className="ws-tag">{it.ai && <RobotOutlined aria-label="AI가 채움" />}{it.kindLabel}</span>
                           <Link className="wa-row__title" to={it.to}>{it.title}</Link>
                         </span>
-                        <span className="wa-row__sub">{it.subtitle}</span>
+                        <span className="wa-row__sub" title={it.subtitle}>{it.subtitle}</span>
                       </div>
-                      {/* 동작: 위 줄 = 주 동작(흰 알약) + 보조 RPC(글자 버튼), 아래 줄 = 고치기 링크 + 나중에. DOM·Tab 순서는 주 → 보조 → 고치기 → 나중에 */}
+                      {/* 동작: 위 줄 = 주 동작(흰 알약) + 보조 RPC(글자 버튼), 아래 줄 = 고치기 링크 + 나중에. DOM·Tab 순서는 주 → 보조 → 고치기 → 나중에.
+                          데스크톱·태블릿에서 흰 알약은 화면상 맨 오른쪽(CSS order, 분류 확인·작성 규칙 화면과 같은 자리) */}
                       <div className="wa-row__acts">
                         <div className="wa-row__primary">
                           <Button
@@ -130,6 +134,7 @@ function Body({ ctx }: { ctx: WidgetContext }) {
                 })}
               </ul>
             )}
+            {shown.length > 0 && <p className="wa-guide-m">{GUIDE}</p>}
             {(open.length > VISIBLE || later > 0) && (
               <p className="wa-foot">
                 {open.length > VISIBLE && <span>처리하면 다음 {open.length - VISIBLE}건이 올라와요.</span>}

@@ -19,6 +19,12 @@
 .ws-masonry__item { min-width: 0; }
 .ws-masonry__item.is-full { grid-column: 1 / -1; }
 .ws-masonry__item:empty { display: none; }
+/* 줄기 끝 맞추기: 묶음(전체 폭 카드 앞·그리드 끝)마다 두 줄기의 마지막 카드는 같은 아래 선까지(아래 간격 1칸은 남김).
+   흰 면만 늘고 내용은 위에 붙어 있어요. 히어로는 늘리지 않아요. 잴 때(.is-measuring)는 끔 */
+.ws-masonry:not(.is-measuring) > .ws-masonry__item.is-grown:not(:empty) {
+  align-self: stretch; display: flex; flex-direction: column; padding-bottom: var(--ws-mgap); box-sizing: border-box;
+}
+.ws-masonry:not(.is-measuring) > .ws-masonry__item.is-grown > .ws-card:not(.ws-card--hero) { flex: 1 0 auto; }
 @media (max-width: 1279px) {
   .ws-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
   .ws-grid > * { grid-column: span var(--span-t, 8); }
@@ -104,8 +110,14 @@
 .ws-card__title > .ws-pill { display: inline; height: auto; padding: 0; background: none; color: inherit; font: inherit; border-radius: 0; outline: 0; vertical-align: baseline; }
 
 /* ── 알약 문맥(3.7): 머리 오른쪽·카드 머리·필터 줄·툴바·행 동작·히어로 안의 버튼·선택 상자만 999. 나머지(서랍·모달·폼)는 전역 8 */
-html :is(.ws-page-header__side, .ws-card__actions, .ws-filterbar, .ws-toolbar, .ws-listrow__action, .ws-card--hero) .ant-btn { border-radius: 999px; }
-html :is(.ws-page-header__side, .ws-card__actions, .ws-filterbar, .ws-toolbar, .ws-listrow__action, .ws-card--hero) .ant-select .ant-select-selector { border-radius: 999px; }
+html :is(.ws-page-header__side, .ws-card__actions, .ws-filterbar, .ws-toolbar, .ws-listrow__action, .ws-card--hero, .ws-kcard__foot) .ant-btn { border-radius: 999px; }
+html :is(.ws-page-header__side, .ws-card__actions, .ws-filterbar, .ws-toolbar, .ws-listrow__action, .ws-card--hero, .ws-kcard, .ws-table) .ant-select .ant-select-selector { border-radius: 999px; }
+/* 필터 줄·툴바·칸반 카드·표 행 안의 선택 상자: 옆 알약([필터]·칩)과 같은 옅은 1px line 테두리(값 글자와 ⌄로 알아봐요), hover만 control-line.
+   글자 검색칸(.ws-filterbar__search)은 보이는 이름이 없어 입력칸 테두리(control-line) 그대로. 초점·오류·경고 테두리는 antd 그대로 */
+html :is(.ws-filterbar, .ws-toolbar, .ws-kcard, .ws-table) .ant-select-outlined:not(.ant-select-status-error):not(.ant-select-status-warning) .ant-select-selector { border-color: var(--ws-line); }
+html :is(.ws-filterbar, .ws-toolbar, .ws-kcard, .ws-table) .ant-select-outlined:not(.ant-select-disabled):not(.ant-select-focused):not(.ant-select-status-error):not(.ant-select-status-warning):hover .ant-select-selector { border-color: var(--ws-control-line); }
+/* 칸반 카드·표 행 안 선택 상자의 키보드 초점 선도 알약(global.css의 라운드 8 규칙보다 세게) */
+html :is(.ws-kcard, .ws-table) .ant-select:has(input:focus-visible) { border-radius: 999px; }
 /* 카드 머리의 컨트롤은 32h('이번 주 ⌄' 자리) */
 html .ws-card__actions .ant-btn { height: 32px; }
 html .ws-card__actions .ant-btn:not(.ant-btn-icon-only) { padding-inline: 12px; }
@@ -129,8 +141,17 @@ html .ws-rowact-text {
 }
 html .ws-rowact-text:not(:disabled):not(.ant-btn-disabled) { color: var(--ws-ink-2); background: transparent; }
 html .ws-rowact-text:not(:disabled):not(.ant-btn-disabled):hover { background: var(--ws-hover); color: var(--ws-ink); }
+/* 막힌 보조 동작: 옆 줄의 켜진 글자 버튼(ink-2)과 한눈에 구분되게 흐리게. 이유는 DisabledAction 툴팁이 알려요 */
+html .ant-btn.ws-rowact-text:disabled, html .ant-btn.ws-rowact-text.ant-btn-disabled { color: var(--ws-ink-2); opacity: 0.45; background: transparent; }
 @media (max-width: 767px) {
   html .ant-btn.ws-rowact, html .ws-rowact-text { min-height: 44px; }
+}
+/* 모바일 누름 크기: 머리 오른쪽 버튼 44h(세그먼트 칸 40h는 아래 '세그먼트 알약'). 카드 머리 더보기·차트 표로 보기는 모양은 그대로, 누르는 자리만 44h로 */
+@media (max-width: 767px) {
+  html .ws-page-header__side .ant-btn:not(.ant-btn-icon-only) { min-height: 44px; }
+  html .ws-page-header__side .ant-btn.ant-btn-icon-only { width: 44px; min-width: 44px; height: 44px; }
+  .ws-card__actions > .ws-card__more { position: relative; }
+  .ws-card__actions > .ws-card__more::after, .ws-chart__toggle.ant-btn::after { content: ""; position: absolute; inset: -6px -4px; }
 }
 
 /* ── 예시 데이터 배지 */
@@ -174,8 +195,15 @@ html .ws-rowact-text:not(:disabled):not(.ant-btn-disabled):hover { background: v
 .ws-person__unit { font-size: 13px; line-height: 20px; color: var(--ws-muted); white-space: nowrap; }
 
 /* ── 목록 행 */
-.ws-list { list-style: none; margin: 0; padding: 0; }
+/* 목록은 크기 컨테이너: 좁은 칸(안쪽 380 이하, 5/12 홈 칸·모바일)에서는 제목·보조 줄을 말줄임 대신 두 줄까지 보여요 */
+.ws-list { list-style: none; margin: 0; padding: 0; container-type: inline-size; }
 .ws-list > li + li { border-top: 1px solid var(--ws-sunken); }
+/* 카드 안 ListRows: 행의 hover 안쪽 4px는 카드 안쪽 여백으로 내밀어, 행 글자가 카드 제목·소제목과 같은 줄에서 시작해요.
+   행 사이 선은 카드 글자 폭 그대로(양끝 4px 안쪽) */
+.ws-card .ws-list:has(> li > :is(.ws-listrow, .ws-listrow-wrap)) { margin-inline: -4px; }
+.ws-card .ws-list:has(> li > :is(.ws-listrow, .ws-listrow-wrap)) > li + li { border-top: 0; }
+.ws-card .ws-list:has(> li > :is(.ws-listrow, .ws-listrow-wrap)) > li + li::before { content: ""; display: block; height: 1px; margin-inline: 4px; background: var(--ws-sunken); }
+.ws-card .ws-list > li > .ws-listrow-wrap > .ws-listrow__action { padding-right: 4px; }
 .ws-listrow {
   display: flex; align-items: center; gap: 12px; min-height: var(--ws-row-h); padding: 8px 4px; box-sizing: border-box; width: 100%;
   color: inherit; text-decoration: none; background: none; border: 0; text-align: left; font: inherit; border-radius: var(--ws-radius-control);
@@ -198,6 +226,17 @@ a.ws-listrow:hover, button.ws-listrow:hover { background: var(--ws-hover); }
 .ws-listrow__action .anticon { font-size: 16px; }
 .ws-listrow__trailing { flex: none; display: flex; align-items: center; gap: 8px; color: var(--ws-ink-2); font-size: 13px; line-height: 20px; font-variant-numeric: tabular-nums; }
 @media (max-width: 767px) { .ws-listrow__action a:not(.ws-rowact-text) { min-height: 44px; min-width: 44px; } }
+/* 좁은 목록(안쪽 380 이하): 제목·보조 줄은 두 줄까지(정보가 '…'로 사라지지 않게), 앞·뒤 표시는 첫 줄에 맞춰 위로. 넓은 카드·표의 행은 그대로.
+   ' · ' 조각(.ws-listrow__seg)은 한 덩어리로 줄을 옮겨 조각 사이에서만 꺾여요('50분 / 전', '예시배기시스템 / (주)' 없음).
+   줄보다 긴 조각만 안에서 꺾여요(max-width). 마지막 줄에 낱말 하나만 남지 않게 text-wrap: pretty */
+@container (max-width: 380px) {
+  .ws-listrow { align-items: flex-start; }
+  .ws-listrow__title, .ws-listrow__sub {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+    white-space: normal; word-break: keep-all; overflow-wrap: anywhere; text-wrap: pretty;
+  }
+  .ws-listrow__seg { display: inline-block; max-width: 100%; }
+}
 .ws-unread { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; line-height: 18px; color: var(--ws-brand-text); font-weight: 600; }
 .ws-unread::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--ws-brand); }
 /* 목록 앞 아이콘 타일 */
@@ -218,7 +257,9 @@ a.ws-listrow:hover, button.ws-listrow:hover { background: var(--ws-hover); }
 .ws-stat__unit { font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2); }
 .ws-stat--hero .ws-stat__unit { font-size: 18px; line-height: 26px; }
 .ws-stat__caption { font-size: 13px; line-height: 20px; color: var(--ws-muted); }
-.ws-stat__trend { margin-top: 4px; }
+.ws-stat__trend { margin-top: 4px; min-width: 0; }
+/* 추이선(LineSpark fluid): 칸 폭을 다 채우는 높이 28(작은 점 표시가 아니라 칸 너비의 흐름으로) */
+.ws-spark { display: block; width: 100%; max-width: 100%; height: 28px; }
 /* 아이콘 원(KPI 아이콘 점): 기본 brand */
 .ws-iconcircle {
   display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; flex: none; font-size: 18px;
@@ -250,13 +291,34 @@ a.ws-listrow:hover, button.ws-listrow:hover { background: var(--ws-hover); }
 .ws-card--hero .ws-delta__chip { background: transparent; border: 1px solid var(--ws-hero-line); box-shadow: none; color: var(--ws-on-brand); }
 .ws-card--hero .ws-delta__chip .anticon { color: var(--ws-on-brand); }
 .ws-card--hero .ws-delta__text { color: var(--ws-on-brand-2); }
-/* StatRow(카드 안 묶음 KPI): 칸 사이 위아래 8 띄운 짧은 세로선, 줄이 꺾이면 줄 사이 가로선. 첫 열·첫 줄의 선은 overflow에 잘려 안 보여요 */
-.ws-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px 0; overflow: hidden; margin-left: -20px; }
-.ws-stats > * { position: relative; padding: 0 20px; min-width: 0; }
+/* StatRow(카드 안 묶음 KPI): 칸 사이 위아래 8 띄운 짧은 세로선, 줄이 꺾이면 줄 사이 가로선. 첫 열·첫 줄의 선은 overflow에 잘려 안 보여요.
+   칸 안쪽 16, 줄을 양옆으로 16씩 내밀어 첫 칸 글자는 카드 글자 줄에, 끝 칸 글자는 카드 오른쪽 글자 끝에 맞춰요(좁은 칸에서 글자 자리를 넓혀요).
+   칸 수는 화면 폭이 아니라 카드 안쪽 폭(.ws-stats-box 컨테이너)으로 정해요 */
+.ws-stats-box { container-type: inline-size; min-width: 0; }
+.ws-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px 0; overflow: hidden; margin-inline: -16px; }
+.ws-stats > * { position: relative; padding: 0 16px; min-width: 0; }
 .ws-stats > *::before { content: ""; position: absolute; left: -1px; top: 8px; bottom: 8px; width: 1px; background: var(--ws-sunken); }
-.ws-stats > *::after { content: ""; position: absolute; left: 20px; right: 20px; top: -8px; height: 1px; background: var(--ws-sunken); }
-/* 숫자 3개는 한 줄 3칸(2 + 1로 꺾여 오른쪽 아래가 비지 않게) */
-@media (min-width: 768px) { .ws-stats:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.ws-stats > *::after { content: ""; position: absolute; left: 16px; right: 16px; top: -8px; height: 1px; background: var(--ws-sunken); }
+/* 추이(스파크라인)는 칸 맨 아래: 위 글자가 몇 줄로 꺾여도 한 줄의 추이가 같은 높이에 놓여요 */
+.ws-stats > .ws-stat > .ws-stat__body { flex: 1 1 auto; align-self: stretch; }
+.ws-stats .ws-stat__trend { margin-top: auto; padding-top: 4px; }
+@media (min-width: 768px) {
+  /* 숫자 2개는 한 줄 2칸(5/12 홈 칸에서도 위아래로 쌓지 않게). 3개·4개도 좁으면 2칸(3 + 1처럼 오른쪽 아래가 비지 않게) */
+  @container (min-width: 260px) {
+    .ws-stats:is(:has(> :nth-child(2):last-child), :has(> :nth-child(3):last-child), :has(> :nth-child(4):last-child)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  /* 숫자 3개: 카드 안쪽 480 이상이면 한 줄 3칸. 좁으면 2 + 1이고, 혼자 남은 셋째 칸은 줄 전체(가로선도 끝까지) */
+  @container (min-width: 480px) { .ws-stats:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @container (max-width: 479.98px) { .ws-stats > :nth-child(3):last-child { grid-column: 1 / -1; } }
+  /* 줄 전체를 차지한 셋째 칸(2 + 1)은 가로로: 숫자 묶음은 왼쪽(첫 칸 폭), 추이선은 오른쪽(둘째 칸 글자 줄 그대로), 아래 끝 맞춤.
+     칸 오른쪽 아래가 비지 않게 */
+  @container (min-width: 260px) and (max-width: 479.98px) {
+    .ws-stats > .ws-stat:nth-child(3):last-child > .ws-stat__body:has(> .ws-stat__trend) { position: relative; padding-right: calc(50% + 16px); }
+    .ws-stats > .ws-stat:nth-child(3):last-child > .ws-stat__body > .ws-stat__trend { position: absolute; right: 0; bottom: 0; width: calc(50% - 16px); margin: 0; padding: 0; }
+  }
+  /* 숫자 4개: 카드 안쪽 608 이상이면 한 줄 4칸, 좁으면 2 × 2 */
+  @container (min-width: 608px) { .ws-stats:has(> :nth-child(4):last-child) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+}
 @media (max-width: 767px) { .ws-stats { grid-template-columns: minmax(0, 1fr); } }
 .ws-card--hero .ws-stats > *::before, .ws-card--hero .ws-stats > *::after { background: var(--ws-hero-line); }
 /* KpiStrip: 페이지 위 지표 카드 띠(카드 한 장 = 지표 하나). 띠 자체는 카드가 아님 */
@@ -268,7 +330,11 @@ a.ws-listrow:hover, button.ws-listrow:hover { background: var(--ws-hover); }
 .ws-kpi .ws-iconcircle { position: absolute; top: 16px; right: 20px; width: 32px; height: 32px; font-size: 16px; }
 .ws-kpi .ws-stat--icon { display: flex; }
 .ws-kpi .ws-stat--icon .ws-stat__label { padding-right: 40px; }
-@media (max-width: 767px) { .ws-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
+@media (max-width: 767px) {
+  .ws-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  /* 홀수 장이면 혼자 남은 마지막 장은 줄 전체(오른쪽 반 칸이 비지 않게) */
+  .ws-kpis > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
 /* BigNumber(히어로 안 큰 숫자) */
 .ws-bignum { display: flex; flex-direction: column; gap: 2px; color: var(--ws-on-brand); }
 .ws-bignum__label { font-size: 14px; line-height: 20px; font-weight: 400; color: var(--ws-on-brand-2); }
@@ -280,6 +346,13 @@ a.ws-listrow:hover, button.ws-listrow:hover { background: var(--ws-hover); }
 .ws-seg .ant-segmented-item { border-radius: 999px; }
 .ws-seg .ant-segmented-item-label { padding: 0 14px; min-height: 32px; line-height: 32px; }
 .ws-card--hero .ws-seg .ant-segmented { background: var(--ws-hero-line); }
+/* 모바일: 트랙은 칸 폭을 넘지 않고(넘치면 트랙 안에서 가로로 밀어요 — 둥근 끝이 잘리지 않게), 칸은 누르기 쉬운 40h */
+@media (max-width: 767px) {
+  .ws-seg { max-width: 100%; min-width: 0; }
+  .ws-seg .ant-segmented { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .ws-seg .ant-segmented::-webkit-scrollbar { display: none; }
+  .ws-seg .ant-segmented-item-label { min-height: 40px; line-height: 40px; padding: 0 12px; }
+}
 
 /* ── 빈 상태 */
 .ws-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 56px 16px; }
@@ -328,6 +401,8 @@ a.ws-listrow:hover, button.ws-listrow:hover { background: var(--ws-hover); }
 .ws-chart__title { font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink-2); }
 .ws-chart__foot { display: flex; justify-content: flex-end; margin-top: 4px; }
 .ws-chart__toggle { color: var(--ws-ink-2); }
+/* 작은 글자 버튼의 안쪽 12(paddingInlineSM)만큼 내밀어 글자 끝을 범례 값·카드 글자 끝에 맞춰요(hover 바탕은 카드 여백으로) */
+.ws-chart__foot .ws-chart__toggle.ant-btn { margin-right: -12px; }
 .ws-legend__line { width: 14px; height: 0; border-top: 1px solid var(--ws-muted); flex: none; }
 .ws-chart svg { display: block; overflow: visible; }
 .ws-chart text { font-family: var(--ws-font); font-variant-numeric: tabular-nums; }
@@ -386,7 +461,7 @@ a.ws-listrow:hover, button.ws-listrow:hover { background: var(--ws-hover); }
   position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-size: 24px; line-height: 32px; font-weight: 600;
   color: var(--ws-ink); font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.ws-gauge__caption { font-size: 13px; line-height: 20px; color: var(--ws-muted); }
+.ws-gauge__caption { font-size: 13px; line-height: 20px; color: var(--ws-muted); text-wrap: balance; }
 
 /* ── 칸반: 회색 트레이 레인 안에 흰 카드 */
 .ws-kanban { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; }
@@ -406,6 +481,8 @@ a.ws-listrow:hover, button.ws-listrow:hover { background: var(--ws-hover); }
   box-shadow: inset -40px 0 24px -16px var(--ws-fade, var(--ws-panel));
 }
 .ws-scroll-fade.is-overflowing.is-at-end::after { display: none; }
+/* 표 카드: 가림은 카드 안쪽 여백 안(표 끝)에서 멈춰요. 카드의 둥근 모서리·테두리를 덮지 않게 */
+.ws-table-card.ws-scroll-fade.is-overflowing::after { top: 8px; bottom: 12px; right: 8px; border-radius: 0 var(--ws-radius-control) var(--ws-radius-control) 0; }
 .ws-lane__head { display: flex; align-items: center; gap: 8px; padding: 6px 6px 4px; font-size: 15px; line-height: 22px; font-weight: 600; color: var(--ws-ink); }
 .ws-lane__count { font-weight: 400; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
 .ws-lane__dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
@@ -477,6 +554,11 @@ html .ws-table .ant-table-wrapper .ant-table-container table > thead > tr > th:o
 .ws-table .ant-table-tbody > tr:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: -2px; }
 /* 정렬 화살표: 켜진 방향만 강조 글자색(칸 바탕은 칠하지 않음 — antdTheme Table bodySortBg) */
 .ant-table-wrapper .ant-table-column-sorter-up.active, .ant-table-wrapper .ant-table-column-sorter-down.active { color: var(--ws-brand-text); }
+/* 정렬 화살표는 머리 글자 바로 옆(칸 오른쪽 끝에 떨어져 있지 않게). 오른쪽·가운데 정렬 칸은 그쪽으로 */
+html .ws-table .ant-table-column-sorters { justify-content: flex-start; gap: 2px; }
+html .ws-table .ant-table-column-sorters .ant-table-column-title { flex: 0 1 auto; }
+html .ws-table th[style*="text-align: right"] .ant-table-column-sorters { justify-content: flex-end; }
+html .ws-table th[style*="text-align: center"] .ant-table-column-sorters { justify-content: center; }
 .ws-table .ws-cell-name { font-weight: 400; color: var(--ws-ink); }
 .ws-ellipsis { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .ws-tag--fit { max-width: 100%; }
@@ -504,8 +586,11 @@ html .ant-pagination .ant-pagination-item-active:hover a { color: var(--ws-ink);
 .ws-pager { display: flex; justify-content: center; padding: 12px 0 4px; }
 
 /* ── 서랍(꼬리 버튼은 전역 라운드 8, 알약 아님) */
-.ws-drawer .ant-drawer-content { border-radius: 0; }
-.ws-drawer--sheet .ant-drawer-content-wrapper { border-radius: var(--ws-radius-panel) var(--ws-radius-panel) 0 0; overflow: hidden; }
+/* antd는 className을 .ant-drawer-content(패널 자신)에 붙여요 → 패널과 그 바로 위 감싸개(.ant-drawer-content-wrapper)를 직접 골라요 */
+html .ant-drawer-content.ws-drawer { border-radius: 0; }
+/* 아래 시트(모바일 서랍): 위 라운드 16(5.20). 감싸개도 같은 라운드로 잘라 그림자·바탕이 네모로 비치지 않게 */
+html .ant-drawer-content-wrapper:has(> .ws-drawer--sheet) { border-radius: var(--ws-radius-panel) var(--ws-radius-panel) 0 0; overflow: hidden; }
+html .ant-drawer-content.ws-drawer--sheet { border-radius: var(--ws-radius-panel) var(--ws-radius-panel) 0 0; }
 .ws-drawer .ant-drawer-footer { display: flex; justify-content: space-between; gap: 8px; }
 .ws-drawer__footer-right { display: flex; gap: 8px; margin-left: auto; }
 
@@ -530,6 +615,8 @@ html .ant-pagination .ant-pagination-item-active:hover a { color: var(--ws-ink);
 
 /* 비활성 동작 감싸개(DisabledAction): Tab 정지점 + 이유 툴팁. 버튼 모양 그대로, 초점 선도 같은 라운드(알약 문맥 안이면 999) */
 .ws-disabled-action { display: inline-flex; border-radius: var(--ws-radius-control); cursor: not-allowed; }
-html :is(.ws-page-header__side, .ws-card__actions, .ws-filterbar, .ws-toolbar, .ws-listrow__action, .ws-card--hero) .ws-disabled-action { border-radius: 999px; }
+html :is(.ws-page-header__side, .ws-card__actions, .ws-filterbar, .ws-toolbar, .ws-listrow__action, .ws-card--hero, .ws-kcard__foot) .ws-disabled-action { border-radius: 999px; }
+/* 표 행·칸반 카드 안 알약 선택 상자를 감싼 비활성 감싸개도 알약 */
+html :is(.ws-table, .ws-kcard) .ws-disabled-action:has(> .ant-select) { border-radius: 999px; }
 html .ws-disabled-action:has(> .ws-rowact, > .ws-rowact-text) { border-radius: 999px; }
 .ws-disabled-action > .ant-btn { pointer-events: none; }

@@ -3,10 +3,10 @@
 // 동작: [사유 남기기](담당·검토자, ?selected=<수정 id>) · [규칙 후보 보기] · [최종본으로 확정](검토자)
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { Button, Input, Select, Skeleton } from "antd";
-import { CheckOutlined, EditOutlined, SwapRightOutlined } from "@ant-design/icons";
+import { Button, Input, Popover, Select, Skeleton } from "antd";
+import { CheckOutlined, EditOutlined, ExportOutlined, SwapRightOutlined } from "@ant-design/icons";
 import {
-  AiTag, CardGrid, DemoOnlyLink, DetailDrawer, Divider, EmptyState, PageHeader, PersonChip, SectionCard, SensitivityTag, StatusTag, Timeline, useConfirm,
+  AiTag, CardGrid, DetailDrawer, GridCell, Divider, EmptyState, PageHeader, PersonChip, SectionCard, SensitivityTag, StatusTag, Timeline, useConfirm,
 } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
@@ -120,31 +120,50 @@ export default function Page() {
         }
         actions={
           <div className="ws-row">
-            <DemoOnlyLink label="파일 열기" hint="파일은 회사 저장소에 있어요. 저장소를 연결하면 여기서 바로 열려요." />
+            {/* 머리 보조 버튼: 흰 알약(기본 버튼). 채운 버튼은 '최종본으로 확정' 하나뿐. 데모에선 안내 팝오버만 */}
+            <Popover trigger="click" placement="bottomRight" title="연동 후 열려요" content={<p className="ws-demo-pop">파일은 회사 저장소에 있어요. 저장소를 연결하면 여기서 바로 열려요.</p>}>
+              <Button icon={<ExportOutlined aria-hidden />} aria-label="파일 열기(연동 후 열려요)">파일 열기</Button>
+            </Popover>
             {canFinalize && <Button type="primary" icon={<CheckOutlined aria-hidden />} loading={finalize.isPending} onClick={() => void doFinalize()}>최종본으로 확정</Button>}
           </div>
         }
       />
 
       <CardGrid>
-        <SectionCard title={`버전(${versions.length})`} span={4}>
-          {versions.length ? (
-            <Timeline
-              ariaLabel="버전 기록"
-              items={versions.map((v) => ({
-                id: v.id,
-                at: v.created_at,
-                title: `v${v.ver} ${labelOf("artifact_versions.kind", v.kind)}`,
-                description: v.applied_rule_ids.length ? `규칙 ${v.applied_rule_ids.length}개 적용` : undefined,
-                actor: v.author_kind === "ai" ? { kind: "ai" as const } : { memberId: v.author_id },
-                tone: v.kind === "final" ? "good" as const : v.kind === "ai_draft" ? "info" as const : "neutral" as const,
-              }))}
-            />
-          ) : <EmptyState kind="empty" compact title="버전 기록이 없어요" />}
-          {versions.some((v) => v.author_kind === "ai") && <Caption style={{ marginTop: 16 }}>AI 연결이 만든 초안은 'AI 연결'로 표시해요. 담당자가 확인한 뒤 수정본으로 이어져요.</Caption>}
-        </SectionCard>
+        {/* 왼쪽 줄기: 버전 + 정보를 쌓아 오른쪽 긴 비교 카드 옆이 비지 않게(태블릿은 둘 다 한 줄 전체) */}
+        <GridCell span={5}>
+          <div className="ws-stack">
+            <SectionCard title={`버전(${versions.length})`}>
+              {versions.length ? (
+                <Timeline
+                  ariaLabel="버전 기록"
+                  items={versions.map((v) => ({
+                    id: v.id,
+                    at: v.created_at,
+                    title: `v${v.ver} ${labelOf("artifact_versions.kind", v.kind)}`,
+                    description: v.applied_rule_ids.length ? `규칙 ${v.applied_rule_ids.length}개 적용` : undefined,
+                    actor: v.author_kind === "ai" ? { kind: "ai" as const } : { memberId: v.author_id },
+                    tone: v.kind === "final" ? "good" as const : v.kind === "ai_draft" ? "info" as const : "neutral" as const,
+                  }))}
+                />
+              ) : <EmptyState kind="empty" compact title="버전 기록이 없어요" />}
+              {versions.some((v) => v.author_kind === "ai") && <Caption style={{ marginTop: 16 }}>AI 연결이 만든 초안은 'AI 연결'로 표시해요. 담당자가 확인한 뒤 수정본으로 이어져요.</Caption>}
+            </SectionCard>
+            <SectionCard title="정보">
+              <KeyValue
+                items={[
+                  ["문서 유형", labelOf("artifacts.doc_type", art.doc_type)],
+                  ["담당", <PersonChip memberId={art.owner_id} size="sm" />],
+                  ["양식", art._rel?.template ? `${art._rel.template.name} · ${art._rel.template.version}` : "—"],
+                  ["파일(회사 저장소)", <ExternalLink href={art.file_ref}>v{art.current_version} 파일 링크</ExternalLink>],
+                  ["수정일", formatDate(art.updated_at)],
+                ]}
+              />
+            </SectionCard>
+          </div>
+        </GridCell>
 
-        <SectionCard title={`비교(${inRange.length})`} span={8}>
+        <SectionCard title={`비교(${inRange.length})`} span={7}>
           {versions.length < 2 ? (
             <EmptyState kind="empty" compact title="버전이 하나뿐이라 비교할 것이 없어요" description="수정본이 올라오면 바뀐 곳을 보여 줘요." />
           ) : (
@@ -213,18 +232,6 @@ export default function Page() {
               ? "고친 내용이 쌓이면 규칙 후보가 돼요. 고객 비밀(L2) 문서는 국내 경로가 열리기 전까지 AI 초안 없이 사람이 쓰고, 승인한 규칙은 작성 안내로 보여요."
               : "고친 내용이 쌓이면 규칙 후보가 돼요. 검토자가 승인한 규칙만 다음 AI 초안에 적용돼요."}
           </Caption>
-        </SectionCard>
-
-        <SectionCard title="정보" span={12}>
-          <KeyValue
-            items={[
-              ["문서 유형", labelOf("artifacts.doc_type", art.doc_type)],
-              ["담당", <PersonChip memberId={art.owner_id} size="sm" />],
-              ["양식", art._rel?.template ? `${art._rel.template.name} · ${art._rel.template.version}` : "—"],
-              ["파일(회사 저장소)", <ExternalLink href={art.file_ref}>v{art.current_version} 파일 링크</ExternalLink>],
-              ["수정일", formatDate(art.updated_at)],
-            ]}
-          />
         </SectionCard>
       </CardGrid>
 

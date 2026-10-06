@@ -31,14 +31,20 @@
 }
 .ws-skip:focus { top: 12px; }
 
-/* ───────── 좌측 메뉴(흰색, 오른쪽 1px 선) */
+/* ───────── 좌측 메뉴(흰색, 오른쪽 1px 선)
+   바깥 aside: 셸 높이만큼 늘어나는 흰 기둥(긴 화면·전체 캡처·인쇄에서도 아래 끝까지 흰색과 오른쪽 선).
+   안쪽 __inner: 화면 높이로 위에 붙어 있고(sticky), 메뉴가 길면 이 안에서만 스크롤해요. */
 .ws-sidenav {
-  position: sticky; top: 0; height: 100vh; width: var(--ws-w-side-nav); flex: none; box-sizing: border-box;
-  padding: 16px 12px; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;
+  position: relative; align-self: stretch; min-height: 100vh; width: var(--ws-w-side-nav); flex: none; box-sizing: border-box;
   background: var(--ws-surface); border-right: 1px solid var(--ws-line);
 }
+.ws-sidenav__inner {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;
+  padding: 16px 12px; display: flex; flex-direction: column;
+}
 /* 접힘 72: 선 1px을 빼고 안쪽 폭 48(메뉴 항목 48) */
-.ws-sidenav.is-collapsed { width: var(--ws-w-side-nav-collapsed); padding: 16px 11px 16px 12px; align-items: center; }
+.ws-sidenav.is-collapsed { width: var(--ws-w-side-nav-collapsed); }
+.ws-sidenav.is-collapsed .ws-sidenav__inner { padding: 16px 11px 16px 12px; align-items: center; }
 .ws-sidenav__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; min-width: 0; }
 .ws-sidenav.is-collapsed .ws-sidenav__head { flex-direction: column; gap: 8px; }
 
@@ -106,11 +112,14 @@ html .ws-sidenav .ws-collapse-btn.ant-btn .anticon { font-size: 12px; }
 .ws-sidenav .ws-count, .ws-navrail .ws-count, .ws-drawer-nav .ws-count { background: var(--ws-sunken); color: var(--ws-ink-2); font-weight: 600; }
 .ws-sidenav__foot { padding: 12px 8px 0; }
 
-/* ───────── 태블릿 NavRail(80, 흰색, 오른쪽 1px 선) */
+/* ───────── 태블릿 NavRail(80, 흰색, 오른쪽 1px 선). SideNav와 같이 바깥은 늘어나는 기둥, 안쪽만 sticky */
 .ws-navrail {
-  position: sticky; top: 0; height: 100vh; width: var(--ws-w-nav-rail); flex: none; padding: 16px 7px 16px 8px; box-sizing: border-box;
-  display: flex; flex-direction: column; align-items: center; gap: 4px; overflow-y: auto; overflow-x: hidden;
+  position: relative; align-self: stretch; min-height: 100vh; width: var(--ws-w-nav-rail); flex: none; box-sizing: border-box;
   background: var(--ws-surface); border-right: 1px solid var(--ws-line);
+}
+.ws-navrail__inner {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;
+  padding: 16px 7px 16px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
 .ws-navrail__item {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; padding: 8px 2px; box-sizing: border-box;
@@ -135,6 +144,13 @@ html .ws-sidenav .ws-collapse-btn.ant-btn .anticon { font-size: 12px; }
 .ws-topbar__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
 .ws-topbar__field { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .ws-topbar__field .ant-select { min-width: 0; }
+/* 회사·누구로 보기 폭(07 명세 5.3). 1024~1279는 상단 바에 빈 폭이 넉넉해서 글자가 잘리지 않게 조금 넓혀요 */
+.ws-topbar .ant-select.ws-switch--tenant { width: clamp(160px, 14vw, 200px); }
+.ws-topbar .ant-select.ws-switch--persona { width: clamp(160px, 17vw, 240px); }
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .ws-topbar .ant-select.ws-switch--tenant { width: clamp(180px, 18vw, 210px); }
+  .ws-topbar .ant-select.ws-switch--persona { width: clamp(180px, 20vw, 240px); }
+}
 .ws-topbar__label { font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ws-muted); white-space: nowrap; }
 
 /* 회사·누구로 보기: 테두리 없는 채운 알약(variant="filled"). antd 선택자보다 세게 html + 문맥 class */
@@ -216,7 +232,8 @@ html .ws-topbar .ant-select .ant-select-arrow { inset-inline-end: 16px; height: 
 /* ───────── 모바일 */
 .ws-shell--mobile { flex-direction: column; background: var(--ws-panel); }
 .ws-shell--mobile .ws-topbar { height: 56px; padding: 0 8px; gap: 4px; }
-.ws-shell--mobile .ws-iconbtn { border-color: transparent; }
+/* 모바일 아이콘 버튼: 터치 크기 44, 테두리 없음 */
+.ws-shell--mobile .ws-iconbtn { width: 44px; height: 44px; border-color: transparent; }
 .ws-shell--mobile .ws-panel { margin: 0; border-radius: 0; padding: 16px 16px calc(64px + 24px + env(safe-area-inset-bottom)); min-height: calc(100vh - 56px); }
 .ws-mobile-brand { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--ws-ink); text-decoration: none; }
 .ws-mobile-brand .ws-brand__name { font-size: 15px; }
@@ -236,7 +253,8 @@ html .ws-topbar .ant-select .ant-select-arrow { inset-inline-end: 16px; height: 
 }
 .ws-tabbar__item.is-active { color: var(--ws-brand-text); font-weight: 600; }
 .ws-tabbar__item.is-active .anticon { background: var(--ws-brand-weak); }
-.ws-tabbar__item.is-active::before { content: ""; position: absolute; top: 0; left: 25%; right: 25%; height: 2px; border-radius: 0 0 2px 2px; background: var(--ws-brand); }
+/* 위 2px 막대는 아래 56 알약과 같은 폭으로 가운데 정렬 */
+.ws-tabbar__item.is-active::before { content: ""; position: absolute; top: 0; left: calc(50% - 28px); right: calc(50% - 28px); height: 2px; border-radius: 0 0 2px 2px; background: var(--ws-brand); }
 .ws-tabbar__badge { position: absolute; top: 6px; left: calc(50% + 6px); }
 .ws-tabbar__badge .ws-count { margin: 0; }
 

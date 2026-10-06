@@ -69,30 +69,36 @@ export default function Page() {
       />
       {hasKpi ? (
         <CardGrid>
-          <SectionCard title="고객 PPM" pill span={6} demo>
-            {ppmCur ? (
-              <StatTile
-                hero
-                label={three ? `고객 PPM(최근 3개월 평균)` : `고객 PPM(${formatMonth(ppmCur.period)})`}
-                value={three ? ppmAvg ?? "—" : ppmCur.value}
-                unit="PPM"
-                delta={!three && ppmPrev ? { value: Math.round((ppmCur.value - ppmPrev.value) * 10) / 10, period: "지난달보다", goodWhen: "down" } : undefined}
-                caption={`목표 Single PPM(${formatNumber(target)} 미만)`}
-                tone={ppmCur.value < target ? "good" : "warning"}
-                toneLabel={ppmCur.value < target ? "목표 달성" : "목표 미달성"}
-              />
-            ) : <EmptyState kind="empty" compact title="이번 달 PPM 기록이 없어요" />}
-          </SectionCard>
-          <SectionCard title="월별 고객 PPM" pill span={6} demo>
-            <SimpleBarChart
-              data={chartData}
-              unit="PPM"
-              highlightKey={ppmCur?.period}
-              target={{ value: target, label: `Single PPM 목표 ${formatNumber(target)}` }}
-              ariaLabel={`월별 고객 PPM, ${chartData.map((d) => `${d.label} ${d.value}`).join(", ")}, 목표 ${target}`}
-              tableCaption="월별 고객 PPM(예시)"
-              height={190}
-            />
+          {/* 고객 PPM 수치(왼쪽 5)와 월별 막대(오른쪽 7)를 한 카드에(홈 '품질 지표'와 같은 두 갈래). 두 카드로 나누면 짧은 수치 카드 아래가 비어요 */}
+          <SectionCard title="고객 PPM" pill span={12} demo>
+            <div className="in-split">
+              <div>
+                {ppmCur ? (
+                  <StatTile
+                    hero
+                    label={three ? `고객 PPM(최근 3개월 평균)` : `고객 PPM(${formatMonth(ppmCur.period)})`}
+                    value={three ? ppmAvg ?? "—" : ppmCur.value}
+                    unit="PPM"
+                    delta={!three && ppmPrev ? { value: Math.round((ppmCur.value - ppmPrev.value) * 10) / 10, period: "지난달보다", goodWhen: "down" } : undefined}
+                    caption={`목표 Single PPM(${formatNumber(target)} 미만)`}
+                    tone={ppmCur.value < target ? "good" : "warning"}
+                    toneLabel={ppmCur.value < target ? "목표 달성" : "목표 미달성"}
+                  />
+                ) : <EmptyState kind="empty" compact title="이번 달 PPM 기록이 없어요" />}
+              </div>
+              <div>
+                <h3 className="in-split__sub">월별 고객 PPM</h3>
+                <SimpleBarChart
+                  data={chartData}
+                  unit="PPM"
+                  highlightKey={ppmCur?.period}
+                  target={{ value: target, label: `Single PPM 목표 ${formatNumber(target)}` }}
+                  ariaLabel={`월별 고객 PPM, ${chartData.map((d) => `${d.label} ${d.value}`).join(", ")}, 목표 ${target}`}
+                  tableCaption="월별 고객 PPM(예시)"
+                  height={190}
+                />
+              </div>
+            </div>
           </SectionCard>
           <KpiStrip title="공정 지표" demo>
             <KpiCard>
@@ -141,9 +147,9 @@ export default function Page() {
                   { key: "inspected_on", title: "검사일", kind: "date" },
                   { key: "kind", title: "종류", width: 120, render: (i) => <span className="ws-tag">{labelOf("inspections.kind", i.kind)}</span> },
                   { key: "item_id", title: "품목", flex: true, render: (i) => <span className="ws-cell-name">{itemById.get(i.item_id)?.name ?? "—"}</span> },
-                  { key: "lot_no", title: "LOT", width: 190, render: (i) => <span className="ws-nowrap">{i.lot_no ?? "—"}</span> },
+                  { key: "lot_no", title: "LOT", width: 176, render: (i) => <span className="ws-nowrap">{i.lot_no ?? "—"}</span> },
+                  { key: "inspector_id", title: "검사자(역할)", low: true, render: (i) => roleOf(i.inspector_id) },
                   { key: "result", title: "판정", kind: "status", statusDomain: "inspections.result" },
-                  { key: "inspector_id", title: "검사자(역할)", render: (i) => roleOf(i.inspector_id) },
                 ]}
                 mobileRow={(i) => ({ title: `${labelOf("inspections.kind", i.kind)} · ${itemById.get(i.item_id)?.name ?? "—"}`, subtitle: `${formatDate(i.inspected_on)} · ${i.lot_no ?? "LOT 없음"}`, trailing: <StatusTag {...statusOf("inspections.result", i.result)} /> })}
                 empty={{ kind: "empty", title: "검사 기록이 없어요", description: "수입·초중종물·출하 검사를 하면 여기에 쌓여요." }}

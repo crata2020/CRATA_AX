@@ -201,7 +201,7 @@ export default function Page() {
               { key: "title", title: "업무명", kind: "name" },
               { key: "assignee_id", title: "담당", kind: "person" },
               { key: "reviewer_id", title: "검토자", kind: "person" },
-              { key: "due_at", title: "마감", render: (t) => <span className="ws-row" style={{ flexWrap: "nowrap" }}><span className="ws-date">{formatDate(t.due_at, false)}</span><DdayBadge date={t.due_at} done={!isOpen(t)} /></span> },
+              { key: "due_at", title: "마감", width: 224, render: (t) => <span className="ws-row" style={{ flexWrap: "nowrap" }}><span className="ws-date">{formatDate(t.due_at, false)}</span><DdayBadge date={t.due_at} done={!isOpen(t)} /></span> },
               { key: "status", title: "상태", kind: "status", statusDomain: "tasks.status" },
             ]}
             mobileRow={(t) => ({ title: t.title, subtitle: formatDate(t.due_at, false), trailing: <StatusTag {...statusOf("tasks.status", t.status)} /> })}

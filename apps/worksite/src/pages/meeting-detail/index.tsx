@@ -3,8 +3,9 @@
 // 녹음·전사 원문은 쓰던 도구(Plaud·클로바노트)에 있고 여기서는 링크 자리만 둡니다. 구성원은 읽기만 해요.
 import { useState } from "react";
 import { Link, useParams } from "react-router";
-import { Skeleton } from "antd";
-import { AiTag, DemoOnlyLink, EmptyState, PageHeader, PersonChip, SectionCard, SensitivityTag, StatusTag } from "@/components";
+import { Button, Popover, Skeleton } from "antd";
+import { ExportOutlined } from "@ant-design/icons";
+import { AiTag, EmptyState, PageHeader, PersonChip, SectionCard, SensitivityTag, StatusTag } from "@/components";
 import { usePageReady } from "@/app/pageReady";
 import { useList, useOne } from "@/lib/refine";
 import { useUrlParam } from "@/lib/url";
@@ -78,7 +79,10 @@ export default function Page() {
           </div>
         }
         actions={
-          <DemoOnlyLink label="원문 열기" hint="녹음 원문은 쓰시던 녹음 도구에 있어요. 녹음 도구를 연결하면 여기서 바로 열려요." />
+          // 머리 보조 버튼: 다른 화면의 머리 보조 버튼('업무 취소' 등)과 같은 흰 알약(기본 버튼). 데모에선 안내 팝오버만
+          <Popover trigger="click" placement="bottomRight" title="연동 후 열려요" content={<p className="ws-demo-pop">녹음 원문은 쓰시던 녹음 도구에 있어요. 녹음 도구를 연결하면 여기서 바로 열려요.</p>}>
+            <Button icon={<ExportOutlined aria-hidden />} aria-label="원문 열기(연동 후 열려요)">원문 열기</Button>
+          </Popover>
         }
         tabs={tabs}
       />
@@ -93,7 +97,7 @@ export default function Page() {
               <span className="ws-row">
                 {m.project_ids.length ? m.project_ids.map((id) => {
                   const p = st.projectById.get(id);
-                  return p ? <Link key={id} className="ws-tag ws-tag--brand" to={`/projects/${id}`}>{p.name}</Link> : <span key={id} className="ws-tag">볼 수 없는 프로젝트</span>;
+                  return p ? <Link key={id} className="ws-tag" to={`/projects/${id}`}>{p.name}</Link> : <span key={id} className="ws-tag">볼 수 없는 프로젝트</span>;
                 }) : "—"}
               </span>
             </dd>

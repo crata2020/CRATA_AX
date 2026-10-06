@@ -79,6 +79,14 @@ a.wk-row__title:hover { color: var(--ws-brand-text); text-decoration: underline;
 .wk-tree-title strong { font-weight: 600; }
 .wk-tree .ant-tree-node-selected .wk-tree-title { color: var(--ws-brand-text); }
 .wk-tree-code { font-size: 13px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
+/* 연결선: 옅은 1px --ws-line(조직도 .cb-tree와 같은 선). 줄 위아래 패딩(2px)과 줄 간격(4px)까지 이어 그려 끊기지 않게 */
+.wk-tree.ant-tree .ant-tree-indent-unit::before,
+.wk-tree.ant-tree .ant-tree-switcher-leaf-line::before { top: -2px; bottom: -8px; border-color: var(--ws-line); }
+.wk-tree.ant-tree .ant-tree-switcher-leaf-line::after { border-color: var(--ws-line); }
+/* 펼침 표시: 아래 화살표(접으면 antd가 -90도 돌림) */
+.wk-tree.ant-tree .ant-tree-switcher .ant-tree-switcher-icon { font-size: 12px; color: var(--ws-ink-2); }
+/* 사업별 프로젝트 수: 메뉴·탭 숫자와 같은 옅은 회색 알약 */
+.wk-tree .ws-count { margin-left: 0; background: var(--ws-sunken); color: var(--ws-ink-2); font-weight: 600; }
 
 /* 결정 모음 타임라인 안 링크 */
 .wk-dec-links { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: 13px; line-height: 20px; }

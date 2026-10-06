@@ -41,6 +41,8 @@ export function antdTheme(t: BrandTokens, density: Density = "comfortable"): The
       colorBgElevated: t.surface,
       colorBgMask: `rgba(${inkRgb},0.32)`,
       colorFillAlter: t.panel,
+      // 비활성 버튼·입력칸 바탕은 테넌트 panel(antd 기본 #F5F5F5 아님). 글자는 colorTextDisabled 그대로
+      colorBgContainerDisabled: t.panel,
       controlItemBgHover: t.panel,
       controlItemBgActive: t.brandWeak,
       fontFamily: FONT_STACK,
@@ -69,17 +71,20 @@ export function antdTheme(t: BrandTokens, density: Density = "comfortable"): The
         defaultBorderColor: t.line, defaultHoverBorderColor: t.controlLine, defaultHoverBg: t.panel, defaultHoverColor: t.ink,
         defaultActiveBg: t.sunken, defaultActiveBorderColor: t.controlLine, defaultActiveColor: t.ink,
         textHoverBg: t.panel,
+        // 비활성 버튼은 panel 바탕 + 옅은 line 테두리(입력칸 테두리 controlLine보다 진하게 보이지 않게)
+        borderColorDisabled: t.line,
       },
       Card: { borderRadiusLG: 12, colorBorderSecondary: t.sunken, boxShadowTertiary: "none" },
       Modal: { borderRadiusLG: 12, titleFontSize: 18 },
+      // size="large" 입력칸·선택 상자도 8(전역 borderRadiusLG 12로 떨어지면 버튼 8과 모서리가 달라져요)
       Input: {
-        borderRadius: 8, hoverBorderColor: t.ink2, activeBorderColor: t.brand,
+        borderRadius: 8, borderRadiusLG: 8, borderRadiusSM: 6, hoverBorderColor: t.ink2, activeBorderColor: t.brand,
         activeShadow: "none", errorActiveShadow: "none", warningActiveShadow: "none",
       },
-      InputNumber: { borderRadius: 8, hoverBorderColor: t.ink2, activeBorderColor: t.brand, activeShadow: "none" },
-      DatePicker: { borderRadius: 8, hoverBorderColor: t.ink2, activeBorderColor: t.brand, activeShadow: "none" },
+      InputNumber: { borderRadius: 8, borderRadiusLG: 8, borderRadiusSM: 6, hoverBorderColor: t.ink2, activeBorderColor: t.brand, activeShadow: "none" },
+      DatePicker: { borderRadius: 8, borderRadiusLG: 8, borderRadiusSM: 6, hoverBorderColor: t.ink2, activeBorderColor: t.brand, activeShadow: "none" },
       Select: {
-        borderRadius: 8,
+        borderRadius: 8, borderRadiusLG: 8, borderRadiusSM: 6,
         optionSelectedBg: t.brandWeak, optionSelectedColor: t.brandText, optionSelectedFontWeight: 600, optionActiveBg: t.panel,
         // 상단 바 variant="filled" 선택 상자: 바탕 panel, hover sunken
         colorFillTertiary: t.panel, colorFillSecondary: t.sunken,
@@ -96,6 +101,8 @@ export function antdTheme(t: BrandTokens, density: Density = "comfortable"): The
         headerBg: t.panel, headerColor: t.ink2, headerBorderRadius: 8, headerSplitColor: "transparent",
         rowHoverBg: t.panel, rowSelectedBg: t.brandWeak, rowSelectedHoverBg: t.brandWeak, borderColor: t.sunken,
         cellPaddingBlock: density === "compact" ? 8 : 14, cellPaddingInline: 16, cellFontSize: 14,
+        // App이 componentSize="middle"을 주므로 antd는 MD 토큰(기본 12/8)을 써요 → 같은 값으로 맞춤
+        cellPaddingBlockMD: density === "compact" ? 8 : 14, cellPaddingInlineMD: 16,
         // 정렬한 칸 전체에 색 띠를 깔지 않아요(정렬 상태는 머리의 화살표가 보여 줌)
         bodySortBg: t.surface, headerSortActiveBg: t.panel, headerSortHoverBg: t.sunken,
       },

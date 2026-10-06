@@ -1,5 +1,6 @@
 // TopBar(빌드 스펙 2.4절): [회사 ▾][누구로 보기 ▾] …… [검색 Ctrl K][AI 연결 n][종][사용자][예시 데이터]
-// 모바일(56): [메뉴][모노그램·회사명][예시 데이터] …… (검색)(종)(사용자 → 사용자 시트)
+// 모바일(56): [메뉴][모노그램·회사명][예시 데이터] …… (검색)(사용자 → 사용자 시트). 아이콘 버튼 44(터치 크기).
+//   종은 두지 않아요: 하단 탭 바의 '알림' 탭이 같은 안 읽음 배지로 /notifications를 열어요(배지가 두 번 보이지 않게).
 // 07 명세 5.3: 흰 바, 아래 1px 선은 늘 보임. 회사·누구로 보기·검색은 테두리 없는 채운 알약, 종은 40 원 + 1px 선.
 // 태블릿은 AI 칩 글자를 숨기고(aria-label에 이름) 예시 데이터 배지를 짧게. 아이콘만 있는 버튼은 aria-label + 툴팁.
 // Ctrl/Cmd+K → CommandMenu(pages/search/CommandMenu.tsx).
@@ -33,7 +34,9 @@ export function TenantSwitcher({ block }: { block?: boolean }) {
       aria-label="회사"
       value={tenant.slug}
       variant={block ? undefined : "filled"}
-      style={{ width: block ? "100%" : "clamp(160px, 14vw, 200px)" }}
+      // 상단 바 폭은 layout.css(.ws-switch--tenant, 구간별 clamp)
+      className={block ? undefined : "ws-switch--tenant"}
+      style={block ? { width: "100%" } : undefined}
       popupMatchSelectWidth={false}
       options={TENANT_ORDER.map((s) => ({ value: s, label: `${TENANTS[s].displayName}(예시)` }))}
       onChange={(v) => switchTenant(v)}
@@ -51,7 +54,8 @@ export function PersonaSwitcher({ block }: { block?: boolean }) {
       aria-label="누구로 보기"
       value={persona.roleCode}
       variant={block ? undefined : "filled"}
-      style={{ width: block ? "100%" : "clamp(160px, 17vw, 240px)" }}
+      className={block ? undefined : "ws-switch--persona"}
+      style={block ? { width: "100%" } : undefined}
       popupMatchSelectWidth={false}
       options={personas.map((p) => {
         const role = tenant.roles.find((r) => r.code === p.roleCode)!;
@@ -119,18 +123,17 @@ function NotificationPopover({ onClose }: { onClose: () => void }) {
   );
 }
 
-function NotificationBell({ mobile }: { mobile?: boolean }) {
+// 모바일에는 두지 않아요(하단 탭 바의 '알림' 탭이 같은 배지로 /notifications를 열어요)
+function NotificationBell() {
   const [open, setOpen] = useState(false);
-  const nav = useNavigate();
   const badges = useNavBadges();
   const count = badges.unreadNotifications ?? 0;
   const btn = (
-    <button type="button" className="ws-iconbtn" aria-label={count ? `알림, 안 읽음 ${count}건` : "알림"} onClick={mobile ? () => nav("/notifications") : undefined}>
+    <button type="button" className="ws-iconbtn" aria-label={count ? `알림, 안 읽음 ${count}건` : "알림"}>
       <BellOutlined aria-hidden />
       <CountBadge count={count} />
     </button>
   );
-  if (mobile) return btn;
   return (
     <Popover open={open} onOpenChange={setOpen} trigger="click" placement="bottomRight" content={<NotificationPopover onClose={() => setOpen(false)} />} arrow={false}>
       <Tooltip title="알림" open={open ? false : undefined}>{btn}</Tooltip>
@@ -233,7 +236,6 @@ export function TopBar({ bp, navOpen = false, onOpenNav }: { bp: Breakpoint; nav
           <DemoDataBadge variant="topbar" compact />
           <div className="ws-topbar__right" style={{ gap: 0 }}>
             <button type="button" className="ws-iconbtn" aria-label="검색" onClick={() => nav("/search")}><SearchOutlined aria-hidden /></button>
-            <NotificationBell mobile />
             <button type="button" className="ws-iconbtn" aria-label={`사용자 메뉴: ${persona.displayName}`} onClick={() => setSheet(true)}>
               <span className="ws-avatar" aria-hidden>{initialsOf(persona.displayName)}</span>
             </button>

@@ -45,7 +45,9 @@ export interface ColumnDef<T> {
 }
 
 /** 데스크톱 고정 레이아웃의 종류별 기본 폭. name 칸은 비워 두어 남는 폭을 모두 가집니다(말줄임 + 칸 title) */
-const KIND_WIDTH: Record<ColumnKind, number | undefined> = { name: undefined, text: 152, number: 112, price: 128, date: 128, datetime: 172, status: 136, person: 176, dday: 132, tag: 148 };
+const KIND_WIDTH: Record<ColumnKind, number | undefined> = { name: undefined, text: 152, number: 112, price: 128, date: 128, datetime: 172, status: 136, person: 200, dday: 132, tag: 148 };
+/** 사람 칸 최소 폭: 칸 안쪽 16 × 2 + 아바타 20 + 간격 8 + 보통 이름('품질보증 담당 A(예시)') ≈ 200. 화면이 준 더 좁은 폭(160~184)도 여기까지 올려요 */
+const PERSON_MIN = 200;
 /** 이름 칸이 최소한 가져야 할 폭. 다른 칸 폭의 합이 이걸 남기지 못하면 가로 스크롤(+ 오른쪽 끝 흐림)로 바꿔요 */
 const NAME_MIN = 160;
 const warnedNoFlex = new Set<string>();
@@ -223,7 +225,10 @@ export function DataTable<T extends BaseRecord>(props: DataTableProps<T>) {
     console.warn(`[DataTable:${resource}] 남는 폭을 가질 칸(flex 또는 kind "name")이 없어 첫 칸이 대신 가져요. 칸 하나에 flex: true를 주세요.`);
   }
   const nameIdx = flexIdx >= 0 ? flexIdx : Math.max(0, nameKindIdx);
-  const widthOf = (c: ColumnDef<T>, i: number) => c.width ?? (i === nameIdx ? undefined : KIND_WIDTH[c.kind ?? "text"]);
+  const widthOf = (c: ColumnDef<T>, i: number) => {
+    const w = c.width ?? (i === nameIdx ? undefined : KIND_WIDTH[c.kind ?? "text"]);
+    return c.kind === "person" && typeof w === "number" ? Math.max(w, PERSON_MIN) : w;
+  };
   const wideScreen = typeof window !== "undefined" && window.innerWidth >= WIDE_MIN;
   const visible = columns.filter((c) => !c.low || wideScreen);
   const fixedSum = visible.reduce((sum, c) => { const w = widthOf(c, columns.indexOf(c)); return sum + (typeof w === "number" ? w : 0); }, 0);

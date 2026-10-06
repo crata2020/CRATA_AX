@@ -1,7 +1,7 @@
 // 차트(차트 라이브러리 없이 SVG·HTML 직접 구현, 빌드 스펙 4.8절 + dataviz 스킬).
 //   SimpleBarChart: 단일 계열 강조형(이번 기간만 chart-accent) 또는 비교형(이전 chart-muted · 이번 chart-accent) + 목표 수평선
 //   StackedShareBar: 비중 막대(높이 10, 양끝 알약). 상태 비중이면 tone 색, 아니면 범주 슬롯 색. 6개 넘으면 "기타". 색 규칙 segmentColor는 DonutChart(ringCharts.tsx)와 같이 씀
-//   LineSpark: 96×28 추이선(선 chart-muted, 마지막 점 chart-accent + 2px 바탕 고리)
+//   LineSpark: 96×28 추이선(선 chart-muted, 마지막 점 chart-accent + 2px 바탕 고리). fluid면 칸 폭을 다 채움(높이 28 그대로, StatTile 추이)
 //   Meter: 진행 막대(트랙: 강조색이면 --ws-sunken, tone이면 tone 바탕)
 //   ChartFrame: [표로 보기]/[차트로 보기] 토글(모든 차트의 접근성 쌍둥이)
 // 마크: 막대 두께 ≤24px, 데이터 끝 6px 라운드·기준선 쪽 직각, 붙은 막대 사이 2px 틈, 격자·축 1px 실선, 글자는 데이터 색을 입지 않음.
@@ -12,13 +12,13 @@ import { formatNumber, formatQty } from "@/lib/format";
 import type { Tone } from "@/theme/tokens";
 
 // ───────── 공통
-function useWidth<T extends HTMLElement>(fallback = 480): [React.RefObject<T>, number] {
+function useWidth<T extends HTMLElement>(fallback = 480, min = 120): [React.RefObject<T>, number] {
   const ref = useRef<T>(null) as React.RefObject<T>;
   const [w, setW] = useState(fallback);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const update = () => setW(Math.max(120, Math.floor(el.getBoundingClientRect().width)));
+    const update = () => setW(Math.max(min, Math.floor(el.getBoundingClientRect().width)));
     update();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(update);
@@ -254,10 +254,24 @@ export function StackedShareBar({ segments, unit, height = 10, legend = "list", 
 }
 
 // ───────── LineSpark
-export interface LineSparkProps { values: number[]; width?: number; height?: number; ariaLabel: string }
+export interface LineSparkProps {
+  values: number[]; width?: number; height?: number; ariaLabel: string;
+  /** 놓인 칸의 폭을 다 채워요(width 무시, 높이는 그대로). StatTile 추이처럼 칸 폭만큼 긴 추이선 */
+  fluid?: boolean;
+}
 /** 추이선: 선 2px chart-muted, 마지막 점 chart-accent 지름 8 + 2px 바탕 고리, 축 없음 */
-export function LineSpark({ values, width = 96, height = 28, ariaLabel }: LineSparkProps) {
-  if (values.length < 2) return null;
+export function LineSpark(props: LineSparkProps) {
+  if (props.values.length < 2) return null;
+  return props.fluid ? <FluidSpark {...props} /> : <SparkSvg {...props} />;
+}
+
+/** 칸 폭을 재서 그 폭으로 그려요(점이 찌그러지지 않게 viewBox 늘이기 대신) */
+function FluidSpark({ height = 28, ...rest }: LineSparkProps) {
+  const [ref, w] = useWidth<HTMLSpanElement>(96, 48);
+  return <span ref={ref} className="ws-spark" style={{ height }}><SparkSvg {...rest} width={w} height={height} /></span>;
+}
+
+function SparkSvg({ values, width = 96, height = 28, ariaLabel }: LineSparkProps) {
   const pad = 5;
   const min = Math.min(...values);
   const max = Math.max(...values);

@@ -70,12 +70,12 @@ export function WidgetState<T>({ state, render, isEmpty }: { state: WidgetData<T
 }
 
 /** list 템플릿 머리: 큰 숫자 + 단위 + 라벨 + 보조 문장 */
-export function ListHead({ count, unit, label, note }: { count: number; unit: string; label: string; note?: string | null }) {
+export function ListHead({ count, unit, label, note, noteClassName }: { count: number; unit: string; label: string; note?: string | null; noteClassName?: string }) {
   return (
     <div className="wh-head">
       <span className="wh-head__num"><span className="ws-t-figure">{formatNumber(count)}</span><span className="wh-head__unit">{unit}</span></span>
       <span className="wh-head__label">{label}</span>
-      {note && <p className="wh-head__note">{note}</p>}
+      {note && <p className={noteClassName ? `wh-head__note ${noteClassName}` : "wh-head__note"}>{note}</p>}
     </div>
   );
 }

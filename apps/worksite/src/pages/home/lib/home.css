@@ -28,12 +28,13 @@
 .wh-hero__val { font-size: 18px; line-height: 26px; font-weight: 600; color: var(--ws-on-brand); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .wh-hero__val small { font-size: 13px; font-weight: 600; margin-left: 2px; color: var(--ws-on-brand-2); }
 .wh-hero__row .anticon { font-size: 12px; color: var(--ws-on-brand-2); }
-/* 꼬리: 위 1px 선, 왼쪽 참고 링크(합에 넣지 않는 것), 오른쪽 CTA */
+/* 꼬리: 위 1px 선, 왼쪽 참고 링크(합에 넣지 않는 것), 오른쪽 CTA.
+   참고 링크는 세로로 쌓아요(가로로 늘어놓으면 줄을 다 차지해 CTA가 혼자 셋째 줄로 꺾임). 아주 좁을 때만 CTA가 아래로 꺾여요 */
 .wh-hero__foot {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
   padding-top: 12px; border-top: 1px solid var(--ws-hero-line);
 }
-.wh-hero__aside { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
+.wh-hero__aside { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 0; min-width: 0; }
 .wh-hero__asidelink {
   display: inline-flex; align-items: center; gap: 4px; min-height: 32px;
   font-size: 13px; line-height: 20px; font-weight: 400; color: var(--ws-on-brand-2); text-decoration: none;
@@ -41,6 +42,8 @@
 .wh-hero__asidelink strong { color: var(--ws-on-brand); font-weight: 600; font-variant-numeric: tabular-nums; }
 .wh-hero__asidelink .anticon { font-size: 11px; }
 .wh-hero__asidelink:hover { color: var(--ws-on-brand); text-decoration: underline; }
+/* 링크가 2개 이상이면 데스크톱에서 24h씩(두 줄 48 ≈ CTA 36과 한 줄) */
+@media (min-width: 768px) { .wh-hero__aside:has(> li + li) .wh-hero__asidelink { min-height: 24px; } }
 /* CTA = 36h 흰 알약, 브랜드 글자(이 화면의 짙은 요소는 히어로 한 장) */
 .wh-hero-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 16px; margin-left: auto; box-sizing: border-box;
@@ -48,6 +51,11 @@
   font-size: 14px; line-height: 20px; font-weight: 600; text-decoration: none; transition: background-color 120ms linear;
 }
 .wh-hero-btn:hover { background: var(--ws-brand-weak); color: var(--ws-brand); }
+/* 모바일: 손가락 기준 44h(CTA·참고 링크 모두) */
+@media (max-width: 767px) {
+  .wh-hero-btn { height: 44px; padding: 0 20px; font-size: 15px; }
+  .wh-hero__asidelink { min-height: 44px; }
+}
 
 /* ── 위젯: 숫자 머리(list 템플릿). 숫자는 .ws-t-figure(28/36/600) */
 .wh-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin-bottom: 8px; }
@@ -75,7 +83,10 @@
 .wh-split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
 .wh-split > * { min-width: 0; }
 @media (max-width: 1279px) { .wh-split { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
-.wh-mini { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin-top: 16px; }
+/* 품질 지표 왼쪽(.wh-ppm): 큰 숫자(PPM) 아래 묶음 KPI(StatRow: 클레임·시정조치)는 위 16 + 가는 선 + 16으로 떼어
+   PPM 캡션의 다음 줄이 아니라 따로 읽히게. 두 숫자는 좁은 칸(생산·품질 7fr 칸, 모바일)에서도 한 줄 2칸(화면마다 모양이 같게) */
+.wh-ppm > .ws-stat + .ws-stats-box { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--ws-sunken); }
+.wh-split > .wh-ppm > .ws-stats-box > .ws-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* ── 팀 업무: 담당자별 수 */
 .wh-people { list-style: none; margin: 12px 0 0; padding: 12px 0 0; border-top: 1px solid var(--ws-sunken); display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
@@ -127,7 +138,7 @@
 html .wh-action:focus-visible, html .wh-linkbtn:focus-visible { outline: 2px solid var(--ws-brand); outline-offset: 2px; }
 
 /* ── 승인 대기(approval-inbox): 한 번 눌러 끝내는 줄. 채운 버튼 없음(주 동작 = .ws-rowact 흰 알약, 나머지 = .ws-rowact-text 글자 버튼) */
-.wa-counts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 4px; }
+.wa-counts { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 0 0 4px; }
 .wa-count {
   display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; box-sizing: border-box; white-space: nowrap;
   border: 1px solid var(--ws-line); border-radius: 999px; background: var(--ws-surface); color: var(--ws-ink-2);
@@ -140,34 +151,68 @@ html .wh-action:focus-visible, html .wh-linkbtn:focus-visible { outline: 2px sol
 .wa-list > li + li { border-top: 1px solid var(--ws-sunken); }
 .wa-row {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: center;
-  padding: 9px 0; min-height: 64px; box-sizing: border-box;
+  padding: 6px 0; min-height: 64px; box-sizing: border-box;
 }
 .wa-row__main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.wa-row__line { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.wa-row__line .ws-tag { flex: none; gap: 4px; }
+/* 제목은 두 줄까지(한 번 눌러 확정하는 줄이라 무엇을 확정하는지 읽혀야 해요). 꼬리표는 첫 줄 높이에 맞춰 위에 */
+.wa-row__line { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.wa-row__line .ws-tag { flex: none; gap: 4px; margin-top: -1px; }
 .wa-row__title {
   min-width: 0; font-size: 14px; line-height: 22px; font-weight: 600; color: var(--ws-ink); text-decoration: none;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  white-space: normal; word-break: keep-all; overflow-wrap: anywhere;
 }
 .wa-row__title:hover { color: var(--ws-brand-text); text-decoration: underline; }
-.wa-row__sub { min-width: 0; font-size: 13px; line-height: 20px; color: var(--ws-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wa-row__acts { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+/* 부제(누가·언제 + AI가 고른 분류·확신·추천 담당)도 줄바꿈: 확인하는 내용이 말줄임에 잘리지 않게.
+   1440·1280 7fr 칸(제목 자리 약 290)에서 회의 분류 부제('회의 제목 (날짜) · AI 분류 사업 › 프로젝트 · 확신 73%')가 두 줄을 조금 넘어 세 줄까지 */
+.wa-row__sub {
+  min-width: 0; font-size: 13px; line-height: 20px; color: var(--ws-muted);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  white-space: normal; word-break: keep-all; overflow-wrap: anywhere;
+}
+.wa-row__acts { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
 .wa-row__primary, .wa-row__minor { display: flex; align-items: center; gap: 4px; }
-/* 두 줄 동작(넓은 카드): 위 32h 알약 + 아래 24h 글자 버튼(고치기·나중에) → 줄 높이 76(9 + 32 + 2 + 24 + 9) */
-.wa-list .wa-row__minor .ws-rowact-text { height: 24px; min-height: 24px; padding: 0 6px; font-size: 13px; line-height: 20px; }
+/* 두 줄 동작(카드 안쪽 400~519, 1440·1280의 7fr 칸): 위 32h 알약 + 아래 28h 글자 버튼(고치기·나중에, 안쪽 8 = .ws-rowact-text와 같음),
+   둘 다 오른쪽 끝 정렬 → 줄 높이 72 이상(6 + 32 + 28 + 6). 한 줄에 다 놓으면 이 폭에서 제목 자리가 150px 남짓이라 짧은 제목도 잘려요 */
+.wa-list .wa-row__minor .ws-rowact-text { height: 28px; min-height: 28px; padding: 0 8px; font-size: 13px; line-height: 20px; }
+/* 카드 안쪽 520 이상(한 줄기 배치): 동작을 제목 옆 한 줄에, 두 텍스트 줄 가운데 → 줄 64 */
+@container (min-width: 520px) {
+  .wa-row__acts { flex-direction: row; align-items: center; gap: 4px; }
+  .wa-list .wa-row__minor .ws-rowact-text { height: 32px; min-height: 32px; padding: 0 8px; font-size: 14px; }
+}
+/* 데스크톱·태블릿: 주 동작(흰 알약)은 언제나 맨 오른쪽 — 분류 확인·작성 규칙 화면('고치기 [맞아요]', '반려하기 [승인하기]')과 같은 자리.
+   한 줄 배치는 '고치기 · 나중에 · (이번만) [주 동작]', 두 줄 배치는 위 줄 '(이번만) [주 동작]'. Tab 순서(DOM)는 주 동작 먼저 그대로.
+   모바일은 그대로(전체 폭 주 동작이 먼저) */
+@media (min-width: 768px) {
+  @container (min-width: 400px) { .wa-row__primary > .ws-rowact { order: 2; } }
+  @container (min-width: 520px) { .wa-row__primary { order: 2; } .wa-row__minor { order: 1; } }
+}
 /* 카드 안쪽 폭 400 미만: 한 열(동작 묶음이 제목 아래 한 줄, 왼쪽 정렬, 줄바꿈 허용) */
 @container (max-width: 399px) {
-  .wa-row { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+  .wa-row { grid-template-columns: minmax(0, 1fr); row-gap: 8px; padding: 9px 0; }
   .wa-row__acts { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 4px; }
   .wa-list .wa-row__minor .ws-rowact-text { height: 32px; min-height: 32px; padding: 0 8px; font-size: 14px; }
 }
 .wa-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 8px 0 0; font-size: 13px; line-height: 20px; color: var(--ws-muted); }
 .wa-inline.ant-btn { padding: 0 4px; height: auto; font-size: 13px; }
+/* 설명 문장의 모바일 자리(목록 바로 아래). 데스크톱·태블릿은 머리(.wh-head__note)에 */
+.wa-guide-m { display: none; margin: 8px 0 0; font-size: 13px; line-height: 20px; color: var(--ws-muted); }
 @media (max-width: 767px) {
   .wa-row__acts { width: 100%; }
   .wa-row__primary { flex: 1 1 auto; }
   .wa-row__primary .ws-rowact { flex: 1; }
   .wa-row__acts .ant-btn, .wa-list .wa-row__minor .ws-rowact-text { min-height: 44px; }
+  /* 첫 화면에 첫 줄의 '승인'이 탭 바 위로 보이게 머리를 줄여요(390×844 기준 카드 머리 237 → 약 160, 첫 승인 약 y 721~765, 탭 바 780).
+     종류 칩: 44h 한 줄 가로 스크롤(카드 안쪽 여백까지 끝에서 끝으로, 스크롤바 숨김). 설명 문장은 목록 아래로(.wa-guide-m) */
+  .wa-counts {
+    flex-wrap: nowrap; gap: 8px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
+    margin: 0 calc(var(--ws-card-pad) * -1) 4px; padding: 0 var(--ws-card-pad); scroll-padding-inline: var(--ws-card-pad);
+  }
+  .wa-counts::-webkit-scrollbar { display: none; }
+  .wa-count { flex: none; height: 44px; min-height: 44px; padding: 0 14px; font-size: 14px; }
+  html .wa-counts > .wa-count:focus-visible { outline-offset: -2px; }
+  .wh-head__note.wa-guide { display: none; }
+  .wa-guide-m { display: block; }
 }
 
 /* ── 알림: 묶음(오늘·이번 주·이전) + 종류 아이콘 36 원 */

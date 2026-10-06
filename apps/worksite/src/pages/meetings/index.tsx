@@ -105,7 +105,7 @@ export default function Page() {
             { key: "attendee_ids", title: "참석", width: 72, align: "right", render: (m) => <span className="ws-tabular">{m.attendee_ids.length}명</span> },
             { key: "decisions", title: "결정", width: 64, align: "right", render: (m) => <span className="ws-tabular">{decCount.get(m.id) ?? 0}</span> },
             {
-              key: "actions", title: "액션 제안", width: 128,
+              key: "actions", title: "액션 제안", width: 128, align: "right",
               render: (m) => <span className="ws-tabular">{apCount.get(m.id) ?? 0}{apOpen.get(m.id) ? ` (확인 ${apOpen.get(m.id)})` : ""}</span>,
             },
             { key: "status", title: "상태", kind: "status", statusDomain: "meetings.status" },

@@ -60,17 +60,32 @@ html .ant-input:not(.ant-input-affix-wrapper .ant-input):focus-visible,
 html .ant-input-affix-wrapper:has(input:focus-visible),
 html .ant-input-number:has(input:focus-visible),
 html .ant-picker:has(input:focus-visible) { outline: 2px solid var(--ws-brand); outline-offset: 2px; }
+/* 비활성 입력칸·선택 상자: 바탕은 테마 colorBgContainerDisabled(panel), 테두리는 옅은 line(비활성 버튼과 같게).
+   antd 비활성 hover(0,4,0)보다 세게 :hover:not([disabled])까지 */
+html :is(.ant-input-outlined.ant-input-disabled, .ant-input-outlined[disabled], .ant-input-number-outlined.ant-input-number-disabled, .ant-picker-outlined.ant-picker-disabled),
+html :is(.ant-input-outlined.ant-input-disabled, .ant-input-number-outlined.ant-input-number-disabled, .ant-picker-outlined.ant-picker-disabled):hover:not([disabled]),
+html .ant-select-outlined.ant-select-disabled:not(.ant-select-customize-input) .ant-select-selector { border-color: var(--ws-line); }
 /* 화면이 바뀔 때 코드가 옮긴 초점(제목·본문)은 선을 그리지 않아요(누를 수 있는 것이 아니라서) */
 html h1[tabindex="-1"]:focus, html main[tabindex="-1"]:focus { outline: none; }
 html .ws-on-brand :focus-visible, html [data-hero] :focus-visible,
 html .ws-on-brand a:focus-visible, html [data-hero] a:focus-visible,
 html .ws-on-brand button:focus-visible, html [data-hero] button:focus-visible { outline-color: var(--ws-on-brand); }
 
-/* 본문 안 링크: 색만으로 구분하지 않게 밑줄(WCAG 1.4.1). 버튼처럼 생긴 링크(목록 줄·더보기·메뉴)는 빼요. */
-.ws-t-caption a, .as-caption a, .ws-card__caption a, .ws-page-header__desc a, .wk-meta-text a, p a, li > a:not([class]) {
+/* 본문 안 링크: 색만으로 구분하지 않게 밑줄(WCAG 1.4.1). 버튼처럼 생긴 링크(목록 줄·더보기·메뉴)는 빼요.
+   antd 목록 항목(li.ant-pagination-item > a 같은 쪽 넘김 숫자)은 원형 버튼이라 밑줄 없음 */
+.ws-t-caption a, .as-caption a, .ws-card__caption a, .ws-page-header__desc a, .wk-meta-text a, p a, li:not([class*="ant-"]) > a:not([class]) {
   text-decoration: underline; text-underline-offset: 2px;
 }
 .ws-t-caption a[class^="ws-"], p a.ws-listrow, p a.ws-card__more, p a.ws-nav__link, p a.ws-nav__sub { text-decoration: none; }
+/* 이어서(본문·서랍·대화상자 안): 글자 사이 span·정보 목록 dd·표 칸·개인 영역 띠의 맨 링크, 안내 띠 안 링크,
+   저장소 파일 링크(.cb-extlink), 글자 링크 모양 antd 버튼(type="link", 예: 규칙 '근거 보기').
+   antd가 만든 span(빵부스러기·메뉴 글자)과 행 링크(.ws-card__more)·행 동작(ws-rowact*)은 빼요 */
+html :is(.ws-panel-inner, .ant-drawer-body, .ant-modal-body) :is(span:not([class*="ant-"]), dd, td, .ws-private) > a:not([class]),
+html :is(.ws-panel-inner, .ant-drawer-body, .ant-modal-body) .ws-banner a:not([class]),
+html :is(.ws-panel-inner, .ant-drawer-body, .ant-modal-body) a.cb-extlink,
+html :is(.ws-panel-inner, .ant-drawer-body, .ant-modal-body) .ant-btn-link:not(.ws-card__more):not([class*="ws-rowact"]) {
+  text-decoration: underline; text-underline-offset: 2px;
+}
 
 /* 숫자 */
 .ws-tabular, .ws-tabular * { font-variant-numeric: tabular-nums; }

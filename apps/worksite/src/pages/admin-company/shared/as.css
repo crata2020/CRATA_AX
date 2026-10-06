@@ -172,3 +172,8 @@
 /* 감사 기록 행위자(AI 연결): 이름 줄 + 아래 작은 'OO 대신' 줄(아바타 너비만큼 들여 씀) */
 .as-actor { display: inline-flex; flex-direction: column; gap: 0; min-width: 0; max-width: 100%; }
 .as-actor__for { padding-left: 30px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 18px; }
+
+/* 도입 단계 세그먼트(모듈): 폰 폭에서 긴 이름이 말줄임으로 잘리지 않게 줄바꿈 허용 */
+@media (max-width: 767px) {
+  html .as-stage-seg .ant-segmented-item-label { white-space: normal; line-height: 20px; padding-block: 6px; text-align: center; }
+}

@@ -1,10 +1,10 @@
 // 생산·품질 홈 `/ops` · I-06 · 깊이 A · 모듈 mfg-production · TR 전용 · 소유: industry 그룹
 // 공장장·품질·영업이 아침에 "오늘 라인이 정상인가, 급한 품질 일이 있나"를 3초 안에 봅니다(CRATA의 /ops는 라우트가 /ops/sales로 보냄).
-// 히어로(오늘 라인)는 sel:ops.today, 나머지 카드는 홈 위젯(home 그룹 구현)을 WidgetSlot으로 씁니다.
+// 히어로(오늘 라인)는 sel:ops.today, 나머지 카드는 홈 위젯(home 그룹 구현)을 WidgetSlot으로 씁니다. 배치는 홈과 같은 5:7 MasonryGrid.
 // 생산 작업자(R_OPERATOR)는 숫자 대시보드 대신 '오늘 작업지시 · 점검 미완료'와 현장 등록만 봅니다. 개인별 작업량은 어디에도 없습니다.
 import { Link } from "react-router";
 import { RightOutlined } from "@ant-design/icons";
-import { BigNumber, CardGrid, GridCell, HeroCard, PageHeader, WidgetSlot } from "@/components";
+import { BigNumber, CardGrid, HeroCard, MasonryGrid, PageHeader, WidgetSlot } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
 import { useSelector } from "@/lib/refine";
@@ -92,23 +92,19 @@ export default function Page() {
           <WidgetSlot id="mfg-field-feed" size="M" />
         </CardGrid>
       ) : (
-        <CardGrid>
-          {hero}
-          <WidgetSlot id="mfg-quality-ppm" pill span={7} period={widgetPeriod} />
-          {/* 알약은 첫 줄(히어로·품질 지표)만. 둘째 줄부터는 왼쪽·오른쪽 두 줄기로 쌓아요(짧은 클레임 카드 아래가 패널로 비지 않게) */}
-          <GridCell span={6}>
-            <div className="ws-stack">
-              <WidgetSlot id="mfg-claims-8d" size="M" period={widgetPeriod} />
-              <WidgetSlot id="mfg-field-feed" size="M" period={widgetPeriod} />
-            </div>
-          </GridCell>
-          <GridCell span={6}>
-            <div className="ws-stack">
-              <WidgetSlot id="mfg-delivery-due" size="M" period={widgetPeriod} />
-              <WidgetSlot id="mfg-legal-calendar" size="M" period={widgetPeriod} />
-            </div>
-          </GridCell>
-        </CardGrid>
+        // 히어로·품질 지표·나머지를 한 MasonryGrid(1024 이상 5:7 두 줄기)에. 히어로는 내용 높이로 끝나고 바로 아래에 다음 카드(홈과 같은 배치).
+        // 알약은 첫 칸 둘(히어로·품질 지표)만. 이후 카드는 잰 높이로 더 짧은 줄기 아래에 붙어요(줄마다 키가 달라 생기던 회색 구멍 없음)
+        <MasonryGrid
+          className="in-flow"
+          items={[
+            { key: "hero", node: hero, est: 250 },
+            { key: "mfg-quality-ppm", node: <WidgetSlot id="mfg-quality-ppm" pill period={widgetPeriod} />, est: 370 },
+            { key: "mfg-delivery-due", node: <WidgetSlot id="mfg-delivery-due" size="M" period={widgetPeriod} />, est: 310 },
+            { key: "mfg-claims-8d", node: <WidgetSlot id="mfg-claims-8d" size="M" period={widgetPeriod} />, est: 200 },
+            { key: "mfg-field-feed", node: <WidgetSlot id="mfg-field-feed" size="M" period={widgetPeriod} />, est: 400 },
+            { key: "mfg-legal-calendar", node: <WidgetSlot id="mfg-legal-calendar" size="M" period={widgetPeriod} />, est: 380 },
+          ]}
+        />
       )}
     </>
   );

@@ -3,6 +3,7 @@
 // 꺼진 항목 400, 활성 항목: brand-weak 바탕 + brand 글자 + 굵기 600 + aria-current="page" + 왼쪽 3px 막대(색만으로 표시하지 않음).
 // 하위 항목이 켜지면 그룹 줄은 brand 글자·아이콘만 남기고(바탕·막대 없음), 바탕·막대·점은 하위 항목에만.
 // 하위 항목은 아이콘 없이 점 불릿, 활성 그룹만 펼칩니다(서랍은 모든 그룹을 펼칠 수 있음).
+// 구조: aside(셸 높이로 늘어나는 흰 기둥 + 오른쪽 선) > div.__inner(sticky, 화면 높이, 메뉴가 길면 이 안에서 스크롤).
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Button, Tooltip } from "antd";
@@ -119,21 +120,23 @@ export function SideNav({ collapsed, onCollapse }: { collapsed: boolean; onColla
   const { nav } = useWorksite();
   return (
     <aside className={`ws-sidenav${collapsed ? " is-collapsed" : ""}`} aria-label="메뉴">
-      <div className="ws-sidenav__head">
-        <Brand collapsed={collapsed} />
-        <Tooltip title={collapsed ? "메뉴 펼치기" : "메뉴 접기"} placement="right">
-          <Button
-            shape="circle"
-            size="small"
-            className="ws-collapse-btn"
-            aria-label={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
-            aria-expanded={!collapsed}
-            icon={collapsed ? <DoubleRightOutlined /> : <DoubleLeftOutlined />}
-            onClick={() => onCollapse(!collapsed)}
-          />
-        </Tooltip>
+      <div className="ws-sidenav__inner">
+        <div className="ws-sidenav__head">
+          <Brand collapsed={collapsed} />
+          <Tooltip title={collapsed ? "메뉴 펼치기" : "메뉴 접기"} placement="right">
+            <Button
+              shape="circle"
+              size="small"
+              className="ws-collapse-btn"
+              aria-label={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
+              aria-expanded={!collapsed}
+              icon={collapsed ? <DoubleRightOutlined /> : <DoubleLeftOutlined />}
+              onClick={() => onCollapse(!collapsed)}
+            />
+          </Tooltip>
+        </div>
+        <NavTree items={nav} collapsed={collapsed} />
       </div>
-      <NavTree items={nav} collapsed={collapsed} />
     </aside>
   );
 }
@@ -146,25 +149,27 @@ export function NavRail() {
   const badges = useNavBadges();
   return (
     <aside className="ws-navrail" aria-label="메뉴">
-      <Link to="/" className="ws-brand ws-brand--rail" aria-label={`${tenant.displayName} 홈`}>
-        <span className="ws-monogram" aria-hidden>{tenant.monogram}</span>
-      </Link>
-      <nav aria-label="주 메뉴">
-        {nav.map((g) => {
-          const on = active.group === g.key;
-          return (
-            <div key={g.key}>
-              {g.dividerBefore && <div className="ws-nav__divider" role="separator" />}
-              <Link to={g.to} className={`ws-navrail__item${on ? " is-active" : ""}`} aria-current={on ? "page" : undefined}>
-                <NavIcon name={g.icon} />
-                <span>{g.label}</span>
-                {g.private && <span className="ws-sr-only">나만 보여요</span>}
-                <span className="ws-navrail__badge"><GroupBadge group={g} badges={badges} /></span>
-              </Link>
-            </div>
-          );
-        })}
-      </nav>
+      <div className="ws-navrail__inner">
+        <Link to="/" className="ws-brand ws-brand--rail" aria-label={`${tenant.displayName} 홈`}>
+          <span className="ws-monogram" aria-hidden>{tenant.monogram}</span>
+        </Link>
+        <nav aria-label="주 메뉴">
+          {nav.map((g) => {
+            const on = active.group === g.key;
+            return (
+              <div key={g.key}>
+                {g.dividerBefore && <div className="ws-nav__divider" role="separator" />}
+                <Link to={g.to} className={`ws-navrail__item${on ? " is-active" : ""}`} aria-current={on ? "page" : undefined}>
+                  <NavIcon name={g.icon} />
+                  <span>{g.label}</span>
+                  {g.private && <span className="ws-sr-only">나만 보여요</span>}
+                  <span className="ws-navrail__badge"><GroupBadge group={g} badges={badges} /></span>
+                </Link>
+              </div>
+            );
+          })}
+        </nav>
+      </div>
     </aside>
   );
 }

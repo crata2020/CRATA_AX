@@ -100,10 +100,11 @@ export default function Page() {
           { key: "assignee_id", title: "담당", kind: "person", width: 172 },
           { key: "reviewer_id", title: "검토자", kind: "person", width: 172, low: true },
           {
-            key: "due_at", title: "마감", sortable: true, width: 200,
+            // 날짜는 줄바꿈 없이(ws-date). 224 = 패딩 32 + '12월 31일' + 'D-1 내일 마감' 배지
+            key: "due_at", title: "마감", sortable: true, width: 224,
             render: (t) => (
               <span className="ws-row" style={{ flexWrap: "nowrap" }}>
-                <span className="ws-tabular">{formatDate(t.due_at, false)}</span>
+                <span className="ws-date">{formatDate(t.due_at, false)}</span>
                 <DdayBadge date={t.due_at} done={t.status === "done" || t.status === "canceled"} />
               </span>
             ),

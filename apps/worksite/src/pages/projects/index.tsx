@@ -3,7 +3,7 @@
 import { useMemo, type Key } from "react";
 import { useNavigate } from "react-router";
 import { Button, Skeleton, Tree } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { DownOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   CardGrid, DataTable, EmptyState, FilterBar, PageHeader, PersonChip, SectionCard, SensitivityTag, StatusTag, useFilterBarState, type FilterBarProps,
 } from "@/components";
@@ -56,7 +56,7 @@ export default function Page() {
       title: (
         <span className="wk-tree-title">
           <strong>{l.name}</strong><span className="wk-tree-code">{l.code}</span>
-          <span className="ws-tag">{list.length}</span>
+          <span className="ws-count">{list.length}</span>
           {/* 진단 전 가설 표시는 설정하는 사람(소유자·관리자)에게만 */}
           {adminish && l.hypothesis && <span className="ws-tag" title="진단에서 확인할 초안이에요">진단 전 초안</span>}
         </span>
@@ -150,7 +150,9 @@ export default function Page() {
               <Tree
                 className="wk-tree"
                 blockNode
-                showLine
+                // 연결선은 옅은 1px --ws-line(work.css .wk-tree, 조직도 .cb-tree와 같은 선), 펼침 표시는 네모 대신 아래 화살표
+                showLine={{ showLeafIcon: false }}
+                switcherIcon={<DownOutlined aria-hidden />}
                 defaultExpandAll
                 treeData={treeData}
                 selectedKeys={selectedLine ? [`line:${selectedLine.id}`] : []}

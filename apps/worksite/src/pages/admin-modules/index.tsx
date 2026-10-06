@@ -2,8 +2,8 @@
 // 이 회사에서 켤 공통 코어 모듈을 정합니다. 스위치 → rpc:set_module_enabled(덮어쓰기 저장 + 감사 기록) → 메뉴가 바로 바뀜(TenantBoundary가 다시 계산).
 // 규칙: 다른 켜진 모듈이 쓰는 모듈은 끌 수 없음(이유 표시), 필요한 모듈이 꺼져 있으면 켤 수 없음, 꼭 필요한 모듈 5개는 잠금. 업종 팩은 보기만.
 // 도입 단계(맨 위): 1단계(꼭 필요한 화면만)와 전체 사이 전환 → rpc:set_rollout_stage. 메뉴·홈만 바뀌고 모듈·데이터는 그대로예요.
-import { useMemo, useState } from "react";
-import { App, Radio, Switch } from "antd";
+import { Fragment, useMemo, useState } from "react";
+import { App, Segmented, Switch } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import { CardGrid, EmptyState, FilterBar, PageHeader, SectionCard, StatTile, StatRow, useConfirm, useFilterBarState, type FilterBarProps, DisabledAction } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
@@ -48,18 +48,18 @@ function StageCard() {
       title="도입 단계"
       caption="메뉴와 홈만 바뀌어요. 모듈·데이터는 그대로라 언제든 되돌릴 수 있고, 숨긴 화면도 알림·홈 카드의 링크로는 열려요."
     >
-      <Radio.Group
-        optionType="button"
-        buttonStyle="solid"
-        value={stage}
-        disabled={isPending}
-        onChange={(e) => void change(e.target.value as RolloutStage)}
-        aria-label="도입 단계"
-        options={[
-          { value: "phase1", label: `1단계 · 꼭 필요한 화면만 (${phase1.length}개)` },
-          { value: "full", label: `전체 (${full.length}개)` },
-        ]}
-      />
+      {/* SegmentedPills와 같은 알약 세그먼트(.ws-seg). 저장 중에는 잠가야 해서 antd Segmented를 직접 씁니다 */}
+      <div className="ws-seg as-stage-seg" role="group" aria-label="도입 단계">
+        <Segmented<RolloutStage>
+          value={stage}
+          disabled={isPending}
+          onChange={(v) => void change(v)}
+          options={[
+            { value: "phase1", label: `1단계 · 꼭 필요한 화면만 (${phase1.length}개)` },
+            { value: "full", label: `전체 (${full.length}개)` },
+          ]}
+        />
+      </div>
       <p className="as-caption" style={{ marginTop: 12 }}>
         {stage === "phase1" ? "지금 보이는 메뉴: " : "1단계로 바꾸면 남는 메뉴: "}
         {phase1.join(" · ")}
@@ -153,6 +153,11 @@ export default function Page() {
     );
   };
 
+  /** 필요한 모듈: 이름 하나는 한 덩어리(ws-nowrap)로, 줄은 이름 사이(', ' 뒤)에서만 바뀌어요 */
+  const depsCell = (m: RegistryModule) => (m.dependsOn.length
+    ? m.dependsOn.map((d, i) => <Fragment key={d}>{i > 0 && ", "}<span className="ws-nowrap">{MODULE_BY_ID[d]?.nameKo ?? d}</span></Fragment>)
+    : "—");
+
   const packCounts = PACKS.map((p) => ({ ...p, count: MODULES.filter((m) => m.industry === p.id).length, on: tenant.packs.includes(p.id as never) }));
   // 계약한 팩만 표로. 다른 업종 팩은 이름만 한 줄(이 회사와 상관없는 팩이 같은 무게로 보이지 않게)
   const myPacks = packCounts.filter((p) => p.on);
@@ -176,13 +181,14 @@ export default function Page() {
             ariaLabel="공통 코어 모듈"
             rows={rows}
             rowKey={(m) => m.id}
+            // 칸 폭을 정해 둬요: '필요한 모듈'만 남는 폭을 가지고(폭 없음), 메뉴 위치는 한 줄, 모듈 이름 사이에서만 줄바꿈
             columns={[
-              { key: "name", title: "모듈", render: nameCell },
-              { key: "tier", title: "단계", render: (m) => m.tier },
-              { key: "mode", title: "방식", render: (m) => MODE_LABEL[m.buildMode] ?? "—" },
-              { key: "menu", title: "메뉴 위치", render: menuOf },
-              { key: "deps", title: "필요한 모듈", render: (m) => m.dependsOn.map((d) => MODULE_BY_ID[d]?.nameKo ?? d).join(", ") || "—" },
-              { key: "state", title: "상태", render: stateCell },
+              { key: "name", title: "모듈", width: 280, render: nameCell },
+              { key: "tier", title: "단계", width: 64, render: (m) => m.tier },
+              { key: "mode", title: "방식", width: 72, render: (m) => MODE_LABEL[m.buildMode] ?? "—" },
+              { key: "menu", title: "메뉴 위치", width: 112, render: (m) => <span className="ws-nowrap">{menuOf(m)}</span> },
+              { key: "deps", title: "필요한 모듈", render: depsCell },
+              { key: "state", title: "상태", width: 216, render: stateCell },
             ]}
             mobile={(m) => ({
               title: <>{m.nameKo}{!WITH_SCREEN.has(m.id) && <span className="ws-tag">화면 없음</span>}</>,

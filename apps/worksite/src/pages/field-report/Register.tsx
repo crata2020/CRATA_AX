@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { Button, Input, Select, Switch } from "antd";
-import { AlertOutlined, WarningOutlined, CameraOutlined, CheckCircleOutlined, EllipsisOutlined, ToolOutlined } from "@ant-design/icons";
+import { CameraOutlined, CheckCircleOutlined, ExceptionOutlined, FormOutlined, SafetyOutlined, ToolOutlined } from "@ant-design/icons";
 import { EmptyState, ListRows, SectionCard, StatusTag } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
@@ -17,11 +17,11 @@ import { StepHead } from "../ops-home/kit/ui";
 
 type Kind = StatusValue<"field_reports.kind">;
 const KINDS: { value: Kind; label: string; icon: React.ReactNode }[] = [
-  // 불량은 제품 경고 표시(소프트웨어 '버그' 그림은 공장에서 어색해요)
-  { value: "defect", label: "불량", icon: <WarningOutlined aria-hidden /> },
+  // 아이콘은 홈 '현장 등록' 위젯(mfg-field-report)과 같게(두 화면이 한 앱으로 이어 보이게). 소프트웨어 '버그' 그림은 쓰지 않아요
+  { value: "defect", label: "불량", icon: <ExceptionOutlined aria-hidden /> },
   { value: "equipment", label: "설비 이상", icon: <ToolOutlined aria-hidden /> },
-  { value: "near_miss", label: "아차사고", icon: <AlertOutlined aria-hidden /> },
-  { value: "other", label: "기타", icon: <EllipsisOutlined aria-hidden /> },
+  { value: "near_miss", label: "아차사고", icon: <SafetyOutlined aria-hidden /> },
+  { value: "other", label: "기타", icon: <FormOutlined aria-hidden /> },
 ];
 /** 공정 칩: 편조 · 크림핑 · 프레스 성형 · 스파이럴링 · 출하 */
 const STEP_CHIPS: { code: string; label: string }[] = [

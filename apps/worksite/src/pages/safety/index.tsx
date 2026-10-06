@@ -7,7 +7,7 @@ import { Link } from "react-router";
 import { Button, Form, Input, Select, Switch } from "antd";
 import { FormOutlined, RightOutlined } from "@ant-design/icons";
 import {
-  Banner, BigNumber, CardGrid, DdayBadge, DetailDrawer, EmptyState, HeroCard, ListRows, PageHeader, SectionCard, SimpleBarChart, StatTile, StatusTag,
+  Banner, BigNumber, DdayBadge, DetailDrawer, EmptyState, HeroCard, ListRows, MasonryGrid, PageHeader, SectionCard, SimpleBarChart, StatTile, StatusTag,
 } from "@/components";
 import { useWorksite } from "@/app/TenantBoundary";
 import { usePageReady } from "@/app/pageReady";
@@ -81,35 +81,50 @@ export default function Page() {
         actions={<Button type="primary" icon={<FormOutlined />} onClick={() => setSelected("new")}>아차사고·의견 남기기</Button>}
       />
       <div className="in-mb"><Banner tone="info">기록과 일정을 놓치지 않게 돕는 도구예요. 법 준수를 보장하지는 않아요.</Banner></div>
-      <CardGrid>
-        <HeroCard title="가장 가까운 법정 일정" pill span={5} demo>
-          {next ? (
-            <>
-              <BigNumber label={next.title} value={days > 0 ? `D-${days}` : days === 0 ? "오늘" : `${-days}일 지남`} />
-              <p className="in-hero-text">{formatDate(next.due_on)}까지 · {labelOf("legal_calendar_items.kind", next.kind)}</p>
-              {halfRows.length > 0 && <p className="in-hero-text">SH 항목 {halfRows.length}개 중 {halfRows.filter((r) => r.result !== "pending").length}개 확인</p>}
-              {nextLink && <div className="in-hero-cta"><Link to={nextLink}>{next.kind === "semiannual_review" ? "반기 점검 열기" : "자세히 보기"} <RightOutlined aria-hidden /></Link></div>}
-            </>
-          ) : <p className="in-hero-text">다가오는 법정 일정이 없어요.</p>}
-        </HeroCard>
-        <SectionCard title="미조치 위험요인" pill span={7} demo more={{ label: "위험성평가", to: "/company/safety/risk" }}>
-          {risks.rows.length ? (
-            <>
-              <StatTile label="개선대책 기한 지남" value={overdue.length} unit="건" caption={`이행 확인 전 ${risks.rows.length}건 중`} />
-              <ListRows ariaLabel="미조치 위험요인" rows={topRisks.map((r) => ({ key: r.id, title: r.hazard, subtitle: `${r.process} · ${r.work_area}`, to: `/company/safety/risk?selected=${r.id}`, trailing: <DdayBadge date={r.due_on} /> }))} />
-            </>
-          ) : <EmptyState kind="empty" compact title="미조치 위험요인이 없어요" description="위험성평가에서 개선대책을 모두 이행했어요." />}
-        </SectionCard>
-        <SectionCard title="아차사고·의견" span={5} demo caption={member ? "내가 남긴 아차사고만 보여요." : undefined}>
-          <StatTile label={`${formatMonth(months[2]!)} 아차사고 신고`} value={thisMonth} unit="건" caption={`많을수록 좋은 신호예요 · 의견·개선 제안 ${opinionsThisMonth}건`} />
-          <SimpleBarChart data={byMonth} unit="건" highlightKey={months[2]} ariaLabel={`월별 아차사고 신고, ${byMonth.map((b) => `${b.label} ${b.value}건`).join(", ")}`} tableCaption="월별 아차사고 신고(예시)" height={150} />
-        </SectionCard>
-        <SectionCard title="법정 일정" span={7} demo>
-          {upcoming.length ? (
-            <ListRows ariaLabel="법정 일정" rows={upcoming.map((l) => ({ key: l.id, title: l.title, subtitle: `${labelOf("legal_calendar_items.kind", l.kind)} · ${l.basis}`, to: linkOf(l) ?? undefined, trailing: <DdayBadge date={l.due_on} /> }))} />
-          ) : <EmptyState kind="empty" compact title="다가오는 법정 일정이 없어요" />}
-        </SectionCard>
-        <SectionCard title="최근 아차사고·의견" span={12}>
+      {/* 히어로·미조치 위험요인·법정 일정·아차사고를 5:7 두 줄기 MasonryGrid에(홈과 같은 배치). 히어로는 내용 높이로 끝나고
+          바로 아래에 법정 일정 목록이, 오른쪽 줄기에는 미조치 위험요인 아래 아차사고가 붙어요(줄마다 생기던 회색 구멍 없음) */}
+      <div className="in-stack">
+        <MasonryGrid
+          className="in-flow"
+          items={[
+            { key: "hero", est: 270, node: (
+              <HeroCard title="가장 가까운 법정 일정" pill demo>
+                {next ? (
+                  <>
+                    <BigNumber label={next.title} value={days > 0 ? `D-${days}` : days === 0 ? "오늘" : `${-days}일 지남`} />
+                    <p className="in-hero-text">{formatDate(next.due_on)}까지 · {labelOf("legal_calendar_items.kind", next.kind)}</p>
+                    {halfRows.length > 0 && <p className="in-hero-text">SH 항목 {halfRows.length}개 중 {halfRows.filter((r) => r.result !== "pending").length}개 확인</p>}
+                    {nextLink && <div className="in-hero-cta"><Link to={nextLink}>{next.kind === "semiannual_review" ? "반기 점검 열기" : "자세히 보기"} <RightOutlined aria-hidden /></Link></div>}
+                  </>
+                ) : <p className="in-hero-text">다가오는 법정 일정이 없어요.</p>}
+              </HeroCard>
+            ) },
+            { key: "risks", est: 360, node: (
+              <SectionCard title="미조치 위험요인" pill demo more={{ label: "위험성평가", to: "/company/safety/risk" }}>
+                {risks.rows.length ? (
+                  <>
+                    <StatTile label="개선대책 기한 지남" value={overdue.length} unit="건" caption={`이행 확인 전 ${risks.rows.length}건 중`} />
+                    <ListRows ariaLabel="미조치 위험요인" rows={topRisks.map((r) => ({ key: r.id, title: r.hazard, subtitle: `${r.process} · ${r.work_area}`, to: `/company/safety/risk?selected=${r.id}`, trailing: <DdayBadge date={r.due_on} /> }))} />
+                  </>
+                ) : <EmptyState kind="empty" compact title="미조치 위험요인이 없어요" description="위험성평가에서 개선대책을 모두 이행했어요." />}
+              </SectionCard>
+            ) },
+            { key: "legal", est: 450, node: (
+              <SectionCard title="법정 일정" demo>
+                {upcoming.length ? (
+                  <ListRows ariaLabel="법정 일정" rows={upcoming.map((l) => ({ key: l.id, title: l.title, subtitle: `${labelOf("legal_calendar_items.kind", l.kind)} · ${l.basis}`, to: linkOf(l) ?? undefined, trailing: <DdayBadge date={l.due_on} /> }))} />
+                ) : <EmptyState kind="empty" compact title="다가오는 법정 일정이 없어요" />}
+              </SectionCard>
+            ) },
+            { key: "near-miss", est: 370, node: (
+              <SectionCard title="아차사고·의견" demo caption={member ? "내가 남긴 아차사고만 보여요." : undefined}>
+                <StatTile label={`${formatMonth(months[2]!)} 아차사고 신고`} value={thisMonth} unit="건" caption={`많을수록 좋은 신호예요 · 의견·개선 제안 ${opinionsThisMonth}건`} />
+                <SimpleBarChart data={byMonth} unit="건" highlightKey={months[2]} ariaLabel={`월별 아차사고 신고, ${byMonth.map((b) => `${b.label} ${b.value}건`).join(", ")}`} tableCaption="월별 아차사고 신고(예시)" height={150} />
+              </SectionCard>
+            ) },
+          ]}
+        />
+        <SectionCard title="최근 아차사고·의견">
           {feed.length ? (
             <SimpleTable<Feed>
               ariaLabel="최근 아차사고·의견"
@@ -127,7 +142,7 @@ export default function Page() {
             />
           ) : <EmptyState kind="empty" compact title="아직 등록된 아차사고·의견이 없어요" description="작은 것도 남겨 주세요." action={{ label: "남기기", onClick: () => setSelected("new") }} />}
         </SectionCard>
-      </CardGrid>
+      </div>
 
       <DetailDrawer open={selected === "new"} onClose={() => setSelected(null)} title="아차사고·의견 남기기" closeLabel="취소" footer={<Button type="primary" loading={report.isPending} onClick={() => void save()}>남기기</Button>}>
         <Form form={form} layout="vertical" requiredMark="optional">

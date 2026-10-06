@@ -46,7 +46,7 @@ export interface StatTileProps {
   value: number | string;
   unit?: string;
   delta?: DeltaTextProps;
-  /** 추이 → LineSpark(마지막 점 강조) */
+  /** 추이 → LineSpark(마지막 점 강조). 칸 폭을 다 채우는 높이 28 추이선 */
   trend?: number[];
   /** figure-hero 크기. 화면당 1개 */
   hero?: boolean;
@@ -80,7 +80,7 @@ export function StatTile({ label, value, unit, delta, trend, hero, caption, tone
         {caption && <span className="ws-stat__caption">{caption}</span>}
         {trend && trend.length > 1 && (
           <span className="ws-stat__trend">
-            <LineSpark values={trend} ariaLabel={trendLabel ?? sparkLabel(label, trend, unit)} />
+            <LineSpark fluid values={trend} ariaLabel={trendLabel ?? sparkLabel(label, trend, unit)} />
           </span>
         )}
       </div>
@@ -88,9 +88,10 @@ export function StatTile({ label, value, unit, delta, trend, hero, caption, tone
   );
 }
 
-/** StatTile 여러 개를 한 줄에(카드 안 그리드, 칸 사이 짧은 세로선) */
+/** StatTile 여러 개를 한 줄에(카드 안 그리드, 칸 사이 짧은 세로선).
+ *  바깥 .ws-stats-box는 크기 컨테이너: 칸 수를 화면 폭이 아니라 이 줄이 놓인 카드 안쪽 폭으로 정해요(좁은 홈 칸에서 3칸으로 끼지 않게) */
 export function StatRow({ children }: { children: ReactNode }) {
-  return <div className="ws-stats">{children}</div>;
+  return <div className="ws-stats-box"><div className="ws-stats">{children}</div></div>;
 }
 
 export interface KpiStripProps { title?: string; demo?: boolean; ariaLabel?: string; children: ReactNode }
