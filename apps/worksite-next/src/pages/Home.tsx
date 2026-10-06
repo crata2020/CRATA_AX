@@ -60,13 +60,13 @@ export default function Home() {
         eyebrow={longDate(d.today)}
         title={<>안녕하세요, {firstName}님</>}
         actions={
-          <>
+          <div className="hm-acts">
             <Button variant="dark" icon={<CheckCircle2 />} count={approvals.length} onClick={() => document.getElementById("approvals")?.scrollIntoView({ behavior: "smooth" })}>승인하기</Button>
             {mfg && <Button icon={<PlusCircle />} onClick={() => nav("/report")}>현장 등록</Button>}
             <Button icon={<Mic />} onClick={() => nav("/meetings")}>회의 올리기</Button>
             <Button icon={<Plus />} onClick={() => nav("/tasks")}>업무 만들기</Button>
-            <Button icon={<Sparkles />} onClick={() => nav("/ara")}>ARA에게 묻기</Button>
-          </>
+            <Button icon={<Sparkles />} className="hm-ara" onClick={() => nav("/ara")}>ARA에게 묻기</Button>
+          </div>
         }
       />
 

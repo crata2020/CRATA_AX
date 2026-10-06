@@ -21,16 +21,24 @@ export function useWidth<T extends HTMLElement>(): [React.RefObject<T>, number] 
   return [ref, w];
 }
 
-/** Catmull-Rom → 베지어(부드러운 곡선) */
+/** 단조 3차 보간(Fritsch–Carlson): 부드럽지만 데이터 밖으로 넘치지 않는 곡선(0 아래로 꺼지지 않게) */
 function smoothPath(pts: [number, number][]): string {
-  if (pts.length < 2) return "";
+  const n = pts.length;
+  if (n < 2) return "";
+  const dx: number[] = [], dy: number[] = [], m: number[] = [];
+  for (let i = 0; i < n - 1; i++) { dx.push(pts[i + 1]![0] - pts[i]![0]); dy.push(pts[i + 1]![1] - pts[i]![1]); m.push(dy[i]! / (dx[i]! || 1)); }
+  const t: number[] = [m[0]!];
+  for (let i = 1; i < n - 1; i++) t.push(m[i - 1]! * m[i]! <= 0 ? 0 : (m[i - 1]! + m[i]!) / 2);
+  t.push(m[n - 2]!);
+  for (let i = 0; i < n - 1; i++) {
+    if (m[i] === 0) { t[i] = 0; t[i + 1] = 0; continue; }
+    const a = t[i]! / m[i]!, b = t[i + 1]! / m[i]!, h = a * a + b * b;
+    if (h > 9) { const k = 3 / Math.sqrt(h); t[i] = k * a * m[i]!; t[i + 1] = k * b * m[i]!; }
+  }
   let d = `M${pts[0]![0]},${pts[0]![1]}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] ?? pts[i]!, p1 = pts[i]!, p2 = pts[i + 1]!, p3 = pts[i + 2] ?? p2;
-    const t = 0.18;
-    const c1 = [p1[0] + (p2[0] - p0[0]) * t, p1[1] + (p2[1] - p0[1]) * t];
-    const c2 = [p2[0] - (p3[0] - p1[0]) * t, p2[1] - (p3[1] - p1[1]) * t];
-    d += ` C${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${p2[0]},${p2[1]}`;
+  for (let i = 0; i < n - 1; i++) {
+    const [x0, y0] = pts[i]!, [x1, y1] = pts[i + 1]!, h = dx[i]! / 3;
+    d += ` C${x0 + h},${y0 + t[i]! * h} ${x1 - h},${y1 - t[i + 1]! * h} ${x1},${y1}`;
   }
   return d;
 }
