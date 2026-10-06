@@ -35,8 +35,7 @@
 .dc-leg { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
 .dc-leg i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .dc-leg b { font-weight: 500; color: var(--ink); margin-left: 2px; }
-.dc-trend__chart { flex: 1; min-height: 220px; min-width: 0; padding-left: 14px; }
-.dc-trend__chart svg { overflow: visible; }
+.dc-trend__chart { flex: 1; min-height: 220px; min-width: 0; }
 .dc-trend__note { display: flex; align-items: flex-start; gap: 6px; font-size: 12.5px; color: var(--faint); line-height: 18px; }
 .dc-trend__note svg { width: 14px; height: 14px; flex: none; margin-top: 2px; }
 
@@ -191,7 +190,7 @@
   .dc-mbar .seg__btn { padding: 0 10px; }
   .card__actions:has(> .dc-hide-m:only-child) { display: none; }
 
-  .dc-trend__chart { min-height: 200px; padding-left: 12px; }
+  .dc-trend__chart { min-height: 200px; }
   .dc-flowcard { padding: 14px 14px 12px; }
   .dc-flowcard__head { padding: 0 2px 10px; }
   .dc-flow { grid-template-columns: 1fr; gap: 8px; }

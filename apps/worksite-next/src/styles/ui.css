@@ -313,6 +313,7 @@
   .phead__actions { margin-left: 0; width: 100%; }
   .card__head { padding: 16px 16px 0; min-height: 56px; }
   .card__body { padding: 14px 16px 18px; }
+  .card__body--flush { padding: 8px 0 0; }
   .table th:first-child, .table td:first-child { padding-left: 16px; }
   .table th:last-child, .table td:last-child { padding-right: 16px; }
   .btn, .seg__btn { min-height: 44px; }

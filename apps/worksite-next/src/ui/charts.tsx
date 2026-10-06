@@ -75,7 +75,7 @@ export function LineChart({ series, labels, height: minH = 240, format = (v) => 
           {labels.map((l, i) => (
             <g key={l + i}>
               <line x1={x(i)} x2={x(i)} y1={padT} y2={padT + ih} stroke="var(--line)" strokeWidth="1" />
-              <text x={x(i)} y={height - 8} textAnchor="middle" fontSize="11.5" fill={idx === i ? "var(--ink)" : "var(--faint)"} fontWeight={idx === i ? 600 : 400}>{l}</text>
+              <text x={i === 0 ? Math.max(0, x(i) - 6) : x(i)} y={height - 8} textAnchor={i === 0 ? "start" : "middle"} fontSize="11.5" fill={idx === i ? "var(--ink)" : "var(--faint)"} fontWeight={idx === i ? 600 : 400}>{l}</text>
             </g>
           ))}
           {series.map((s) => (
