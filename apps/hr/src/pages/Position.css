@@ -1,0 +1,143 @@
+/* 공고 상세. 접두어 ps- (서랍·찾는 사람 표는 Hiring.css의 hg-) */
+.ps-back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13.5px; }
+.ps-back svg { width: 15px; height: 15px; stroke-width: 1.9; }
+.ps-back:hover { color: var(--ink); }
+.ps-meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.ps-meta > span:not(.chip) + span:not(.chip)::before, .ps-meta > .chip + span::before { content: "·"; color: var(--faint); margin-right: 10px; }
+.ps-meta b { font-weight: 600; color: var(--ink); }
+.ps-foot { margin-top: 16px; }
+
+/* 위 두 카드 */
+.ps-top { margin-bottom: 8px; }
+.ps-look .card__foot { font-size: 12.5px; color: var(--faint); }
+.ps-look__intro { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+.ps-say { display: flex; gap: 10px; font-size: 14px; line-height: 22px; color: var(--ink); }
+.ps-say svg { width: 16px; height: 16px; flex: none; margin-top: 3px; color: var(--brand); }
+.ps-look .hg-look { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
+.ps-look .hg-look__row:nth-child(-n+2) { border-top: 0; padding-top: 2px; }
+.ps-look .hg-look__row:last-child { grid-column: 1 / -1; }
+.ps-conds { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); }
+.ps-k { font-size: 13px; color: var(--muted); width: 96px; flex: none; }
+
+.ps-ana .card__body { display: flex; flex-direction: column; gap: 16px; }
+.ps-ana__row { display: flex; align-items: center; gap: 24px; }
+.ps-ana__l { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.ps-big { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.ps-big > .num { font-size: 44px; line-height: 48px; font-weight: 500; letter-spacing: -0.03em; color: var(--ink); }
+.ps-legend li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.ps-legend li:first-child { border-top: 0; padding-top: 0; }
+.ps-legend .tagsq { font-size: 13.5px; }
+.ps-legend b { font-weight: 500; color: var(--ink); }
+.ps-legend b .faint { font-weight: 400; }
+.ps-topfit { display: flex; flex-direction: column; gap: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ps-topfit ul { display: flex; flex-direction: column; }
+.ps-topfit button {
+  display: grid; grid-template-columns: auto 64px minmax(40px, 1fr) 28px auto; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; margin: 0 -8px;
+  width: calc(100% + 16px); border: 0; background: none; border-radius: 10px; cursor: pointer; text-align: left;
+}
+.ps-topfit button:hover { background: var(--surface-2); }
+.ps-topfit .ava { border: 0; }
+.ps-topfit__n { font-size: 13.5px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-topfit__v { font-size: 13.5px; font-weight: 500; color: var(--ink); text-align: right; }
+.ps-ana__note { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); }
+
+/* 단계 탭 + 툴바 */
+.ps-tabs { margin: 16px 0 16px; }
+.ps-toolbar { margin-bottom: 12px; }
+.ps-search { min-width: 220px; flex: 0 1 300px; }
+
+/* 고른 줄 묶음 동작 */
+.ps-bulk {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 8px 8px 16px; margin-bottom: 14px; border-radius: var(--r-md);
+  background: var(--surface); border: 1px solid var(--line); font-size: 14px; color: var(--ink-2);
+}
+.ps-bulk.is-on { background: var(--brand-soft); border-color: var(--brand-line); color: var(--brand-ink); }
+.ps-bulk__t { display: inline-flex; align-items: center; gap: 4px; flex: 1 1 280px; min-width: 0; flex-wrap: wrap; line-height: 20px; }
+.ps-bulk__t svg { width: 16px; height: 16px; margin-right: 4px; flex: none; }
+.ps-bulk__t b { font-weight: 600; }
+.ps-bulk__acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* 단계 묶음(ProjectFlow 'This month') */
+.ps-groups { display: flex; flex-direction: column; gap: 16px; }
+.ps-group { overflow: hidden; }
+.ps-group__head { display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px 12px; min-height: 60px; }
+.ps-group__toggle {
+  display: inline-flex; align-items: center; gap: 10px; border: 0; background: none; padding: 6px 10px 6px 8px; border-radius: 10px; cursor: pointer;
+  font-size: 15.5px; font-weight: 500; color: var(--ink);
+}
+.ps-group__toggle:hover:not([disabled]) { background: var(--sunken); }
+.ps-group__toggle[disabled] { cursor: default; }
+.ps-group__toggle[disabled] .hg-chev { display: none; }
+.ps-group__hint { font-size: 13px; color: var(--muted); }
+.ps-group__empty { padding: 0 22px 20px 50px; font-size: 13.5px; color: var(--muted); margin-top: -4px; }
+.ps-group__empty b { font-weight: 600; color: var(--ink-2); }
+
+/* 표 */
+.ps-table { table-layout: fixed; min-width: 1010px; }
+.ps-table col.w-chk { width: 52px; }
+.ps-table col.w-date { width: 112px; }
+.ps-table col.w-yrs { width: 70px; }
+.ps-table col.w-doc { width: 104px; }
+.ps-table col.w-test { width: 128px; }
+.ps-table col.w-fit { width: 132px; }
+.ps-table col.w-tier { width: 116px; }
+.ps-table col.w-act { width: 128px; }
+.ps-table th:first-child, .ps-table td:first-child { padding-right: 0; }
+.ps-table td { padding-top: 11px; padding-bottom: 11px; }
+.ps-table tbody tr { cursor: pointer; }
+.ps-table tbody tr.is-sel { background: var(--brand-soft); }
+.ps-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ps-who .ava { border: 0; }
+.ps-name { border: 0; background: none; padding: 0; font-size: 14.5px; font-weight: 500; color: var(--ink); cursor: pointer; text-align: left; line-height: 21px; }
+.ps-name:hover { color: var(--brand-ink); }
+.ps-sub { font-size: 12.5px; color: var(--muted); line-height: 18px; }
+.ps-c-date { white-space: nowrap; }
+.ps-c-date .num { color: var(--ink-2); }
+.ps-src { display: block; font-size: 12px; color: var(--faint); }
+.ps-date { margin-left: 6px; font-size: 12px; color: var(--faint); }
+.ps-c-test { white-space: nowrap; }
+.ps-fit { display: flex; align-items: center; gap: 10px; }
+.ps-fit > .num { font-size: 14px; font-weight: 500; color: var(--ink); min-width: 22px; }
+.ps-fit .bar { flex: 1; min-width: 40px; }
+.ps-c-act .btn { width: 100%; }
+
+@media (max-width: 1279px) {
+  .ps-ana__row { gap: 16px; }
+}
+@media (max-width: 900px) {
+  .ps-search { flex: 1 1 100%; min-width: 0; }
+}
+@media (max-width: 767px) {
+  .ps-look .hg-look { grid-template-columns: minmax(0, 1fr); }
+  .ps-look .hg-look__row:nth-child(2) { border-top: 1px solid var(--line); padding-top: 10px; }
+  .ps-k { width: auto; }
+  .ps-ana__row { flex-direction: column-reverse; align-items: stretch; }
+  .ps-ana__row > div:last-child { align-self: center; }
+  .ps-big > .num { font-size: 36px; line-height: 40px; }
+  .ps-bulk { padding: 12px; }
+  .ps-bulk__acts { justify-content: stretch; width: 100%; }
+  .ps-bulk__acts .btn { flex: 1 1 auto; }
+  .ps-bulk__acts .btn--dark { flex: 1 1 100%; order: -1; }
+  .ps-group__head { padding: 10px 12px 10px 8px; min-height: 54px; flex-wrap: wrap; row-gap: 0; }
+  .ps-group__hint { flex: 1 1 100%; padding-left: 46px; margin-top: -6px; font-size: 12.5px; }
+  .ps-group__empty { padding: 0 16px 16px 46px; }
+
+  /* 표 → 쌓인 줄 */
+  .ps-table, .ps-table tbody { display: block; min-width: 0; }
+  .ps-table thead, .ps-table colgroup { display: none; }
+  .ps-table tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 14px 16px; border-top: 1px solid var(--line); }
+  .ps-table tbody tr::before { content: ""; order: 4; flex-basis: 100%; height: 0; }
+  .ps-table td { display: block; padding: 0 !important; border: 0 !important; min-width: 0; }
+  .ps-c-chk { order: 1; align-self: flex-start; padding-top: 6px !important; }
+  .ps-c-main { order: 2; flex: 1 1 0; }
+  .ps-c-tier { order: 3; align-self: flex-start; }
+  .ps-c-date { order: 5; margin-left: 28px; display: inline-flex !important; gap: 6px; align-items: center; }
+  .ps-src { display: inline; }
+  .ps-c-yrs { order: 6; color: var(--muted); font-size: 13px; }
+  .ps-c-doc { order: 7; }
+  .ps-c-test { order: 8; }
+  .ps-c-fit { order: 9; flex: 1 1 100%; padding-left: 28px !important; }
+  .ps-c-fit:has(.faint) { display: none; }
+  .ps-c-act { order: 10; flex: 1 1 100%; padding-left: 28px !important; }
+  .ps-sub { white-space: normal; overflow: visible; }
+}
