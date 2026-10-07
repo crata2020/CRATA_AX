@@ -8,9 +8,9 @@ import {
 import { useApp } from "@/data/store";
 import { isOpen } from "@/data/phase";
 import { Avatar, Bar, IconButton, Menu } from "@/ui";
-import type { TenantId } from "@/data/types";
+import type { TenantData, TenantId } from "@/data/types";
 
-interface NavDef { to: string; label: string; icon: JSX.Element; badge?: number; pack?: "manufacturing"; adminOnly?: boolean; lock?: boolean }
+interface NavDef { to: string; label: string; icon: JSX.Element; badge?: number; pack?: TenantData["pack"]; adminOnly?: boolean; lock?: boolean }
 
 export const PAGE_TITLE: Record<string, [string, string?]> = {
   "/": ["홈"], "/tasks": ["내 업무", "업무"], "/projects": ["프로젝트", "업무"], "/meetings": ["회의", "업무"], "/docs": ["문서·학습", "업무"],

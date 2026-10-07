@@ -1,11 +1,12 @@
 # AGENTS.md — CRATA AX
+판: 2026-10-07(구성 규칙 포함). 이 줄이 없으면 옛 판이에요.
 
 ## 0. 프로젝트 한 줄
 CRATA(부산)의 AX 서비스 데모예요. 고객사가 일하는 방식을 뽑아 공통 플랫폼 위에 회사별 업무사이트를 세우고, 직원 AI를 ARA MCP로 잇고(ARA는 복지 겸), 수정이 쌓일수록 나아지게 운영해요. 인사 앱은 CRATA 행동방식검사 4종을 인사이동·채용에 붙여요.
 
 **이 저장소에는 대표님이 이미 승인한 디자인 시스템이 있어요.** 새 콘셉트(ImageGen 포함), 장식 그라데이션, 대담한 색, 새 글꼴(Pretendard 고정), UI 라이브러리를 쓰지 않아요. **모양**(토큰·부품·차트·문구)은 그대로 쓰고, **구성**(어떤 요소를 어디에)은 화면의 용도에서 새로 정해요. 기준 화면·레퍼런스는 베낄 배치가 아니라 어휘와 품질 기준이에요.
 
-**지시가 부딪히면:** 사용자 요청 > 브리프(`docs/codex/briefs/<page>.md`) > 이 파일 > PLAYBOOK > 템플릿의 채운 예. 숫자·사람은 seed(hr `src/data/seed.ts`, 업무사이트 `src/data/{tr,crata}.ts`)가 맞고, 디자인 값은 원본 CSS가 맞아요. 버튼 이름은 사용자 요청의 동사를 그대로 써요. 요청에 seed에 없는 역할·팀이 나오면 대화 중엔 묻고, 무인이면 가장 가까운 seed 역할로 대신하고 '승인 전 가정'에 적어요.
+**지시가 부딪히면:** 사용자 요청 > 브리프(`docs/codex/briefs/<page>.md`) > 이 파일 > PLAYBOOK > 템플릿의 채운 예. 숫자·사람은 seed(hr `src/data/seed.ts`, 업무사이트 `src/data/{tr,crata}.ts`)가 맞고, 디자인 값은 원본 CSS가 맞아요. 버튼 이름은 사용자 요청의 동사를 그대로 써요. 요청이 seed에 없는 역할·기록·대상을 말하거나 요청 동사가 누를 동작이 아니면 PLAYBOOK 7.4대로 해요. 데이터 등급은 `docs/research/04`가 맞아요.
 
 ## 1. 폴더 지도
 | 경로 | 내용 |
@@ -34,7 +35,7 @@ Node 22 이상. 저장소 루트에서 시작해요. **포트: hr 4311·worksite
 cd apps/hr  # 또는 apps/worksite-next
 npm ci  # node_modules가 있으면 건너뛰어요
 npm run typecheck && npm run build  # worksite-next는 npm run build:public도
-npm test  # hr만(src/lib/*.test.ts). worksite-next는 아직 없어요
+npm test  # hr만(src/lib/*.test.ts)
 setsid sh -c 'echo $$ > .vite.pid; exec node node_modules/vite/bin/vite.js --port 4314 --strictPort' > .vite.log 2>&1 < /dev/null &
 node ../../scripts/ui-check.mjs --base http://localhost:4314/ --routes /moves,/people --fold --a11y  # 내 경로로
 kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)"; rm -f .vite.pid  # 서버 끄기
@@ -49,7 +50,7 @@ kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)"; rm -f .vite.
 
 - **카드** `<Card>`: 머리는 제목 17/500 + 오른쪽 `PillSelect`("이번 주 ▾")나 `MoreButton`(⋯). 표는 `flush`로. 그림자는 `--shadow-card`만.
 - **페이지 머리** `<PageHead>`: h1 하나(26/34·500), 아래 설명 한 줄, 오른쪽 동작 버튼.
-- **버튼**: 기본은 흰 테두리 버튼(높이 40, 라운드 12). 주 동작 하나만 `variant="dark"`, 건수는 `count`("승인하기 9"). 짙은 버튼이 **체크한 줄에 대한 일괄 동작**이면 일괄 띠 오른쪽 끝(`Position.tsx`), **화면 전체 동작**이면 머리(Moves '모두 확정', 인사 홈 '인사이동 열기')에 둬요. 브랜드색 주 버튼을 쓰는 화면(프로젝트)이나 읽기 위주 화면에는 짙은 버튼이 없어도 돼요. 서로 다른 결정을 한 번에 확정하는 일괄 버튼은 만들지 않아요(줄마다 버튼).
+- **버튼**: 기본은 흰 테두리 버튼(높이 40, 라운드 12). 주 동작 하나만 `variant="dark"`, 건수는 `count`("승인하기 9"). 짙은 버튼이 **체크한 줄에 대한 일괄 동작**이면 일괄 띠 오른쪽 끝(`Position.tsx`), **화면 전체 동작**이면 머리(Moves '모두 확정', 인사 홈 '인사이동 열기'), 휴대폰 현장 화면이면 하단 고정 띠(Report `.rp-submit`)에 둬요. 브랜드색 주 버튼을 쓰는 화면(프로젝트)이나 읽기 위주 화면에는 짙은 버튼이 없어도 돼요. 서로 다른 결정을 한 번에 확정하는 일괄 버튼은 만들지 않아요(줄마다 버튼).
 - **숫자**: `Kpi`·`KpiCard`. 34/40·500, 단위는 작고 흐리게, 옆에 `Delta`. Delta 자리에는 비교값이나 뜻 있는 상태 칩만 둬요. '예시'는 note나 라벨 뒤 '(예시)'로. Delta 색은 좋은 방향인지(`good`)로 정해요. 숫자에는 `className="num"`.
 - **색**: 강조색은 `--brand` 하나(회사마다 4개 변수만 바꿔요). 아이콘 원은 `.tone-*` 파스텔, 상태는 `<Chip tone dot>`(옅은 바탕 + 점 + 글자).
 - **보기 전환**: 필터는 `Segmented`(켜진 것만 짙은 알약), 보기 방식은 `Track`, 화면 구역은 `Tabs`(밑줄 + 아이콘 + 흐린 개수).
@@ -58,7 +59,7 @@ kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)"; rm -f .vite.
 - **차트**: `src/ui/charts.tsx`만 써요. 강조는 하나, 색은 파스텔 7색.
 - **아바타**는 이니셜 + 이름 해시 색(사진 없음), **아이콘**은 lucide-react 선 아이콘만.
 - **격자**: `.grid.g-12`. 주인공이 큰 칸(8:4·7:5, 대등하면 6:6, 넓은 보드·표는 s-12 쌓기). 간격 20(모바일 14).
-- **반복 패턴**(AI 일괄 띠, 묶음 표, 모바일 쌓인 표, 최소 눈금 막대)은 PLAYBOOK 4.0 표의 기준 파일에서 복사하고 접두사만 바꿔요.
+- **반복 패턴**(AI 일괄 띠, 묶음 표, 모바일 쌓인 표, 최소 눈금 막대)은 PLAYBOOK 4.0 표의 기준 파일에서 복사하고 접두사만 바꿔요. 표에 없는 요소는 4장 값으로 만들고 '새 요소'로 보고해요.
 
 금지:
 - 숫자·제목 600~700, 짙은 버튼이나 브랜드 버튼 여러 개

@@ -10,7 +10,7 @@
 | `src/main.tsx` | 스타일 4개를 `tokens → base → ui → shell` 순서로 불러와요 |
 | `src/App.tsx` | 라우트: `/` 홈, 나머지는 404 |
 | `src/shell/Shell.tsx` | 앱 틀. 바꿀 곳은 `COMPANY`, `ME`, `NAV`, `PAGE_TITLE` 네 개뿐이에요 |
-| `src/pages/Home.tsx`, `NotFound.tsx` | 틀 확인용 홈(KPI 띠 + 8:4 격자)과 404 |
+| `src/pages/Home.tsx`, `NotFound.tsx` | 틀 확인용 홈(배치 본보기가 아니에요. 구성은 PLAYBOOK 5.0)과 404 |
 | `src/lib/text.test.ts` | `npm test` 자리(조사 테스트 1개) |
 
 디자인 시스템 원본(`src/styles`, `src/ui`)과 `src/lib/text.ts`는 **여기 두지 않아요**. 사본이 셋이 되면 어긋나서, 쓸 때 원본에서 복사해요.

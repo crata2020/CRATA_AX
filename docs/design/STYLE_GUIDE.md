@@ -15,7 +15,7 @@ Orbix Studio(인스타그램 @orbixdashboard)의 밝은 대시보드 문법을 �
 ## 2. 원칙
 
 1. **틀은 흰색, 바탕은 옅은 회색, 카드는 흰색.** 그림자는 떠 있는 것(메뉴·툴팁·서랍·토스트)에만 써요. 카드는 1px `--line` 테두리와 거의 없는 그림자로 구분해요.
-2. **짙은 덩어리는 화면당 하나.** 주 동작 하나만 `btn--dark`예요. 화면 전체 동작이면 머리에, 체크한 줄에 대한 일괄 동작이면 일괄 띠 오른쪽 끝에 둬요(공고 상세). 켜진 세그먼트(검정 알약)는 예외로 둬요.
+2. **짙은 덩어리는 화면당 많아야 하나(없어도 돼요).** 주 동작 하나만 `btn--dark`예요. 화면 전체 동작이면 머리에, 같은 종류 여러 건의 일괄 동작이면 일괄 띠 오른쪽 끝에(공고 상세), 휴대폰 현장 화면이면 하단 고정 띠(현장 등록 `.rp-submit`)에 둬요. 서로 다른 결정 몇 건은 줄마다 버튼이에요. 켜진 세그먼트(검정 알약)는 예외로 둬요.
 3. **강조색은 브랜드 하나.** 누르는 곳, 켜진 상태, 선택에만 써요. 상태색(good·warn·bad·info)은 강조색이 아니에요.
 4. **숫자는 크고 조용하게.** 굵기 500, `letter-spacing -0.02em`, 고정폭 숫자(`.num`)로 쓰고, 단위는 작고 흐리게 붙여요.
 5. **상태는 옅은 배경 알약(점 + 글자).** 색만으로 상태를 나타내지 않고 늘 글자를 함께 써요.
@@ -104,7 +104,7 @@ Orbix Studio(인스타그램 @orbixdashboard)의 밝은 대시보드 문법을 �
 
 | 부품 | 클래스 / 컴포넌트 | 규칙 |
 |---|---|---|
-| 버튼 | `.btn` `.btn--dark` `--brand` `--soft` `--ghost` `--sm` `--lg` `--pill` · `<Button variant size icon count>` | 기본은 흰 바탕 테두리 버튼(높이 40, 라운드 12, 아이콘 + 글자). 짙은 버튼은 화면당 하나. `count`는 버튼 안의 작은 숫자 알약 |
+| 버튼 | `.btn` `.btn--dark` `--brand` `--soft` `--ghost` `--sm` `--lg` `--pill` · `<Button variant size icon count>` | 기본은 흰 바탕 테두리 버튼(높이 40, 라운드 12, 아이콘 + 글자). 짙은 버튼은 화면당 많아야 하나(없어도 돼요, 원칙 2). `count`는 버튼 안의 작은 숫자 알약 |
 | 아이콘 버튼 | `.iconbtn` `--round` `--sm` `--plain` · `<IconButton label>` | 글자가 없으면 `label`이 필수(aria-label). `badge`는 주황 숫자 |
 | 카드 | `.card` `.card__head/title/sub/actions/body/foot` · `<Card title icon sub actions flush foot>` | 머리: 제목 17/500 + 아래 설명 13, 오른쪽에 알약 선택이나 ⋯ 네모 버튼. 표·목록은 `flush` |
 | 알약 선택 | `.pillselect` · `<PillSelect>` | “이번 주 ▾”. 실제 `<select>`를 투명하게 덮어 접근성을 지켜요 |
@@ -161,7 +161,7 @@ Orbix Studio(인스타그램 @orbixdashboard)의 밝은 대시보드 문법을 �
 | post_3 (FinSight) | KPI 4장, 분할 막대, 반원 게이지, Getting started 체크 | 현장·품질, AI 연결 |
 | orbixcrm-team-members-grid, mediflex-doctors | 파스텔 머리 + 큰 아바타 카드, 페이지 넘김 | 구성원, 채용 공고 카드 |
 | orbixcrm-integrations-grid | 3열 카드: 모노 로고 네모, 이름, 설명, 토글 | 도구 연결 |
-| hope-hr-analytics | 도넛 + 분포 막대, 큰 %. 월 달력(날짜 원, 오늘만 brand 채움, 빗금 = 예정)과 날짜 머리 '10월 15일(목)' 아래 일정 카드(제목·장소 · AvatarStack · outline 칩 2~3) 부품. 버림: 짙은 초록 칩(→ neutral/outline), 사진 | 구성원 분포, AI 추천 분포. 일정 카드 부품은 교육 회차 목록에 썼어요(어디에 둘지는 화면마다 정해요) |
+| hope-hr-analytics | 도넛 + 분포 막대, 큰 %. 월 달력(날짜 원, 오늘만 brand 채움, 빗금 = 예정)과 날짜 머리 '10월 15일(목)' 아래 일정 카드(제목·장소 · AvatarStack · outline 칩 2~3) 부품. 버림: 짙은 초록 칩(→ neutral/outline), 사진 | 구성원 분포, AI 추천 분포. 일정 카드 부품은 아직 쓴 화면이 없어요(교육 화면 브리프 견본에 예시가 있어요). 어디에 둘지는 화면마다 정해요 |
 | winx-add-product-form, fintech-accounts | 번호 매긴 폼 구역, 둥근 입력, 오른쪽 상태 열 | 설정, 지원서, 동의·보관 |
 | orbix-ai-chat-home | 가운데 큰 질문 + 입력 상자 + 제안 칩 + 카드 3장, 은은한 파스텔 바탕 | ARA, 지원자 검사 |
 | botrix-ai-command-center, ai-support-inbox-dark(밝게) | 대화 + 결과 카드, 목록 + 상세 받은편지함 | 인사이동 대화, 회의 |

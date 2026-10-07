@@ -1,5 +1,5 @@
-// 시작용 홈: 틀이 맞는지 보는 자리예요. 기준 화면 브리프(docs/codex/briefs/<page>.md)대로 이 파일을 통째로 바꿔요.
-// 문법 출처: apps/worksite-next/src/pages/Home.tsx(KPI 띠 + 8:4 격자 + 카드 머리)
+// 시작용 홈: 틀(사이드바·상단 바·카드 모양)이 맞는지만 보는 자리예요. 배치 본보기가 아니에요.
+// 이 앱의 홈은 PLAYBOOK 5.0(질문 → 요소 → 자리)으로 구성을 정한 뒤 이 파일을 통째로 바꿔요.
 import { CalendarClock, CheckCircle2, ClipboardList, LayoutDashboard, Users } from "lucide-react";
 import { Card, Delta, Empty, KpiCard, PageHead } from "@/ui";
 

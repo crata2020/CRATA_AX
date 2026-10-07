@@ -3,6 +3,7 @@
 > **실제로 쓴 브리프(기록)예요.** 업무사이트(`apps/worksite-next`)를 만들 때 화면을 여러 작업자(서브에이전트)에게 나눠 맡기며 그대로 준 원문이에요. 새 브리프를 **얼마나 구체적으로** 써야 하는지 보는 용도예요.
 > - `$REFS/`는 Orbix 레퍼런스 폴더예요(`post_*.jpg` → `$REFS/instagram-posts/`, `refs/*.jpg` → `$REFS/orbix-refs/`). 저장소 밖에 있어요(PROMPTS.md 준비 2).
 > - '확인' 장의 캡처·서버 명령(`shotdev.js`, `pkill`, `ss`)은 그때 쓰던 임시 도구예요. 지금은 AGENTS.md 2장(`scripts/ui-check.mjs`, `.vite.pid` 방식)을 써요.
+> - **구성 규칙(PLAYBOOK 5.0) 전의 원문이에요.** 화면마다 레퍼런스 배치와 KPI 띠를 먼저 정한 방식은 따라 하지 않아요. 칸을 얼마나 구체적으로 채웠는지만 보세요.
 > - 숫자·화면 목록·문구 규칙은 그때 기준이에요. 지금은 seed, `AGENTS.md`, `docs/codex/PLAYBOOK.md`가 우선이에요.
 
 사용자(한국, CRATA 대표)의 요청: **"기존 것은 아예 신경 쓰지 말고, 디자인은 내가 준 인스타(Orbix Studio Dashboard) 기준으로, 들어갈 내용은 리서치한 것을 참고해서 전체를 새로 만들어 줘."**
