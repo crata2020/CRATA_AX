@@ -5,14 +5,17 @@ description: CRATA 화면 만들기·다듬기(new screen, page, UI, dashboard, 
 
 # CRATA 화면 하나 만들기
 
-이 저장소에는 대표님이 승인한 디자인 시스템이 있어요. 새 콘셉트, ImageGen 시안, 그라데이션, 새 글꼴, UI 라이브러리는 쓰지 않아요. 지시가 부딪히면 사용자 요청 > 브리프 > `AGENTS.md` > PLAYBOOK 순서예요. 숫자·사람은 seed가 맞아요.
+이 저장소에는 대표님이 승인한 디자인 시스템이 있어요. 새 콘셉트, ImageGen 시안, 그라데이션, 새 글꼴, UI 라이브러리는 쓰지 않아요. **모양은 그대로, 구성은 용도에서** 정해요. 기준 화면과 레퍼런스는 베낄 배치가 아니라 어휘와 품질 기준이에요. 지시가 부딪히면 사용자 요청 > 브리프 > `AGENTS.md` > PLAYBOOK 순서예요. 숫자·사람은 seed가 맞아요.
 
 ## 순서
 1. **읽기와 브리프**
-   - `AGENTS.md` 전체, `docs/codex/PLAYBOOK.md` 4장(4.0 복사할 파일 표 포함)과 5장(레시피)
+   - `AGENTS.md` 전체, `docs/codex/PLAYBOOK.md` 5.0(구성), 4장(모양, 4.0 복사할 파일 표 포함), 5.1(출발 레시피)
    - 브리프 `docs/codex/briefs/<page>.md`. 없으면 `docs/codex/SCREEN_BRIEF_TEMPLATE.md` 1장 틀로 초안을 써요. 2장(채운 예)은 형식만 보고 숫자는 seed에서 다시 계산해요.
    - 사람이 대화 중이면 초안을 보여 주고 확인받은 뒤 진행해요. **무인 실행**이면 `docs/codex/briefs/<page>.md`(또는 과제가 정한 위치)에 쓰고 바로 진행해요. 확인받지 못한 판단은 보고의 '승인 전 가정'에 적어요.
-2. **기준 화면 읽기:** 업무사이트는 `apps/worksite-next/src/pages/Home.tsx`, 인사 앱은 `apps/hr/src/pages/Moves.tsx`. 브리프의 레시피(A~H)를 하나 고르고, PLAYBOOK 4.0 표에서 그 레시피의 기준 파일(CSS·마크업)을 열어 둬요.
+2. **구성 정하기와 기준 화면 읽기**
+   - 브리프의 '구성'(질문 → 요소 → 자리)을 확인해요. 비어 있으면 PLAYBOOK 5.0대로 채워요: 질문 3~5개를 중요한 순서로, 질문마다 요소, 1번 질문의 답과 행동은 첫 화면 왼쪽 위.
+   - 구성안 2개를 텍스트 와이어프레임으로 쓰고 하나를 골라요. 사람이 대화 중이면 고르게 하고, 무인 실행이면 고른 이유를 '승인 전 가정'에 적어요.
+   - 그다음 출발 레시피(A~H)를 고르고, PLAYBOOK 4.0 표에서 쓸 부품의 기준 파일(CSS·마크업)을 열어 둬요. 기준 화면(업무사이트 `apps/worksite-next/src/pages/Home.tsx`, 인사 앱 `apps/hr/src/pages/Moves.tsx`)은 밀도·문법을 보려고 읽어요. 배치는 따라 하지 않아요.
 3. **데이터·로직 먼저**
    - 화면이 쓸 데이터와 계산 함수가 이미 있으면 그대로 써요.
    - 오케스트레이터가 있는 작업이면 공통 파일(`src/ui`, `src/styles`, `src/shell`, `src/data`, `src/lib`, `App.tsx`)을 바꾸지 않아요. 필요한 것이 없으면 멈추고 보고해요.
@@ -28,11 +31,12 @@ description: CRATA 화면 만들기·다듬기(new screen, page, UI, dashboard, 
    - 클릭 뒤 상태: 흐름 파일을 `.ui-check/flows/<page>.json`에 쓰고 `--flow @.ui-check/flows/<page>.json --viewports d:1440x1000,m:390x844`로 찍어요(예: `scripts/flows/hr-position.example.json`).
 6. **비교 루프(2번 이상)**
    - `.ui-check/<Page>/*.fold.png`, 브리프의 레퍼런스(사용자가 준 경로), `docs/design/screenshots/`의 비슷한 화면(같은 크기인 `<이름>.fold.png`)을 `view_image`로 나란히 봐요.
-   - 다른 점 목록을 PLAYBOOK 8.4 형식으로 쓰고, high부터 고쳐요. 다시 찍어서 전후를 비교해요.
+   - 다른 점 목록을 PLAYBOOK 8.4 형식(kind 모양/구성)으로 쓰고, high부터 고쳐요. 모양 차이는 고치고, 용도 때문인 구성 차이는 keep 이유를 적어요. 다시 찍어서 전후를 비교해요.
+   - PLAYBOOK 8.3의 '구성' 질문(가~라)도 확인해요. 답하지 않는 카드가 있으면 빼요.
 7. **마무리**
    - `docs/codex/CHECKLIST.md`를 확인해요. 셸을 바꿨으면 `--routes @../../scripts/routes.hr.json`(또는 worksite)로 전 경로를 다시 돌려요.
    - 서버 끄기: `kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)"; rm -f .vite.pid`. `pkill -f`·`pgrep -f`는 쓰지 않아요(내 셸까지 죽어요).
-   - 보고: 바꾼 파일(공통 줄 포함), ui-check 결과 줄, fold 캡처 경로, 남은 다른 점, 승인 전 가정, **공통 파일에서 고칠 것**
+   - 보고: 고른 구성안과 이유, 바꾼 파일(공통 줄 포함), ui-check 결과 줄, fold 캡처 경로, 남은 다른 점, 승인 전 가정, **공통 파일에서 고칠 것**
 
 ## 지킬 것
 - 짙은 버튼은 한 화면에 하나, h1도 하나. 체크한 줄의 일괄 동작이면 짙은 버튼은 일괄 띠 오른쪽 끝에, 화면 전체 동작이면 머리에 둬요.

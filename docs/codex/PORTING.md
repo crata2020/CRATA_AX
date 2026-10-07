@@ -56,7 +56,7 @@ for a in worksite:worksite-next hr:hr; do mkdir -p docs/design/examples/${a%%:*}
 | 7 완료 기준 | 명령 이름만(`npm test` 대상, `build:public`) | 나머지 전부 |
 | 8 배운 것 | 없음 | 전부 |
 
-고친 뒤 `wc -c AGENTS.md`로 크기를 봐요. 16KB 안팎이 좋아요(Codex는 기본 32KiB까지 읽고, 넘으면 뒤가 잘려요).
+고친 뒤 `wc -c AGENTS.md`로 크기를 봐요. 18KB 아래가 좋아요(Codex는 홈의 `~/.codex/AGENTS.md`까지 합쳐 기본 32KiB까지 읽고, 넘으면 뒤가 잘려요).
 
 ## 3. 다른 파일에서 고칠 곳
 
