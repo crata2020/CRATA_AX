@@ -1,0 +1,11 @@
+{
+  "variants": [
+    { "name": "tr-plant", "query": "tenant=tr&as=tr-plant" },
+    { "name": "tr-op1", "query": "tenant=tr&as=tr-op1", "routes": ["/", "/report", "/tasks"], "viewports": ["m"] },
+    { "name": "crata-edu", "query": "tenant=crata&as=cr-edu" }
+  ],
+  "routes": [
+    "/", "/tasks", "/projects", "/meetings", "/docs", "/quality", "/report", "/ai",
+    "/integrations", "/company", "/members", "/settings", "/ara", "/nope"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "crata-ui-check",
+  "private": true,
+  "description": "scripts/ui-check.mjs 전용 검사 도구(앱 package.json은 건드리지 않아요)",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

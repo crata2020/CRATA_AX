@@ -1,0 +1,19 @@
+{
+  "name": "position-bulk",
+  "route": "/hiring/pos-qa",
+  "viewports": ["d", "m"],
+  "steps": [
+    { "shot": "start" },
+    { "uncheck": "tbody tr.is-sel [role=checkbox]" },
+    { "shot": "unchecked" },
+    { "click": ".ps-name" },
+    { "waitFor": ".drawer" },
+    { "shot": "drawer" },
+    { "press": "Escape" },
+    { "click": ".ps-bulk .btn--dark" },
+    { "wait": 200 },
+    { "shot": "after-bulk" },
+    { "goto": "/hiring" },
+    { "shot": "hiring-after" }
+  ]
+}

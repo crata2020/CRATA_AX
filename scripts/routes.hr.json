@@ -1,0 +1,16 @@
+{
+  "routes": [
+    "/", "/moves", "/people", "/hiring",
+    { "path": "/hiring/pos-qa", "name": "position-qa" },
+    { "path": "/hiring/pos-p2", "name": "position-p2", "viewports": ["d", "m"] },
+    { "path": "/hiring/pos-dev", "name": "position-dev", "viewports": ["d", "m"] },
+    { "path": "/hiring/pos-sales", "name": "position-closed", "viewports": ["d", "m"] },
+    { "path": "/hiring/zzz", "name": "position-missing", "viewports": ["d", "m"] },
+    { "path": "/policy", "viewports": ["d", "m"] },
+    { "path": "/apply/pos-qa", "viewports": ["d", "m"] },
+    { "path": "/apply/pos-sales", "viewports": ["d", "m"] },
+    { "path": "/test/a-q07", "viewports": ["d", "m"] },
+    { "path": "/test/a-q02", "viewports": ["d", "m"] },
+    { "path": "/nope", "viewports": ["d", "m"] }
+  ]
+}

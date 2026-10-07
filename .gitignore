@@ -1,0 +1,9 @@
+# ui-check 결과(캡처·report.json)
+.ui-check/
+# Orbix 레퍼런스 이미지는 제3자 저작물이라 커밋하지 않아요(실수로 넣었을 때 대비)
+.design-refs/
+# 개발 서버 pid·로그(AGENTS.md 2장)
+.vite.pid
+.vite.log
+# 검사 도구 설치 폴더(scripts/package.json → npm ci)
+node_modules/
