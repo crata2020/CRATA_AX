@@ -192,13 +192,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       case "about": {
         const p = w.people.find((x) => x.id === intent.personId)!;
-        return say([me, { who: "ara", text: `${p.name} 님은 지금 ${tname(p.teamId)} ${p.title}이에요.`, card: { kind: "about", personId: p.id }, chips: [`${p.name} 어디가 맞을까?`] }]);
+        return say([me, { who: "ara", text: `${p.name} 님은 지금 ${tname(p.teamId)} ${josa(p.title, "이에요")}.`, card: { kind: "about", personId: p.id }, chips: [`${p.name} 어디가 맞을까?`] }]);
       }
       case "help":
         return say([me, { who: "ara", text: "이렇게 적으면 돼요. '○○○ 품질팀으로', '○○○ 생산1팀 팀장으로', '○○○랑 △△△ 자리 바꿔', '○○○ 취소', '모두 확정', '개발팀에 누가 좋아?'", chips: ["이하은 품질보증팀으로", "모두 확정"] }]);
       case "unknown": {
         const msg = intent.reason === "ambiguous" ? `같은 이름이 여러 명이에요: ${intent.candidates!.map((id) => `${name(id)}(${tname(base.find((p) => p.id === id)!.teamId)})`).join(", ")}. 성까지 적어 주세요.`
-          : intent.reason === "sameTeam" ? `${intent.personIds!.map(name).join(", ")} 님은 이미 ${tname(intent.teamId!)}이에요.`
+          : intent.reason === "sameTeam" ? `${intent.personIds!.map(name).join(", ")} 님은 이미 ${josa(tname(intent.teamId!), "이에요")}.`
           : intent.reason === "noTeam" ? `${intent.personIds!.map(name).join(", ")} 님을 어느 팀으로 보낼까요? 팀 이름을 같이 적어 주세요.`
           : intent.reason === "noPerson" && intent.teamId ? `${josa(tname(intent.teamId), "으로")} 보낼 사람 이름을 찾지 못했어요. 구성원 목록에 있는 이름으로 적어 주세요.`
           : "누구를 어디로 보낼지 알아듣지 못했어요. 예: '이하은 품질보증팀으로'";

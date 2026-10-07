@@ -2,6 +2,7 @@
 // 레퍼런스: refs/orbix-ai-chat-home.jpg(입력 상자 + 제안 칩), refs/botrix-ai-command-center.jpg(대화 + 결과 카드),
 // refs/orbixcrm-team-members-grid.jpg(사람 칩), post_1.jpg(옅은 회색 레인 위 흰 카드). 확정 전 이동은 조직도에서 깜빡여요.
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import { CalendarClock, Check, GitBranchPlus, GraduationCap, MessageSquareText, MoveRight, Network, SendHorizontal, ShieldCheck, Sparkles, Undo2, Users } from "lucide-react";
 import { useApp } from "@/data/store";
 import { VERDICT } from "@/lib/fit";
@@ -19,6 +20,20 @@ export default function Moves() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { const el = listRef.current; if (el) el.scrollTop = el.scrollHeight; }, [chat.length]);
+
+  // 구성원 화면의 '인사이동에서 보기'(?person=id): 그 사람을 ARA에게 먼저 물어봐요
+  const [params, setParams] = useSearchParams();
+  const asked = useRef<string | null>(null);
+  useEffect(() => {
+    const id = params.get("person");
+    const p = id ? person(id) : undefined;
+    if (!p || asked.current === id) return;
+    asked.current = id;
+    send(p.name);
+    setText(`${p.name} `);
+    const n = new URLSearchParams(params); n.delete("person"); setParams(n, { replace: true });
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }, [params, person, send, setParams]);
 
   const submit = (t = text) => { if (!t.trim()) return; send(t); setText(""); inputRef.current?.focus(); };
   const severe = pending.reduce((s, m) => s + m.advice.cons.filter((c) => c.severe).length, 0);

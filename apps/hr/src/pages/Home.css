@@ -1,0 +1,110 @@
+/* 인사 홈 */
+.hh-acts { display: contents; }
+
+/* 확정 전 이동 */
+.hh-live { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 4px var(--warn-bg); animation: hhBlink 1.2s ease-in-out infinite; flex: none; }
+@keyframes hhBlink { 50% { opacity: .25; } }
+.hh-verdicts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.hh-moves > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
+.hh-moves > li:first-child { border-top: 0; }
+.hh-moves__main { min-width: 0; }
+.hh-moves__t { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14.5px; }
+.hh-moves__t b { font-weight: 500; color: var(--ink); }
+.hh-route { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.hh-route svg { width: 14px; height: 14px; color: var(--faint); }
+.hh-route__to { color: var(--ink-2); font-weight: 500; }
+.hh-moves__s { font-size: 13px; color: var(--muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hh-moves__v { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.hh-score { display: inline-flex; align-items: baseline; gap: 2px; }
+.hh-score b { font-size: 18px; font-weight: 500; color: var(--ink); }
+
+/* 비어 있을 때: 두 팀 사이 점선 + 사람 하나 → 예시 문장 칩 */
+.hh-empty { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 28px; align-items: center; padding: 6px 0 4px; }
+.hh-empty__art {
+  position: relative; height: 180px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0;
+}
+.hh-empty__node { height: 32px; padding: 0 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line-2); font-size: 13px; font-weight: 500; color: var(--ink-2); display: inline-flex; align-items: center; }
+.hh-empty__node--to { border-style: dashed; border-color: var(--warn); color: var(--warn-ink); background: var(--warn-bg); gap: 8px; }
+.hh-empty__node--to .hh-live { width: 6px; height: 6px; box-shadow: none; }
+.hh-empty__cap { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 11.5px; color: var(--faint); }
+.hh-empty__line { width: 0; height: 44px; border-left: 2px dashed var(--line-2); }
+.hh-empty__who { position: absolute; top: 50%; left: calc(50% + 10px); transform: translateY(-50%); }
+.hh-empty__t { font-size: 17px; font-weight: 500; color: var(--ink); }
+.hh-empty__body { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; }
+.hh-empty__body p { font-size: 13.5px; line-height: 21px; color: var(--muted); }
+.hh-hints { display: flex; flex-wrap: wrap; gap: 8px; }
+.hh-hint {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: var(--r-pill); border: 1px solid var(--line-2); background: var(--surface);
+  font-size: 13.5px; font-weight: 500; color: var(--ink-2); cursor: pointer; white-space: nowrap;
+}
+.hh-hint:hover { background: var(--brand-soft); border-color: var(--brand-line); color: var(--brand-ink); }
+.hh-hint svg { width: 15px; height: 15px; color: var(--brand); stroke-width: 1.8; }
+
+/* 도넛 + 아래 세 칸 */
+.hh-donut { display: flex; justify-content: center; padding-top: 2px; }
+.hh-cstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; border: 1px solid var(--line); border-radius: 12px; }
+.hh-cstats > li { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.hh-cstats > li + li { border-left: 1px solid var(--line); }
+.hh-cstats .tagsq { font-size: 12.5px; white-space: nowrap; }
+.hh-cstats__v { display: flex; align-items: baseline; gap: 6px; }
+.hh-cstats__v b { font-size: 20px; line-height: 26px; font-weight: 500; color: var(--ink); }
+.hh-more { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; padding-top: 14px; border-top: 1px dashed var(--line-2); }
+.hh-tip { display: flex; gap: 8px; align-items: flex-start; margin-top: 16px; padding: 10px 12px; border-radius: 12px; background: var(--brand-soft); font-size: 12.5px; line-height: 18px; color: var(--brand-ink); }
+.hh-tip svg { width: 15px; height: 15px; flex: none; margin-top: 1.5px; }
+.hh-pct { font-size: 16px; color: var(--muted); margin-left: 1px; }
+.hh-note { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; line-height: 18px; color: var(--muted); margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.hh-note svg { width: 14px; height: 14px; flex: none; margin-top: 2px; color: var(--faint); }
+
+/* 채용 파이프라인 */
+.hh-flowleg { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 8px; }
+.hh-pipe > li + li { border-top: 1px solid var(--line); }
+.hh-pipe__row { width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 14px 10px; margin: 0 -10px; width: calc(100% + 20px); border: 0; background: none; text-align: left; cursor: pointer; border-radius: 12px; }
+.hh-pipe__row:hover { background: var(--surface-2); }
+.hh-pipe__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.hh-pipe__t { font-size: 14.5px; font-weight: 500; color: var(--ink); }
+.hh-pipe__s { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.hh-pipe__stats { display: flex; align-items: center; gap: 16px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
+.hh-pipe__stats b { color: var(--ink); font-weight: 500; margin-left: 2px; }
+.hh-pipe__go { width: 16px; height: 16px; margin-left: auto; color: var(--faint); }
+.hh-pipe__row:hover .hh-pipe__go { color: var(--ink); }
+
+/* 팀별 인원 */
+.hh-heads { display: flex; flex-direction: column; gap: 12px; }
+.hh-heads > li { display: grid; grid-template-columns: 82px minmax(0, 1fr) 48px 44px; align-items: center; gap: 12px; font-size: 13px; color: var(--ink-2); }
+.hh-heads__bar { position: relative; height: 12px; border-radius: var(--r-pill); background: var(--sunken); }
+.hh-heads__fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--r-pill); transition: width .3s ease; }
+.hh-heads__fill--ok { background: var(--c-blue); }
+.hh-heads__fill--edge { background: var(--c-amber); }
+.hh-heads__fill--under { background: var(--c-coral); }
+.hh-heads__min { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--ink); }
+.hh-heads__v { text-align: right; white-space: nowrap; }
+.hh-heads__v b { font-weight: 500; color: var(--ink); font-size: 14px; }
+.hh-heads__d { display: flex; justify-content: flex-end; }
+.hh-heads__leg { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+
+/* 기준 */
+.hh-rules { display: flex; flex-direction: column; }
+.hh-rules > li { display: flex; gap: 10px; align-items: flex-start; padding: 11px 0; border-top: 1px solid var(--line); font-size: 13.5px; line-height: 20px; color: var(--ink-2); }
+.hh-rules > li:first-child { border-top: 0; padding-top: 2px; }
+.hh-rules svg { width: 17px; height: 17px; flex: none; margin-top: 1.5px; color: var(--good); stroke-width: 1.9; }
+.hh-rules > li:last-child svg { color: var(--brand); }
+.hh-rules b { font-weight: 600; color: var(--ink); }
+
+@media (max-width: 1279px) {
+  .hh-empty { grid-template-columns: 200px minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .hh-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .hh-acts > :first-child { grid-column: 1 / -1; }
+  .hh-moves > li { grid-template-columns: auto minmax(0, 1fr); }
+  .hh-moves__v { grid-column: 2; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; }
+  .hh-moves__s { white-space: normal; }
+  .hh-empty { grid-template-columns: 1fr; gap: 16px; }
+  .hh-hints { flex-direction: column; align-items: stretch; width: 100%; }
+  .hh-hint { justify-content: flex-start; height: 44px; }
+  .hh-empty__art { height: 140px; }
+  .hh-empty__line { height: 28px; }
+  .hh-cstats > li { padding: 8px 10px; }
+  .hh-heads > li { grid-template-columns: 76px minmax(0, 1fr) 44px 40px; gap: 8px; }
+}
