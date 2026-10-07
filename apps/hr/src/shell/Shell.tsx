@@ -21,7 +21,8 @@ export function Shell() {
   const openPos = positions.filter((p) => p.status === "open");
   const waiting = applicants.filter((a) => openPos.some((p) => p.id === a.positionId) && (a.stage === "applied" || a.stage === "tested")).length;
   const key = "/" + (loc.pathname.split("/")[1] ?? "");
-  const [title, group] = PAGE_TITLE[key] ?? ["찾는 화면이 없어요"];
+  const posId = loc.pathname.startsWith("/hiring/") ? loc.pathname.split("/")[2] : undefined;
+  const [title, group] = posId ? [positions.find((p) => p.id === posId)?.title ?? "공고", "채용 공고"] : PAGE_TITLE[key] ?? ["찾는 화면이 없어요"];
   const tested = applicants.filter((a) => openPos.some((p) => p.id === a.positionId) && a.crata).length;
   const total = applicants.filter((a) => openPos.some((p) => p.id === a.positionId)).length;
 

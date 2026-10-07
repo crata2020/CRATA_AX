@@ -92,16 +92,16 @@ export default function Hiring() {
 
       <div className="kpirow hg-kpis">
         <KpiCard icon={<BriefcaseBusiness />} hue="brand" label="열린 공고" value={open.length} unit="개"
-          delta={<Chip sm>모집 <span className="num">{seats}</span>명</Chip>}
+          delta={<Chip sm><span>모집 <span className="num">{seats}</span>명</span></Chip>}
           foot={soonest ? `가장 빠른 마감 ${md(soonest.deadline)} · ${dday(soonest.deadline, today).text}` : "열린 공고가 없어요"} />
         <KpiCard icon={<UserPlus />} hue="violet" label="이번 주 지원" value={wk} unit="명"
           delta={<Delta value={`${wk - prevWk >= 0 ? "+" : ""}${wk - prevWk}`} dir={wk > prevWk ? "up" : wk < prevWk ? "down" : "flat"} good={wk >= prevWk} />}
           foot={`최근 7일 · 그 전 7일 ${prevWk}명`} />
         <KpiCard icon={<ClipboardCheck />} hue="blue" label="CRATA 검사 완료율" value={rate} unit="%"
-          delta={waitTest ? <Chip tone="info" sm>기다림 <span className="num">{waitTest}</span></Chip> : undefined}
+          delta={waitTest ? <Chip tone="info" sm><span>기다림 <span className="num">{waitTest}</span>명</span></Chip> : undefined}
           foot={`검사 보낸 ${s.sent}명 중 ${s.tested}명 완료`} />
         <KpiCard icon={<Sparkles />} hue="green" label="면접 대상(추천)" value={s.by.rec} unit="명"
-          delta={<Chip tone="good" sm>면접 <span className="num">{s.by.interview}</span>명</Chip>}
+          delta={<Chip tone="good" sm><span>면접 <span className="num">{s.by.interview}</span>명</span></Chip>}
           foot="AI 추천은 참고예요. 담당자가 정해요" />
       </div>
 
@@ -170,7 +170,7 @@ export default function Hiring() {
                           <td>{teamName(p.teamId)}</td>
                           <td className="num">{md(p.deadline)}</td>
                           <td className="r num">{cs.total}</td>
-                          <td><span className="hg-chips"><Chip tone="good" sm dot>합격 {cs.offer}</Chip><Chip sm dot>불합격 {cs.closed}</Chip></span></td>
+                          <td><span className="hg-chips"><Chip tone="good" sm dot><span>합격 <span className="num">{cs.offer}</span></span></Chip><Chip sm dot><span>불합격 <span className="num">{cs.closed}</span></span></Chip></span></td>
                           <td className="r"><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); nav(`/hiring/${p.id}`); }}>보기<ArrowRight /></Button></td>
                         </tr>
                       );
@@ -224,7 +224,7 @@ function PosCard({ p, rows, menu }: { p: Position; rows: Row[]; menu: ReactNode 
         <div className="hg-card__flow">
           <StackBar label={`${p.title} 단계별 인원`} parts={GROUP_ORDER.map((g) => ({ value: s.by[g], color: GROUP[g].color, label: GROUP[g].label }))} />
           <ul className="hg-card__legend">
-            {GROUP_ORDER.map((g) => <li key={g}><Sq color={GROUP[g].color} />{GROUP[g].label}<b className="num">{s.by[g]}</b></li>)}
+            {GROUP_ORDER.map((g) => <li key={g} title={GROUP[g].label}><Sq color={GROUP[g].color} />{GROUP[g].short}<b className="num">{s.by[g]}</b></li>)}
           </ul>
         </div>
         <div className="hg-card__stats">

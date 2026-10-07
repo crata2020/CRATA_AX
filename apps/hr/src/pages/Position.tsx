@@ -53,14 +53,18 @@ function PositionView({ pos }: { pos: Pos }) {
   const [src, setSrc] = useState("all");
   const [sort, setSort] = useState<"score" | "date">("score");
   const recIds = rows.filter((r) => r.group === "rec").map((r) => r.a.id);
-  const [sel, setSel] = useState<Set<string>>(() => new Set(recIds));
+  const isClosed = pos.status === "closed";
+  const [sel, setSel] = useState<Set<string>>(() => new Set(isClosed ? [] : recIds));
   const [closed, setClosed] = useState<Partial<Record<Group, boolean>>>({ result: true });
 
   const k = q.trim().toLowerCase();
   const shown = rows
     .filter((r) => (src === "all" || r.a.source === src) && (!k || `${r.a.name} ${r.a.summary}`.toLowerCase().includes(k)))
     .sort((x, y) => (sort === "score" ? (y.rec.score ?? -1) - (x.rec.score ?? -1) || x.a.appliedAt.localeCompare(y.a.appliedAt) : y.a.appliedAt.localeCompare(x.a.appliedAt)));
-  const groups = (tab === "all" ? GROUP_ORDER : [tab]).map((g) => ({ g, list: shown.filter((r) => r.group === g) }));
+  const groupsAll = (tab === "all" ? GROUP_ORDER : [tab]).map((g) => ({ g, list: shown.filter((r) => r.group === g) }));
+  // 전체 보기에서 빈 단계는 카드 대신 한 줄로 모아요
+  const groups = tab === "all" ? groupsAll.filter((x) => x.list.length) : groupsAll;
+  const empties = tab === "all" ? groupsAll.filter((x) => !x.list.length).map((x) => x.g) : [];
   const sources = Array.from(new Set(rows.map((r) => r.a.source)));
 
   // 고르기·묶음 동작
@@ -137,7 +141,7 @@ function PositionView({ pos }: { pos: Pos }) {
         <Card className="s-5 ps-ana" title="AI 추천 분포" sub="검사를 마친 사람만 등급이 있어요">
           <div className="ps-ana__row">
             <div className="ps-ana__l">
-              <div className="ps-big"><span className="num">{rate}%</span><span className="muted small">검사 완료 <span className="num">{s.tested}/{s.sent}</span>명</span></div>
+              <div className="ps-big"><span className="num">{rate}%</span><span className="muted small">{s.sent ? <>검사 완료 <span className="num">{s.tested}/{s.sent}</span>명</> : "아직 보낸 검사가 없어요"}</span></div>
               <ul className="ps-legend">
                 {TIERS.map((x) => (
                   <li key={x}><span className="tagsq"><i style={{ background: TIER_COLOR[x] }} />{TIER[x].label}</span><b className="num">{tierN(x)}<span className="faint"> · {rows.length ? Math.round((tierN(x) / rows.length) * 100) : 0}%</span></b></li>
@@ -146,9 +150,14 @@ function PositionView({ pos }: { pos: Pos }) {
             </div>
             <Donut data={slices} size={148} thickness={20} center={tierN("recommend")} sub="면접 추천" />
           </div>
-          {top.length > 0 && (
+          {top.length === 0 ? (
             <div className="ps-topfit">
-              <div className="between"><span className="ps-k">적합도 높은 지원자</span><span className="faint xs">누르면 근거를 봐요</span></div>
+              <span className="ps-topfit__k">적합도 높은 지원자</span>
+              <p className="faint small">검사를 마친 지원자가 생기면 적합도 높은 순으로 여기에 보여요.</p>
+            </div>
+          ) : (
+            <div className="ps-topfit">
+              <div className="between"><span className="ps-topfit__k">적합도 높은 지원자</span><span className="faint xs">누르면 근거를 봐요</span></div>
               <ul>
                 {top.map((r) => (
                   <li key={r.a.id}>
@@ -179,7 +188,10 @@ function PositionView({ pos }: { pos: Pos }) {
         <PillSelect<"score" | "date"> label="정렬" value={sort} onChange={setSort} options={[{ value: "score", label: "적합도 높은 순" }, { value: "date", label: "최근 지원 순" }]} />
       </div>
 
-      {rows.length > 0 && (
+      {rows.length > 0 && isClosed && (
+        <div className="ps-bulk" role="note"><span className="ps-bulk__t">마감된 공고예요. 결과를 확인하고, 채용서류는 반환 청구 기간이 지나면 파기해요.</span></div>
+      )}
+      {rows.length > 0 && !isClosed && (
         <div className={cx("ps-bulk", sel.size > 0 && "is-on")} role="status">
           <span className="ps-bulk__t">
             {recSel > 0 ? <><Sparkles aria-hidden />AI 추천 <b className="num">{recSel}</b>명을 미리 골라 뒀어요{sel.size > recSel && <> · 더 고른 <b className="num">{sel.size - recSel}</b>명</>}. 빼거나 더할 수 있어요.</>
@@ -267,7 +279,7 @@ function PositionView({ pos }: { pos: Pos }) {
                                     <span className="ps-fit"><span className="num">{r.rec.score}</span><Bar value={r.rec.score} color={TIER_COLOR[r.rec.tier]} label={`${a.name} 적합도 ${r.rec.score}점`} /></span>
                                   ) : <span className="faint" aria-label="검사 후 나와요">—</span>}
                                 </td>
-                                <td className="ps-c-tier">{r.rec.tier === "pending" ? <span className="faint" aria-label="검사 후 나와요">—</span> : <TierChip t={r.rec.tier} />}</td>
+                                <td className={cx("ps-c-tier", r.rec.tier === "pending" && "is-empty")}>{r.rec.tier === "pending" ? <span className="faint" aria-label="검사 후 나와요">—</span> : <TierChip t={r.rec.tier} />}</td>
                                 <td className="ps-c-act" onClick={(e) => e.stopPropagation()}>
                                   <Button size="sm" icon={nx.icon} onClick={nx.act}>{nx.label}</Button>
                                 </td>
@@ -282,6 +294,12 @@ function PositionView({ pos }: { pos: Pos }) {
               </section>
             );
           })}
+          {empties.length > 0 && (
+            <p className="ps-empties">
+              <span className="muted">지금 비어 있는 단계</span>
+              {empties.map((g) => <span key={g} className="ps-empties__i"><Sq color={GROUP[g].color} />{GROUP[g].label}<span className="num faint">0</span></span>)}
+            </p>
+          )}
         </div>
       )}
 

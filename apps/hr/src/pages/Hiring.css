@@ -30,7 +30,7 @@
 .hg-flow__bar i { display: block; height: 100%; border-radius: var(--r-pill); }
 .hg-flow__sub { font-size: 12.5px; color: var(--muted); line-height: 18px; }
 .hg-flow__arrow {
-  position: absolute; right: -12px; top: 64px; z-index: 1; width: 24px; height: 24px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line);
+  position: absolute; right: -12px; top: 21px; z-index: 1; width: 24px; height: 24px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line);
   display: flex; align-items: center; justify-content: center; color: var(--faint);
 }
 .hg-flow__arrow svg { width: 14px; height: 14px; stroke-width: 2; }
@@ -215,7 +215,7 @@
 .hg-nores p { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .hg-legal { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
 .hg-legal > svg { width: 16px; height: 16px; flex: none; color: var(--muted); }
-.hg-legal p { font-size: 12.5px; line-height: 18px; color: var(--muted); flex: 1; }
+.hg-legal p { font-size: 12.5px; line-height: 18px; color: var(--muted); flex: 1 1 200px; }
 
 /* ───────── 새 공고 서랍(왼쪽 폼 / 오른쪽 ARA 미리보기) */
 .drawer:has(.hg-np) { width: min(980px, calc(100vw - 24px)); }

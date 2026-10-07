@@ -38,7 +38,7 @@ interface Ctx {
   propose: (personId: string, toTeamId: string, lead?: boolean) => void;
   undo: (personIds?: string[]) => void;
   confirm: (personIds?: string[]) => void;
-  setStage: (ids: string[], stage: Stage) => void;
+  setStage: (ids: string[], stage: Stage, note?: string) => void;
   addApplicant: (a: Applicant) => void;
   addPosition: (p: Position) => void;
   toast: (text: string) => void;
@@ -213,8 +213,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     run(parse(t, world.people, world.teams), t);
   }, [run, world]);
 
-  const setStage = useCallback((ids: string[], stage: Stage) => {
-    setApplicants((as) => as.map((a) => (ids.includes(a.id) ? { ...a, stage, testSentAt: stage === "testing" ? a.testSentAt ?? TODAY : a.testSentAt } : a)));
+  const setStage = useCallback((ids: string[], stage: Stage, note?: string) => {
+    setApplicants((as) => as.map((a) => (ids.includes(a.id) ? { ...a, stage, note: note ?? a.note, testSentAt: stage === "testing" ? a.testSentAt ?? TODAY : a.testSentAt } : a)));
   }, []);
   const addApplicant = useCallback((a: Applicant) => setApplicants((as) => [a, ...as]), []);
   const addPosition = useCallback((p: Position) => setPositions((ps) => [p, ...ps]), []);

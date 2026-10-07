@@ -192,7 +192,11 @@ export const APPLICANTS: Applicant[] = AROWS.map(([id, positionId, name, applied
   const pos = POSITIONS.find((p) => p.id === positionId)!;
   const team = TEAMS.find((t) => t.id === pos.teamId)!;
   const tested = stage === "tested" || stage === "shortlist" || stage === "interview" || stage === "offer" || stage === "closed";
-  const profile = tested ? crata ?? gen(seed ?? 99, team, bias ?? 0.5) : undefined;
+  // 검사는 지원한 뒤에 봐요: 지원일 + 4~8일(오늘을 넘지 않게)
+  const after = (d: string, n: number) => { const x = new Date(`${d}T00:00:00`); x.setDate(x.getDate() + n); const s = `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; return s > TODAY ? TODAY : s; };
+  const sent = rest.testSentAt ?? (tested ? after(appliedAt, 2) : undefined);
+  const base = tested ? crata ?? gen(seed ?? 99, team, bias ?? 0.5) : undefined;
+  const profile = base && sent ? { ...base, takenAt: base.takenAt > sent ? base.takenAt : after(appliedAt, 4 + (name.charCodeAt(0) % 5)) } : base;
   return { id, positionId, name, appliedAt, source, years, stage, summary, licenses: [], shiftOk: true, ...rest, crata: profile,
-    testedAt: profile ? profile.takenAt > appliedAt ? profile.takenAt : "2026-10-04" : undefined, testSentAt: rest.testSentAt ?? (profile ? "2026-10-01" : undefined) };
+    testSentAt: sent, testedAt: profile?.takenAt };
 });

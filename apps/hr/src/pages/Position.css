@@ -30,6 +30,7 @@
 .ps-legend b { font-weight: 500; color: var(--ink); }
 .ps-legend b .faint { font-weight: 400; }
 .ps-topfit { display: flex; flex-direction: column; gap: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ps-topfit__k { font-size: 13px; font-weight: 500; color: var(--ink-2); }
 .ps-topfit ul { display: flex; flex-direction: column; }
 .ps-topfit button {
   display: grid; grid-template-columns: auto 64px minmax(40px, 1fr) 28px auto; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; margin: 0 -8px;
@@ -71,6 +72,9 @@
 .ps-group__hint { font-size: 13px; color: var(--muted); }
 .ps-group__empty { padding: 0 22px 20px 50px; font-size: 13.5px; color: var(--muted); margin-top: -4px; }
 .ps-group__empty b { font-weight: 600; color: var(--ink-2); }
+
+.ps-empties { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 14px 20px; border-radius: var(--r-lg); border: 1.5px dashed #d6d7dd; font-size: 13.5px; }
+.ps-empties__i { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
 
 /* 표 */
 .ps-table { table-layout: fixed; min-width: 1010px; }
@@ -137,7 +141,7 @@
   .ps-c-doc { order: 7; }
   .ps-c-test { order: 8; }
   .ps-c-fit { order: 9; flex: 1 1 100%; padding-left: 28px !important; }
-  .ps-c-fit:has(.faint) { display: none; }
+  .ps-c-fit:has(.faint), .ps-c-tier.is-empty { display: none !important; }
   .ps-c-act { order: 10; flex: 1 1 100%; padding-left: 28px !important; }
   .ps-sub { white-space: normal; overflow: visible; }
 }

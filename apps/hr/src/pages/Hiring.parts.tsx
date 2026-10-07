@@ -38,12 +38,12 @@ export function dday(deadline: string, today: string, closed?: boolean) {
 // ───────── 단계 묶음(Orbix 칸반의 색 네모 + 이름 + 개수)
 export type Group = "intake" | "test" | "rec" | "interview" | "result";
 export const GROUP_ORDER: Group[] = ["intake", "test", "rec", "interview", "result"];
-export const GROUP: Record<Group, { label: string; step: string; color: string; icon: ReactNode }> = {
-  intake: { label: "접수·서류", step: "1차 접수", color: "var(--c-violet)", icon: <Inbox /> },
-  test: { label: "CRATA 검사", step: "2차 CRATA 검사", color: "var(--c-blue)", icon: <ClipboardList /> },
-  rec: { label: "면접 추천", step: "AI 추천", color: "var(--c-green)", icon: <Sparkles /> },
-  interview: { label: "면접", step: "면접", color: "var(--c-amber)", icon: <MessagesSquare /> },
-  result: { label: "결과", step: "결과", color: "#c3c4cc", icon: <Flag /> },
+export const GROUP: Record<Group, { label: string; short: string; step: string; color: string; icon: ReactNode }> = {
+  intake: { label: "접수·서류", short: "접수", step: "1차 접수", color: "var(--c-violet)", icon: <Inbox /> },
+  test: { label: "CRATA 검사", short: "검사", step: "2차 CRATA 검사", color: "var(--c-blue)", icon: <ClipboardList /> },
+  rec: { label: "면접 추천", short: "추천", step: "AI 추천", color: "var(--c-green)", icon: <Sparkles /> },
+  interview: { label: "면접", short: "면접", step: "면접", color: "var(--c-amber)", icon: <MessagesSquare /> },
+  result: { label: "결과", short: "결과", step: "결과", color: "#c3c4cc", icon: <Flag /> },
 };
 /** 지금 어느 단계에 있는지. 검사를 마친 사람 중 AI가 면접을 추천한 사람만 '면접 추천'으로 따로 봐요 */
 export function groupOf(a: Applicant, tier: Tier): Group {
@@ -251,7 +251,7 @@ function ApplicantBody({ row, pos, onClose }: { row: Row; pos: Position; onClose
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const ts = testStatus(a);
-  const go = (s: Stage, msg: string) => { setStage([a.id], s); toast(msg); onClose(); };
+  const go = (s: Stage, msg: string, note?: string) => { setStage([a.id], s, note); toast(msg); onClose(); };
   const decided = a.stage === "offer" || a.stage === "closed" || a.stage === "hold";
 
   let primary: ReactNode = null;
@@ -271,7 +271,7 @@ function ApplicantBody({ row, pos, onClose }: { row: Row; pos: Position; onClose
         </select>
       </label>
       <Button onClick={() => { setRejecting(false); setReason(""); }}>취소</Button>
-      <Button variant="brand" disabled={!reason} onClick={() => go("closed", `${a.name} 님 불합격으로 정했어요 · ${reason}`)}>불합격 정하기</Button>
+      <Button variant="brand" disabled={!reason} onClick={() => go("closed", `${a.name} 님 불합격으로 정했어요 · ${reason}`, `불합격 사유: ${reason}`)}>불합격 정하기</Button>
     </>
   ) : (
     <>
@@ -295,8 +295,8 @@ function ApplicantBody({ row, pos, onClose }: { row: Row; pos: Position; onClose
         <div className="hg-pills">
           <span className="hg-pill"><Sq color={GROUP[row.group].color} />{STAGE[a.stage].label}</span>
           <TierChip t={rec.tier} />
-          {rec.score != null && <span className="hg-pill">적합도 <b className="num">{rec.score}</b></span>}
-          <span className="hg-pill"><CalendarDays /><span className="num">{slash(a.appliedAt)}</span> 지원 · {a.source}</span>
+          {rec.score != null && <span className="hg-pill"><span>적합도 <b className="num">{rec.score}</b></span></span>}
+          <span className="hg-pill"><CalendarDays /><span><span className="num">{slash(a.appliedAt)}</span> 지원 · {a.source}</span></span>
         </div>
 
         {rejecting && (
@@ -319,7 +319,7 @@ function ApplicantBody({ row, pos, onClose }: { row: Row; pos: Position; onClose
         {a.crata && rec.fit ? (
           <>
             <section className="hg-sec">
-              <div className="between"><h3 className="hg-sec__t">CRATA 4종 결과</h3><span className="faint xs">검사일 <span className="num">{md(a.crata.takenAt)}</span> · 이 채용 판단에만 써요</span></div>
+              <div className="between"><h3 className="hg-sec__t">CRATA 4종 결과</h3><span className="faint xs">검사일 <span className="num">{md(a.testedAt ?? a.crata.takenAt)}</span> · 이 채용 판단에만 써요</span></div>
               <CrataBlock c={a.crata} />
             </section>
 
@@ -455,10 +455,10 @@ function NewPositionBody({ onClose }: { onClose: () => void }) {
             <label className="hg-pill hg-pill--btn"><Users />{team.name}<ChevronDown />
               <select aria-label="팀" value={teamId} onChange={(e) => pickTeam(e.target.value)}>{choices.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
             </label>
-            <label className="hg-pill hg-pill--btn"><Briefcase /><span className="num">{count}</span>명 모집<ChevronDown />
+            <label className="hg-pill hg-pill--btn"><Briefcase /><span><span className="num">{count}</span>명 모집</span><ChevronDown />
               <select aria-label="모집 인원" value={count} onChange={(e) => setCount(Number(e.target.value))}>{[1, 2, 3, 4, 5, 6, 8, 10].map((n) => <option key={n} value={n}>{n}명</option>)}</select>
             </label>
-            <label className="hg-pill hg-pill--btn"><CalendarDays /><span className="num">{md(deadline)}</span> 마감<ChevronDown />
+            <label className="hg-pill hg-pill--btn"><CalendarDays /><span><span className="num">{md(deadline)}</span> 마감</span><ChevronDown />
               <input type="date" aria-label="마감일" value={deadline} min={today} onChange={(e) => e.target.value && setDeadline(e.target.value)}
                 onClick={(e) => { try { e.currentTarget.showPicker(); } catch { /* 지원 안 함 */ } }} />
             </label>
