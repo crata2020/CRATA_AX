@@ -10,7 +10,7 @@ CRATA(부산)의 AX 서비스 데모예요. 고객사가 일하는 방식을 뽑
 ## 1. 폴더 지도
 | 경로 | 내용 |
 |---|---|
-| `apps/worksite-next` | 업무사이트(화면 14개). 회사는 `?tenant=tr`(제조)·`crata`(교육), 사람은 `&as=<personId>`. **디자인 시스템 원본**은 `src/styles/*.css`·`src/ui/{index,charts}.tsx`(`apps/hr/src/{styles,ui}`도 같은 파일) |
+| `apps/worksite-next` | 업무사이트(화면 14개). 회사는 `?tenant=tr`(제조)·`crata`(교육), 사람은 `&as=<personId>`. **디자인 시스템 원본**은 `src/styles/*.css`·`src/ui/{index,charts}.tsx`(`apps/hr`도 같은 파일) |
 | `apps/hr` | 인사 앱(가상 회사 예시정밀산업, 47명). 로직과 단위 테스트는 `src/lib` |
 | `apps/worksite`, `docs/worksite/screenshots/` | 옛 Refine+antd 앱과 캡처. 반려된 디자인이라 **보지도, 고치지도, 참고하지도 마세요** |
 | `docs/research/00~10`* | 내용의 근거(방향, 데이터 등급, 수정 학습, ARA 등) |
@@ -18,25 +18,26 @@ CRATA(부산)의 AX 서비스 데모예요. 고객사가 일하는 방식을 뽑
 | `docs/design/STYLE_GUIDE.md` | 디자인 시스템 전체: 토큰, 부품, 차트, 레퍼런스 대응표 |
 | `docs/design/screenshots/{worksite,hr}/` | 완성 화면 캡처. **시각 기준**이에요. `<이름>.fold.png`(첫 화면)를 내 fold와 비교해요 |
 | `docs/codex/PLAYBOOK.md` | 순서, 정확한 값, 복사할 파일 표(4.0), 레시피, 검사 루프 |
-| `docs/codex/SCREEN_BRIEF_TEMPLATE.md`, `docs/codex/briefs/` | 브리프 틀과 형식 예 / 화면별 브리프(`<page>.md`) |
+| `docs/codex/SCREEN_BRIEF_TEMPLATE.md`, `docs/codex/briefs/` | 브리프 틀과 형식 예 / 화면별 브리프(`<page>.md`, 실제 쓴 원문 `_examples/`) |
+| `docs/codex/starter/` | 새 앱 시작 틀(바로 빌드돼요. 인사 앱 셸은 복사하지 않아요) |
 | `docs/codex/CHECKLIST.md`, `docs/codex/PORTING.md` | 끝내기 전에 보는 검사표 / 다른 저장소로 옮길 때 |
 | `scripts/ui-check.mjs`, `scripts/routes.*.json`, `scripts/flows/` | 전 화면 캡처·기계 검사, 클릭 흐름 캡처(`--flow`) |
 | `.agents/skills/crata-screen/` | 화면 하나 만들기 스킬(`$crata-screen`) |
 
-\* 표시는 없을 수 있어요(킷만 옮긴 저장소, PORTING.md). 없으면 근거 칸에 '확인 필요'로 적어요. `scripts/routes.*.json`·`.agents/skills/`가 없으면 덜 복사된 거라 보고해요.
+\* 표시는 없을 수 있어요(킷만 옮긴 저장소, PORTING.md). 없으면 근거 칸에 '확인 필요'로 적어요. `scripts/routes.*.json`·`.agents/skills/`가 없으면 보고해요.
 
 Orbix 레퍼런스 이미지(`post_*.jpg`, `orbix-refs/*.jpg`)는 제3자 저작물이라 저장소 밖에 있어요. 경로를 받으면 `view_image`로 **보기만** 하고 복사·커밋하지 않아요. 경로가 없으면 `docs/design/screenshots`와만 비교해요.
 
 ## 2. 실행·검사 명령
 Node 22 이상. 저장소 루트에서 시작해요. **포트: hr 4311·worksite-next 4301은 사람이 띄워 두는 서버, Codex는 hr 4312~4315·worksite 4302~4305·새 앱 4321~ 중 하나**(과제가 정하면 그 포트). 아래 `4314` 자리에 써요.
 ```bash
-cd apps/hr                 # 또는 apps/worksite-next
-npm ci                     # node_modules가 있으면 건너뛰어요
-npm run typecheck && npm run build    # worksite-next는 npm run build:public도
-npm test                              # hr만(src/lib/*.test.ts)
+cd apps/hr  # 또는 apps/worksite-next
+npm ci  # node_modules가 있으면 건너뛰어요
+npm run typecheck && npm run build  # worksite-next는 npm run build:public도
+npm test  # hr만(src/lib/*.test.ts)
 setsid sh -c 'echo $$ > .vite.pid; exec node node_modules/vite/bin/vite.js --port 4314 --strictPort' > .vite.log 2>&1 < /dev/null &
-node ../../scripts/ui-check.mjs --base http://localhost:4314/ --routes /moves,/people --fold --a11y   # 내 경로로 바꿔요
-kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)"; rm -f .vite.pid   # 서버 끄기
+node ../../scripts/ui-check.mjs --base http://localhost:4314/ --routes /moves,/people --fold --a11y  # 내 경로로
+kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)"; rm -f .vite.pid  # 서버 끄기
 ```
 - 서버를 `pkill -f`·`pgrep -f`로 찾지 않아요(내 셸까지 죽어요, exit 144). macOS처럼 `setsid`가 없으면 그 단어만 빼요.
 - ui-check는 서버가 뜰 때까지 기다려요. 명령 끝에 다른 글자(`.` 등)를 붙이지 않아요. 전 경로는 `--routes @../../scripts/routes.hr.json`, 업무사이트는 `@../../scripts/routes.worksite.json --viewports d:1440x1000,m:390x844`예요.
@@ -74,7 +75,7 @@ kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)"; rm -f .vite.
 3. 기준 화면을 먼저 읽어요. 업무사이트는 `apps/worksite-next/src/pages/Home.tsx`, 인사 앱은 `apps/hr/src/pages/Moves.tsx`와 레시피의 기준 파일. 같은 밀도와 문법으로 맞춰요.
 4. 내 화면 파일만 만들어요(`src/pages/<Page>.tsx`, `.css`, 필요하면 `.parts.tsx`). 첫 줄 주석에 "어떤 레퍼런스(파일 이름)에서 무엇을 가져왔는지" 적어요.
 5. `ui-check` → `*.fold.png`와 레퍼런스·기준 캡처를 `view_image`로 나란히 비교 → 다른 점 목록(PLAYBOOK 8.4) → 고치기. **2번 이상** 해요. 클릭 뒤 상태도 `--flow`로 한 번 봐요.
-6. 공통 파일(`src/ui`, `src/styles`, `src/shell`, `src/data`, `src/lib`, `App.tsx`)은 고치지 않고 보고의 **공통 파일에서 고칠 것**에 적어요. 공통 수정은 오케스트레이터가 한곳에서 하고 모든 화면을 다시 검사해요.
+6. 공통 파일(`src/ui`, `src/styles`, `src/shell`, `src/data`, `src/lib`, `App.tsx`)은 고치지 않고 보고의 **공통 파일에서 고칠 것**에 적어요. 공통 수정은 오케스트레이터가 한곳에서 하고 전 화면을 다시 검사해요.
    - **혼자 작업일 때만 허용**(과제에 오케스트레이터·다른 세션 이야기가 없으면 혼자 작업이에요): `App.tsx` 라우트 1줄, `src/shell/Shell.tsx` 메뉴 1줄 + `PAGE_TITLE` 1줄(하단 탭 제외), 새 파일 `src/lib/<page>.ts`(계산 + 이 화면 예시 데이터)와 `src/lib/<page>.test.ts`. 기존 공통 코드는 고치지 않아요. 스토어에 없는 상태는 화면 state로 둬요. 바꾼 공통 줄은 보고에 적고, 셸을 바꿨으면 전 경로를 다시 검사해요(PLAYBOOK 9.1).
 
 ## 5. 내용·문구 규칙
@@ -84,7 +85,7 @@ kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)"; rm -f .vite.
 - KPI 하나마다 `label · value · unit · 비교(delta) · note('그래서' 한 줄)`를 채워요. 숫자는 저장된 데이터에서 계산하고, 같은 숫자는 어느 화면에서나 같아요. **다른 화면에 없는 사람·이동·건수를 한 화면에서만 지어내지 않아요.** 필요하면 seed에 넣을 값을 보고에 적어요.
 - 사람 수를 기준과 비교할 때는 '12명 · 최소 10', '1명 · 정원 4'로 써요. 진행(완료/전체)은 '5/8'도 돼요.
 - "수정 0"·"완벽" 같은 약속은 하지 않아요. 업무사이트 객체는 사업 > 프로젝트 > 파트와 출처에 붙어요(PLAYBOOK 7.1).
-- 메일함, 문서 편집기, 캘린더 도구, STT 같은 범용 도구는 새로 만들지 않고 '연결'로 보여요. 일정을 보여 주는 달력 '보기'는 만들어도 돼요.
+- 메일함, 문서 편집기, 캘린더 도구, STT 같은 범용 도구는 새로 만들지 않고 '연결'로 보여요. 일정을 보여 주는 달력 '보기'는 돼요.
 - 해요체로 짧게, 느낌표·이모지 없이. 버튼은 동사(승인, 확정; '확인'·'OK' 금지). 토스트는 과거형 + 다음 일("등록했어요. 공장장에게 알렸어요"). 빈 화면은 상황 한 줄 + 다음 행동 버튼.
 - 메뉴에는 개발 용어를 쓰지 않아요(MCP는 'AI 연결'). 변수 뒤 조사는 `josa()`로 붙여요("대리예요". hr `src/lib/text.ts`, 업무사이트 `src/pages/Quality.parts.tsx`).
 - 날짜는 앱의 TODAY 하나로 계산해요(hr `2026-10-07`, worksite `2026-10-06`). 렌더링에서 `new Date()`를 쓰지 않아요. '최근' 목록에는 TODAY 이전 것만.

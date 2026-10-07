@@ -70,7 +70,7 @@
 6. 라우트와 빈 페이지: 모든 화면을 `export default function Page(){ return <PageHead title="…" desc="준비 중" /> }` 두 줄로 먼저 만들어 둬요.
 
 - **왜:** 부품이 먼저 있어야 화면 작업이 공통 파일을 건드리지 않아요. 빈 페이지가 있으면 라우트와 메뉴가 처음부터 다 살아 있어서, 화면 작업은 파일 하나만 채우면 돼요.
-- **새 앱일 때:** 디자인 시스템을 **복사해서 그대로** 써요. 원본은 `apps/worksite-next/src/styles/{tokens,base,ui,shell}.css`와 `src/ui/{index,charts}.tsx`예요. 두 앱의 `ui.css`, `base.css`, `index.tsx`, `charts.tsx`는 한 글자도 다르지 않아요. `tokens.css`는 회사별 브랜드 블록(`:root[data-tenant=…]`)만, `shell.css`는 인사 앱의 `.navlink__n--live` 한 줄만 달라요. 그래서 두 앱이 한 제품처럼 보여요. 바꿔도 되는 건 브랜드 변수 4개뿐이에요.
+- **새 앱일 때:** 디자인 시스템을 **복사해서 그대로** 써요. 원본은 `apps/worksite-next/src/styles/{tokens,base,ui,shell}.css`와 `src/ui/{index,charts}.tsx`예요. 두 앱의 `ui.css`, `base.css`, `index.tsx`, `charts.tsx`는 한 글자도 다르지 않아요. `tokens.css`는 회사별 브랜드 블록(`:root[data-tenant=…]`)만, `shell.css`는 인사 앱의 `.navlink__n--live` 한 줄만 달라요. 그래서 두 앱이 한 제품처럼 보여요. 바꿔도 되는 건 브랜드 변수 4개뿐이에요. 앱 틀(설정 파일, `App.tsx`, `Shell.tsx`, 홈, 404)은 `docs/codex/starter/`에서 시작해요. 인사 앱의 `Shell.tsx`는 그 앱 데이터를 불러와서 그대로 복사하면 빌드가 안 돼요.
 
 ### 2.5 예시 데이터와 로직을 먼저 만들어요
 - **업무사이트**
@@ -117,8 +117,8 @@
    setsid sh -c 'echo $$ > .vite.pid; exec node node_modules/vite/bin/vite.js --port 4314 --strictPort' > .vite.log 2>&1 < /dev/null &
    ```
 3. `node ../../scripts/ui-check.mjs --base http://localhost:4314/ --routes /<내 경로>,<관련 경로> --fold --a11y --out .ui-check/<Page>`(명령 끝에 다른 글자를 붙이지 않아요. 서버가 뜰 때까지 알아서 기다려요)
-4. 결과가 `0 problems`인지 봐요.
-5. `*.fold.png`와 레퍼런스, `docs/design/screenshots`의 비슷한 화면을 `view_image`로 나란히 열어요. 다른 점 목록(8.4)을 쓰고 고쳐요.
+4. 결과가 `N shots, 0 with problems`(0 problems)인지 봐요.
+5. `*.fold.png`와 레퍼런스, `docs/design/screenshots`의 비슷한 화면(같은 크기인 `<이름>.fold.png`)을 `view_image`로 나란히 열어요. 다른 점 목록(8.4)을 쓰고 고쳐요.
 6. 3~5를 2번 이상 반복해요. 마지막 회차에는 `--flow`(2.11)로 클릭 뒤 상태도 찍어요.
 7. 서버를 꺼요: `kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)"; rm -f .vite.pid`
    - `pkill -f`·`pgrep -f`로 찾지 않아요. 패턴(예: `vite --port 4331`)이 그 명령 줄 자체와도 맞아서, 대괄호 꼼수를 써도 복합 명령에서는 내 셸까지 죽어요(exit 144, 교육 화면 사례).
@@ -220,11 +220,11 @@
 | AI·규칙 일괄 띠 + 오른쪽 끝 짙은 일괄 버튼 | `apps/hr/src/pages/Position.css`, `Position.tsx`(`ps-bulk` 마크업) | `.ps-bulk`, `.ps-bulk.is-on`, `.ps-bulk__t`, `.ps-bulk__acts`, 767px 블록의 `.ps-bulk*` |
 | 상태별 접히는 묶음 표 + 미리 체크된 줄 | `Position.css`, `Position.tsx`(`ps-groups` 마크업) | `.ps-groups`, `.ps-group`, `.ps-group__head/__toggle/__hint/__empty`, `.ps-table`의 `col` 폭과 `tbody tr.is-sel` |
 | 모바일 쌓인 표(thead 숨김, 줄 = 카드) | `Position.css` 767px 블록 | `.ps-table` 쌓기 규칙 전체(`display:block`, `thead{display:none}`, `tr{display:flex}`, 칸별 `order`) |
-| 최소 눈금이 있는 인원·보유 막대 | `apps/hr/src/pages/Home.css`, `Home.tsx`(팀별 인원 카드) | `.hh-heads`, `.hh-heads__bar/__fill--ok/--edge/--under/__min/__v/__d/__leg`. 값 칸만 '12명 · 최소 10'으로 바꿔요 |
+| 최소 눈금이 있는 인원·보유 막대 | `apps/hr/src/pages/Home.css`, `Home.tsx`(팀별 인원 카드) | `.hh-heads`(줄마다 같은 열 너비는 `subgrid`), `.hh-heads__bar/__fill--ok/--edge/--under/__min/__v/__d/__leg`. 값 칸 형식('12명 · 최소 10')까지 그대로 복사해요 |
 | 단계 흐름 띠 | `apps/hr/src/pages/Hiring.css` | `.hg-flowcard`, `.hg-flow*` |
 | 파스텔 머리 카드 격자 | `Hiring.css` | `.hg-card*` |
 | 대화 + 결과 패널(sticky 채팅) | `apps/hr/src/pages/Moves.css` | `.mv`, `.mv-chat*`, 1100px·767px 블록 |
-| 서랍 구역(규칙 안내 → 테두리 구역 → 이유 칩 → 바닥 확정) | `apps/hr/src/pages/Hiring.parts.tsx`(지원자 서랍, `<Drawer` 부분) + `docs/design/screenshots/hr/applicant-drawer.png` | 구역 순서와 바닥 버튼 짝(ghost '닫기' + `btn--brand`) |
+| 서랍 구역(규칙 안내 → 테두리 구역 → 이유 칩 → 바닥 확정) | `apps/hr/src/pages/Hiring.parts.tsx`(지원자 서랍, `<Drawer` 부분) + `docs/design/screenshots/hr/applicant-drawer.png` | 구역 순서와 바닥 버튼 줄(ghost 보조 '불합격…' + 흰 '보류' + 빈 칸 `.hg-grow` + 오른쪽 끝 `btn--brand` 주 동작) |
 | 모바일 머리 버튼 2열 | `apps/worksite-next/src/pages/Home.css` 767px 블록 | `.hm-acts` |
 | KPI 띠, 칩, 색 네모 범례 | `src/ui`의 `KpiCard`·`Chip`, `ui.css` `.tagsq` | 부품을 그대로 써요(복사하지 않음) |
 
@@ -252,7 +252,7 @@
 5. **페이지 머리 `.phead`**
    - eyebrow 14 muted(홈은 날짜)
    - h1 26/34·500·-0.02em(모바일 22/30)
-   - 설명 14.5 muted 한 줄
+   - 설명 14.5 muted. 제목 쪽(`.phead__main`)이 먼저 줄어들어서 설명이 길면 두 줄로 접히고 버튼은 오른쪽 위에 남아요. 제목 쪽이 360px보다 좁아질 때만 버튼이 다음 줄로 가요
    - 오른쪽 동작은 `align-items: flex-end`, 아래 여백 24
    - h1은 화면당 하나예요.
 6. **큰 숫자**
@@ -453,7 +453,7 @@ Card "채용 흐름" actions=PillSelect
 | 툴바가 검색 + 알약 하나 | 1440에서 오른쪽 절반이 비어요 | 개수 붙은 Tabs/Segmented + 검색 `flex:1`(5.B) |
 | KPI Delta 자리에 '예시' 칩, 이 화면에만 있는 '검토 중' 이동 3건 | 다른 화면 숫자와 달라 가짜처럼 보여요 | store에 없으면 빈 문장, '예시'는 note로(7.3) |
 | `.sr-only`를 `<th>` 안에 씀 | `position:absolute`가 `.tablewrap` 밖으로 빠져 390px 넘침. ui-check는 무고한 표 칸을 가리켰어요 | 표 안 숨김 글은 `aria-label`. ui-check가 이제 범인을 따로 보여요(8.1) |
-| 확정 뒤 팁이 사라져 카드 아래 110px가 빔, 모바일 토스트가 서랍 바닥·하단 탭을 가림 | 처음 상태만 검사해서 못 봤어요 | `--flow`로 클릭 뒤 상태를 찍어요(2.11). 빈자리는 good 한 줄로 채워요 |
+| 확정 뒤 팁이 사라져 카드 아래 110px가 빔, 모바일 토스트가 서랍 바닥·하단 탭을 가림 | 처음 상태만 검사해서 못 봤어요 | `--flow`로 클릭 뒤 상태를 찍어요(2.11). 빈자리는 good 한 줄로 채워요. 모바일 토스트는 `shell.css`에서 하단 탭 위로 올렸어요 |
 | 옛 카드를 그대로 두고 껍데기만 바꿈 | 대표님이 반려했어요 | 토큰 → 부품 → 기준 화면 순서로 새로 만듦 |
 
 ### 6.2 흔한 'AI가 만든 화면' 함정
@@ -628,7 +628,7 @@ Card "채용 흐름" actions=PillSelect
 - **콘솔 오류가 글꼴 403(`/@fs/…/pretendard…woff2`)이에요:** `node_modules`가 저장소 밖을 가리키는 심볼릭 링크라 Vite가 막은 거예요. 화면 문제가 아니라 환경 문제예요. 앱 폴더에서 `npm ci`로 진짜 설치를 하고 다시 찍어요. 그래도 안 되면 보고에 적어요(`vite.config.ts`는 공통 파일이에요).
 
 ### 8.2 캡처 요령(`view_image`로 볼 때)
-- **비교는 `*.fold.png`(뷰포트 캡처)끼리 해요.** 기준 캡처도 `docs/design/screenshots/**/<이름>.fold.png`가 같은 크기로 있어요. 전체 캡처는 긴 변 2048px 안으로 크게 줄어들어 디테일이 사라져요. 아래쪽을 봐야 하면 해당 영역을 잘라서 봐요.
+- **비교는 `*.fold.png`(뷰포트 캡처)끼리 해요.** 기준 캡처도 `docs/design/screenshots/**/<이름>.fold.png`가 같은 크기로 있어요. 전체 캡처는 긴 변 2048px 안으로 크게 줄어들어 디테일이 사라져요. 아래쪽을 봐야 하면 해당 영역을 잘라서 봐요. `hr/applicant-drawer.png`는 그 자체가 1440×1000 첫 화면이라 fold 파일이 따로 없어요.
 - 화면마다 새 브라우저 컨텍스트를 써요. 스토어가 메모리라서 앞 화면의 상태가 남지 않게 하려는 거예요(`ui-check`가 그렇게 해요).
 - 전체 캡처에서는 `position: fixed`(하단 탭, 토스트)가 페이지 중간에 찍혀 보여요. 착시니까 fold로 판단해요.
 - 서랍처럼 긴 패널은 스크롤하며 여러 장 찍어요.

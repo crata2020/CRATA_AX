@@ -97,7 +97,7 @@ Orbix Studio(인스타그램 @orbixdashboard)의 밝은 대시보드 문법을 �
 - **반응형**
   - 1100px 이하: ⌘K와 사람 글자를 숨겨요.
   - 900px 이하: 사이드바가 서랍으로 바뀌고, 햄버거 버튼과 하단 탭(4~5개, 개수 배지)이 나와요.
-- **페이지 머리(`.phead`)**: 왼쪽에 제목 h1 하나 + 한 줄 설명, 오른쪽에 동작(흰 버튼들 + 화면 전체 동작이면 짙은 버튼 하나). 767px 이하에서 버튼이 2개면 한 줄에 나란히, 3개 이상이면 짙은 버튼 한 줄 + 나머지 2열이고, 데스크 작업용 버튼(올리기·내보내기·연결)은 숨겨요.
+- **페이지 머리(`.phead`)**: 왼쪽에 제목 h1 하나 + 짧은 설명(길면 두 줄로 접혀요. 제목 쪽 `.phead__main`이 먼저 줄어들어 버튼이 오른쪽 위에 남아요), 오른쪽에 동작(흰 버튼들 + 화면 전체 동작이면 짙은 버튼 하나). 767px 이하에서 버튼이 2개면 한 줄에 나란히, 3개 이상이면 짙은 버튼 한 줄 + 나머지 2열이고, 데스크 작업용 버튼(올리기·내보내기·연결)은 숨겨요.
 
 ## 5. 부품 (`apps/worksite-next/src/styles/ui.css` + React `apps/worksite-next/src/ui/index.tsx`)
 
@@ -122,8 +122,8 @@ Orbix Studio(인스타그램 @orbixdashboard)의 밝은 대시보드 문법을 �
 | 메뉴 | `.menu` `.menu__item` `.menu__label` · `<Menu trigger>` | 바깥 클릭·Esc로 닫혀요 |
 | 툴팁 | `.tip`(짙은) `.tip--light`(흰) | 막대 차트는 짙은 툴팁, 선 차트는 흰 카드 툴팁 |
 | 서랍 | `.drawer` `.scrim` · `<Drawer title foot>` | 오른쪽에서 떠 있는 라운드 20 판. Esc로 닫혀요. 머리·몸·바닥 3단 |
-| 토스트 | `.toasts .toast` | 아래 가운데, 짙은 바탕 |
-| 페이지 머리 | `.phead` · `<PageHead eyebrow title desc actions>` | |
+| 토스트 | `.toasts .toast` | 아래 가운데, 짙은 바탕. 900px 이하에서는 하단 탭 위에 떠요(`shell.css`) |
+| 페이지 머리 | `.phead` · `<PageHead eyebrow title desc actions>` | 제목 쪽 `.phead__main`(`flex: 1 1 0`, 최소 360px)이 먼저 줄고 버튼은 오른쪽 위. 좁으면 버튼이 다음 줄 |
 | 빈 상태 | `.empty` · `<Empty icon title>` | 회색 원 아이콘 + 제목 + 한 줄 안내 |
 | 격자 | `.grid.g-12` + `.s-3`~`.s-12`, `.col` `.row` `.between` | 1279px 이하에서 3·4칸 → 6칸, 5~9칸 → 12칸. 767px 이하에서 모두 12칸 |
 | 글 도우미 | `.num` `.muted` `.faint` `.small` `.xs` `.ellipsis` | `.num`은 고정폭 숫자 |
@@ -179,7 +179,7 @@ Orbix Studio(인스타그램 @orbixdashboard)의 밝은 대시보드 문법을 �
 원본은 저장소의 `apps/worksite-next/src/styles/`와 `apps/worksite-next/src/ui/`예요. 공통 부품을 고칠 일이 생기면 원본을 고친 뒤 `apps/hr` 같은 복사본에도 똑같이 옮겨요. 앱마다 따로 고치면 두 앱이 다른 제품처럼 보이기 시작해요.
 
 ### React(Vite 등)
-1. 패키지를 설치해요: `npm i react@18 react-dom@18 lucide-react pretendard@1.3.9`
+1. 패키지를 설치해요: `npm i react@18 react-dom@18 react-router@7 lucide-react pretendard@1.3.9`(새 앱이면 `docs/codex/starter/`에서 시작하는 게 빨라요)
 2. `apps/worksite-next/src/styles/`의 네 파일(tokens·base·ui·shell)을 새 앱의 `src/styles/`로 복사하고, 진입 파일(`src/main.tsx`)에서 **이 순서로** 불러와요.
    ```ts
    import "./styles/tokens.css"; // Pretendard @import 포함
@@ -187,7 +187,7 @@ Orbix Studio(인스타그램 @orbixdashboard)의 밝은 대시보드 문법을 �
    import "./styles/ui.css";
    import "./styles/shell.css";  // 사이드바·상단 바 틀이 필요할 때
    ```
-3. `apps/worksite-next/src/ui/index.tsx`와 `charts.tsx`를 새 앱의 `src/ui/`에 복사해요. 외부 의존은 react와 lucide-react뿐이에요. 앱 틀은 `apps/hr/src/shell/Shell.tsx`를 복사해 메뉴만 바꿔요.
+3. `apps/worksite-next/src/ui/index.tsx`와 `charts.tsx`를 새 앱의 `src/ui/`에 복사해요. 외부 의존은 react와 lucide-react뿐이에요. 앱 틀은 `docs/codex/starter/src/shell/Shell.tsx`를 써요(`COMPANY`·`ME`·`NAV`·`PAGE_TITLE`만 바꿔요). `apps/hr/src/shell/Shell.tsx`는 인사 앱 데이터를 불러와서 그대로는 빌드되지 않아요.
 4. 화면은 실제 페이지를 본보기로 만들어요(`Card` + `PageHead` + `KpiCard` + `Segmented`…).
    - 업무사이트: `apps/worksite-next/src/pages/`의 `Home`, `Tasks`, `Projects`, `Settings`
    - 인사 앱: `apps/hr/src/pages/`의 `Moves`, `Hiring`, `Position`, `People`, `Apply`

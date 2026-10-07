@@ -27,7 +27,7 @@ description: CRATA 화면 만들기·다듬기(new screen, page, UI, dashboard, 
    - `node ../../scripts/ui-check.mjs --base http://localhost:4314/ --routes /<내 경로>,<관련 경로> --fold --a11y --out .ui-check/<Page>` (명령 끝에 다른 글자를 붙이지 않아요)
    - 클릭 뒤 상태: 흐름 파일을 `.ui-check/flows/<page>.json`에 쓰고 `--flow @.ui-check/flows/<page>.json --viewports d:1440x1000,m:390x844`로 찍어요(예: `scripts/flows/hr-position.example.json`).
 6. **비교 루프(2번 이상)**
-   - `.ui-check/<Page>/*.fold.png`, 브리프의 레퍼런스(사용자가 준 경로), `docs/design/screenshots/`의 비슷한 화면을 `view_image`로 나란히 봐요.
+   - `.ui-check/<Page>/*.fold.png`, 브리프의 레퍼런스(사용자가 준 경로), `docs/design/screenshots/`의 비슷한 화면(같은 크기인 `<이름>.fold.png`)을 `view_image`로 나란히 봐요.
    - 다른 점 목록을 PLAYBOOK 8.4 형식으로 쓰고, high부터 고쳐요. 다시 찍어서 전후를 비교해요.
 7. **마무리**
    - `docs/codex/CHECKLIST.md`를 확인해요. 셸을 바꿨으면 `--routes @../../scripts/routes.hr.json`(또는 worksite)로 전 경로를 다시 돌려요.

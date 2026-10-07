@@ -9,7 +9,7 @@
 |---|---|
 | 준비 | 처음 한 번 |
 | (0) | 새 대화를 열 때마다, 규칙을 제대로 읽었는지 확인 |
-| (1) | 새 앱을 시작할 때: 디자인 시스템 복사·셋업 |
+| (1) | 새 앱을 시작할 때: 시작 틀(`docs/codex/starter/`) 복사·셋업 |
 | (2) | 새 앱의 기준 화면 1개 |
 | (3) | 화면 1개(브리프를 채워서) |
 | (4) | 캡처를 보고 다듬기 |
@@ -22,9 +22,9 @@
 ## 준비(한 번만)
 
 ### 1. 킷을 저장소에 넣어요
-`AGENTS.md`, `docs/codex/`(`briefs/` 포함), `docs/design/`, `scripts/`(`package.json`, `routes.*.json`, `flows/` 포함), `.agents/skills/`, `.gitignore`를 **통째로** 저장소 루트에 복사하고 커밋해요. 이 저장소(CRATA_AX)에는 이미 들어 있어요. **다른 저장소**에서 쓰려면 `docs/codex/PORTING.md`를 따라요. 루트에 `.gitignore`가 이미 있으면 덮어쓰지 말고 킷의 줄만 덧붙여요. 커밋해야 다른 PC나 Cloud에서도 Codex가 읽어요. `ui-check.mjs`만 복사하면 경로 파일과 스킬이 없어서 Codex가 손으로 메워야 해요(킷 시험에서 실제로 그랬어요).
+`AGENTS.md`, `docs/codex/`(`briefs/` 포함), `docs/design/`, `scripts/`(`ui-check.mjs`, `package.json`, `package-lock.json`, `routes.*.json`, `flows/`), `.agents/skills/`, `.gitignore`를 **통째로** 저장소 루트에 복사하고 커밋해요. 이 저장소(CRATA_AX)에는 이미 들어 있어요. **다른 저장소**에서 쓰려면 `docs/codex/PORTING.md`를 따라요. 루트에 `.gitignore`가 이미 있으면 덮어쓰지 말고 킷의 줄만 덧붙여요. 커밋해야 다른 PC나 Cloud에서도 Codex가 읽어요. `ui-check.mjs`만 복사하면 경로 파일과 스킬이 없어서 Codex가 손으로 메워야 해요(킷 시험에서 실제로 그랬어요).
 
-빠졌는지 확인: `ls AGENTS.md scripts/ui-check.mjs scripts/routes.hr.json scripts/flows .agents/skills/crata-screen/SKILL.md docs/codex/briefs`
+빠졌는지 확인: `ls AGENTS.md scripts/ui-check.mjs scripts/package.json scripts/package-lock.json scripts/routes.hr.json scripts/flows .agents/skills/crata-screen/SKILL.md docs/codex/briefs docs/codex/starter`
 
 ### 2. Orbix 레퍼런스는 저장소 밖에 둬요
 스타일 묶음 zip(`crata-orbix-style-all.zip`, 또는 나눠 받은 `crata-orbix-style.zip` + `-refs-1` + `-refs-2`)을 저장소 밖, 예를 들어 홈 폴더에서 풀어요. 나눠 받은 zip도 같은 자리에 풀면 `~/crata-orbix-style/` 한 폴더로 모여요. 레퍼런스는 아래 두 곳에 있어요.
@@ -85,7 +85,7 @@ AGENTS.md를 읽고 아래를 짧게 정리해 줘. 아직 아무 파일도 고�
 
 ---
 
-## (1) 새 앱 시작: 디자인 시스템 복사·셋업
+## (1) 새 앱 시작: 시작 틀 복사·셋업
 
 **언제:** `apps/<새앱>`을 새로 만들 때.
 **첨부:** `docs/design/screenshots/hr/home.fold.png`(틀 모양 기준)
@@ -97,22 +97,22 @@ AGENTS.md를 읽고 아래를 짧게 정리해 줘. 아직 아무 파일도 고�
 앱 설명: <한 줄. 예: 교육·자격 관리 앱, 가상 회사 예시정밀산업 47명>
 
 맥락:
-- 디자인 시스템 원본은 apps/worksite-next/src/styles/{tokens,base,ui,shell}.css 와 src/ui/{index,charts}.tsx 야.
-- 앱 뼈대는 apps/hr를 본보기로 삼아(package.json 버전, vite.config.ts, tsconfig, main.tsx 불러오는 순서, src/shell/Shell.tsx, 해시 라우팅).
+- 시작 틀은 docs/codex/starter/ 야. 그 README.md의 명령대로 복사해. 디자인 시스템 원본(apps/hr/src/styles 4개, src/ui 2개)과 src/lib/text.ts는 README대로 원본에서 복사해.
+- apps/hr의 App.tsx·Shell.tsx는 인사 앱 데이터를 불러와서 그대로 복사하면 빌드가 안 돼. 셸 모양은 starter의 Shell.tsx가 같아.
 - 첨부 이미지는 완성된 인사 앱 홈이야. 흰 사이드바 + 흰 상단 바 + 옅은 회색 본문 틀만 보면 돼.
 
 할 일:
-1. 스타일 4개와 ui 2개를 그대로 복사해. 바꿔도 되는 건 tokens.css의 --brand 4개 변수뿐이야(흰 글자 대비 4.5:1 이상).
-2. Shell을 복사해서 메뉴·회사 카드·위치 표시만 이 앱에 맞게 바꿔.
-3. 라우트를 다 만들고, 각 화면은 PageHead 하나만 있는 두 줄짜리 빈 페이지로 둬. 404도 만들어.
-4. package.json 스크립트는 apps/hr와 같게(dev, build, typecheck, test).
+1. starter README대로 apps/<새앱>을 만들고 npm ci, npm run typecheck, npm test, npm run build를 통과시켜.
+2. package.json의 name, index.html의 title, src/shell/Shell.tsx의 COMPANY·ME·NAV·PAGE_TITLE을 이 앱에 맞게 바꿔. name을 바꾸면 npm install로 lockfile도 맞춰.
+3. 스타일·ui 파일은 tokens.css의 --brand 4개 변수 말고는 바꾸지 마(흰 글자 대비 4.5:1 이상).
+4. 라우트를 다 만들고(App.tsx + NAV + PAGE_TITLE), 각 화면은 PageHead 하나만 있는 두 줄짜리 빈 페이지로 둬.
 5. scripts/routes.<새앱>.json을 만들어(모든 경로 + /nope).
 
 제약: 새 UI 라이브러리, 새 글꼴, 그라데이션 금지. 부품을 새로 만들지 말고 복사한 것만 써. 커밋하지 마.
 
 완료 조건:
-- npm run typecheck, npm run build 통과
-- 개발 서버를 4321 포트로 띄우고(AGENTS.md 2장의 .vite.pid 방식) node ../../scripts/ui-check.mjs --base http://localhost:4321/ --routes @../../scripts/routes.<새앱>.json --fold --a11y 결과가 0 problems
+- npm run typecheck, npm test, npm run build 통과
+- 개발 서버를 4321 포트로 띄우고(AGENTS.md 2장의 .vite.pid 방식) node ../../scripts/ui-check.mjs --base http://localhost:4321/ --routes @../../scripts/routes.<새앱>.json --fold --a11y 결과가 "N shots, 0 with problems"
 - d-_.fold.png와 첨부 이미지를 view_image로 나란히 보고, 틀(사이드바 폭, 상단 바 높이, 캔버스 색)이 같은지 확인
 - 서버 끄기: kill -- -"$(cat .vite.pid)" 2>/dev/null || kill "$(cat .vite.pid)" (pkill -f 금지)
 - 바꾼 파일 목록과 확인 결과를 보고해 줘
@@ -162,7 +162,7 @@ AGENTS.md를 읽고 아래를 짧게 정리해 줘. 아직 아무 파일도 고�
 첨부 이미지:
 1. <파일 이름>: <가져올 부분>
 2. <파일 이름>: <가져올 부분>
-기준 화면: <apps/…/pages/<기준>.tsx>와 docs/design/screenshots/<…>.png. 같은 품질·밀도·문법으로.
+기준 화면: <apps/…/pages/<기준>.tsx>와 docs/design/screenshots/<…>.fold.png. 같은 품질·밀도·문법으로.
 
 제약:
 - 내 화면 파일만 고쳐: src/pages/<Page>.tsx, .css(+ .parts.tsx).
@@ -173,7 +173,7 @@ AGENTS.md를 읽고 아래를 짧게 정리해 줘. 아직 아무 파일도 고�
 
 완료 조건:
 - npm run typecheck, npm run build 통과 + npm test(hr)
-- ui-check --routes <경로>[,<경로>] --fold --a11y 결과 0 problems(명령 끝에 다른 글자 없이). 셸을 바꿨으면 전 경로도
+- ui-check --routes <경로>[,<경로>] --fold --a11y 결과 "N shots, 0 with problems"(명령 끝에 다른 글자 없이). 셸을 바꿨으면 전 경로도
 - 주 동작 클릭 흐름을 --flow로 찍고 그 캡처도 확인
 - fold 캡처와 레퍼런스를 view_image로 비교해 다른 점 목록을 2번 이상 비우기
 - docs/codex/CHECKLIST.md 확인

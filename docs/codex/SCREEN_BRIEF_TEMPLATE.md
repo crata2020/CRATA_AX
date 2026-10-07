@@ -26,7 +26,7 @@
   - 자리: <체크한 줄의 일괄 동작 → 일괄 띠 오른쪽 끝 / 화면 전체 동작 → 머리>
 - 보조 동작 2~3개(흰 버튼·ghost·카드 머리 sm 버튼):
 - 레시피(PLAYBOOK 5장 A~H):
-- 기준 화면과 복사할 파일(PLAYBOOK 4.0): `<경로>` + `docs/design/screenshots/<…>.png`
+- 기준 화면과 복사할 파일(PLAYBOOK 4.0): `<경로>` + `docs/design/screenshots/<…>.fold.png`
 - 레퍼런스(파일 이름 → 가져올 부분):
   - `<파일>` → <부분>
   - `<파일>` → <부분>
@@ -101,8 +101,8 @@
 - **레시피:** H(KPI 띠) + B(툴바 + 일괄 띠 + 묶음 표 + 서랍). 위쪽 두 카드는 A의 8:4 리듬이에요.
 - **기준 화면과 복사할 파일(PLAYBOOK 4.0)**
   - `apps/hr/src/pages/Position.tsx`·`Position.css`: 단계 Tabs, 툴바, 일괄 띠 `.ps-bulk*`, 묶음 표 `.ps-group*`, 767px 쌓인 표
-  - `apps/hr/src/pages/Home.tsx`·`Home.css`: 팀별 인원 막대 + 최소 눈금 `.hh-heads*`(값 칸만 'n명 · 최소 n'으로)
-  - 캡처: `docs/design/screenshots/hr/position.png`, `hr/people.png`(KPI 줄·툴바), `hr/applicant-drawer.png`(서랍), `worksite/tasks.png`, `worksite/tasks-mobile.png`(모바일 줄)
+  - `apps/hr/src/pages/Home.tsx`·`Home.css`: 팀별 인원 막대 + 최소 눈금 `.hh-heads*`(값 칸 'n명 · 최소 n' 형식까지 그대로)
+  - 캡처(같은 크기 첫 화면): `docs/design/screenshots/hr/position.fold.png`, `hr/people.fold.png`(KPI 줄·툴바), `hr/applicant-drawer.png`(서랍, 그 자체가 첫 화면), `worksite/tasks.fold.png`, `worksite/tasks-mobile.fold.png`(모바일 줄)
 - **레퍼런스**
   - `projectflow-grouped-task-table.jpg` → 만료 상태별로 접히는 그룹 머리(색 네모 + 이름 + 개수 + 힌트), 접힌 그룹 한 줄 문장, 마지막 열 ›
   - `post_3.jpg`(FinSight) → KPI 4장 + 증감 칩. 밝게 바꿔서 써요.
@@ -166,7 +166,7 @@
 - **묶음 표**(`.ps-group*` 복사): 인사이동 전 필요(violet 네모) / 만료됨(coral) / 30일 안(amber) / 90일 안(blue) / 유효(green, 처음엔 접힘: "유효한 교육·자격 <n>건이 접혀 있어요")
   - 표 열: 체크 / 사람(Avatar + 이름 + 팀·직책) / 교육·자격(`cellmain`: 34px 아이콘 + 이름 + "사내 · 1년마다(예시)") / 만료(날짜 `mdw` + D-day 칩) / 팀 영향(칩: '최소와 같아요' warn, '최소보다 적어져요' bad) / 일정(칩: 일정 전 / 10월 15일 잡힘 / 자격 취득 필요 / 만료 없음) / ›
   - 표 머리의 체크 열 숨김 글은 `aria-label`로 줘요(`.sr-only`를 `<th>` 안에 쓰지 않아요).
-- **서랍(일정)**: 규칙 안내(brand-soft) → 교육별 테두리 구역 → 회차 `PillSelect`(규칙이 고른 회차) → 사람 줄(이유 칩 + × 빼기) → 바닥 ghost '닫기' + `btn--brand` '일정 확정 · <n>명' → `ShieldCheck` 누가 보나 한 줄
+- **서랍(일정)**: 규칙 안내(brand-soft) → 교육별 테두리 구역 → 회차 `PillSelect`(규칙이 고른 회차) → 사람 줄(이유 칩 + × 빼기) → 바닥 줄: 흰 '닫기' + 빈 칸 + 오른쪽 끝 `btn--brand` '일정 확정 · <n>명'(지원자 서랍 바닥과 같은 줄 문법) → `ShieldCheck` 누가 보나 한 줄
 - **서랍(사람)**: 보유 교육·자격(번호 가림), 다음에 받을 것과 이유, ghost '인사이동에서 보기 →'(`#/moves`), 바닥 `btn--brand` '이 사람 일정 잡기'
 - **동작 연결**
   - '일정 확정' → 혼자 작업이면 화면 state `book(ids, sessionId)`(다른 화면에 다녀오면 사라져요. 보고에 `act.bookTraining`으로 적어요) / 오케스트레이터가 있으면 `act.bookTraining(ids, sessionId)` → 토스트 "<n>명 교육 일정을 잡았어요. 본인과 팀장에게 알렸어요(예시)"
@@ -202,8 +202,8 @@
     - 1줄: 체크 + 이름 + 오른쪽 상태 칩 하나
     - 2줄: 교육 이름 · 만료 D-day
     - 3줄(있으면): 팀 영향 칩 하나, nowrap
-    - '일정 전'처럼 모든 줄에 같은 칩, 흐린 '보유 안 함' 글은 모바일에서 숨겨요. 줄 높이 100px 안팎(`tasks-mobile.png`)
-  - 토스트가 서랍 바닥 버튼과 하단 탭을 가리면 공통 파일로 보고해요.
+    - '일정 전'처럼 모든 줄에 같은 칩, 흐린 '보유 안 함' 글은 모바일에서 숨겨요. 줄 높이 100px 안팎(`tasks-mobile.png` 전체 캡처에서 그 부분을 잘라서 봐요)
+  - 모바일 토스트는 하단 탭 위에 떠요(`shell.css`). 서랍 바닥 주 버튼을 계속 가리면 공통 파일로 보고해요.
 - **1024px:** s-8과 s-4가 12칸으로 쌓여요. KPI는 2×2. 표의 '팀 영향' 열은 칩만 보여요.
 - **1440px:** 표 7열이 가로 스크롤 없이 들어가요. 툴바 오른쪽이 비지 않아요.
 
@@ -215,4 +215,4 @@
   - '일정 확정' → 칩이 '잡힘'으로, 토스트, 팀 카드 높이 유지 → shot `after-confirm`
   - 줄 클릭 → 사람 서랍 → shot `person-drawer` → '인사이동에서 보기' → `/moves`
   - 이야기: `/moves`에서 이동을 하나 올린 뒤 `goto /training` → '인사이동 전 필요' 줄과 KPI 칩 → shot `story`
-- **완료 조건:** `npm test`(training 테스트 포함), typecheck, build, ui-check 0 problems, `--flow` 캡처 확인, fold 캡처를 `projectflow-grouped-task-table.jpg`, `position.png`와 비교해 다른 점 목록 2번, CHECKLIST.md
+- **완료 조건:** `npm test`(training 테스트 포함), typecheck, build, ui-check `N shots, 0 with problems`, `--flow` 캡처 확인, fold 캡처를 `projectflow-grouped-task-table.jpg`, `position.fold.png`와 비교해 다른 점 목록 2번, CHECKLIST.md

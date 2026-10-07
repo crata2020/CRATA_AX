@@ -1,6 +1,6 @@
 # 새 업무사이트(apps/worksite-next) 화면 만들기 브리프
 
-> **실제로 쓴 브리프(기록)예요.** 업무사이트(`apps/worksite-next`)을 만들 때 화면을 여러 작업자(서브에이전트)에게 나눠 맡기며 그대로 준 원문이에요. 새 브리프를 **얼마나 구체적으로** 써야 하는지 보는 용도예요.
+> **실제로 쓴 브리프(기록)예요.** 업무사이트(`apps/worksite-next`)를 만들 때 화면을 여러 작업자(서브에이전트)에게 나눠 맡기며 그대로 준 원문이에요. 새 브리프를 **얼마나 구체적으로** 써야 하는지 보는 용도예요.
 > - `$REFS/`는 Orbix 레퍼런스 폴더예요(`post_*.jpg` → `$REFS/instagram-posts/`, `refs/*.jpg` → `$REFS/orbix-refs/`). 저장소 밖에 있어요(PROMPTS.md 준비 2).
 > - '확인' 장의 캡처·서버 명령(`shotdev.js`, `pkill`, `ss`)은 그때 쓰던 임시 도구예요. 지금은 AGENTS.md 2장(`scripts/ui-check.mjs`, `.vite.pid` 방식)을 써요.
 > - 숫자·화면 목록·문구 규칙은 그때 기준이에요. 지금은 seed, `AGENTS.md`, `docs/codex/PLAYBOOK.md`가 우선이에요.
