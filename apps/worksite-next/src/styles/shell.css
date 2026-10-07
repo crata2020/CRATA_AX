@@ -82,6 +82,8 @@
   .ask { display: none; }
   .top { padding: 0 16px; }
   .content { padding: 20px 16px 96px; }
+  /* 알림은 하단 탭 위에 띄워요(탭·버튼을 가리지 않게) */
+  .toasts { bottom: calc(72px + env(safe-area-inset-bottom)); width: calc(100% - 32px); }
   .tabbar {
     display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--surface);
     border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom));

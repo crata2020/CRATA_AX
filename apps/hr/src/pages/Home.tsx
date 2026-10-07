@@ -223,7 +223,7 @@ export default function Home() {
                     <i className={`hh-heads__fill hh-heads__fill--${state}`} style={{ width: `${(now / scale) * 100}%` }} />
                     <i className="hh-heads__min" style={{ left: `${(t.min / scale) * 100}%` }} />
                   </span>
-                  <span className="hh-heads__v"><b className="num">{now}</b><span className="faint num">/{t.min}</span></span>
+                  <span className="hh-heads__v"><b className="num">{now}</b>명<span className="faint"> · 최소 <span className="num">{t.min}</span></span></span>
                   <span className="hh-heads__d">
                     {diff !== 0 ? <Delta value={`${Math.abs(diff)}`} dir={diff > 0 ? "up" : "down"} good={diff > 0} />
                       : state === "under" ? <Chip tone="bad" sm>부족</Chip> : state === "edge" ? <Chip tone="warn" sm>최소</Chip> : null}

@@ -220,7 +220,7 @@ export function Empty({ icon, title, children }: { icon: ReactNode; title: strin
 export function PageHead({ eyebrow, title, icon, desc, actions }: { eyebrow?: ReactNode; title: ReactNode; icon?: ReactNode; desc?: ReactNode; actions?: ReactNode }) {
   return (
     <div className="phead">
-      <div style={{ minWidth: 0 }}>
+      <div className="phead__main">
         {eyebrow && <div className="phead__eyebrow">{eyebrow}</div>}
         <h1 className="phead__title">{title}{icon}</h1>
         {desc && <p className="phead__desc">{desc}</p>}
