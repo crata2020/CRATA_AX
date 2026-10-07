@@ -1,0 +1,96 @@
+/* 앱 골격: 흰 사이드바 + 흰 상단 바 + 옅은 회색 본문 */
+.app { display: flex; min-height: 100vh; }
+.side { width: var(--side-w); flex: none; background: var(--surface); border-right: 1px solid var(--line); z-index: 30; }
+.side__in { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 16px 14px; gap: 6px; overflow-y: auto; }
+.ws {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: var(--r-md); border: 1px solid var(--line);
+  background: var(--surface-2); cursor: pointer; text-align: left;
+}
+.ws:hover { background: var(--sunken); }
+.ws__logo { width: 36px; height: 36px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 13.5px; background: var(--brand); letter-spacing: 0.02em; }
+.ws__t { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 20px; }
+.ws__s { font-size: 12px; color: var(--muted); line-height: 16px; }
+.ws svg { width: 16px; height: 16px; color: var(--faint); margin-left: auto; flex: none; }
+.navsec { margin-top: 14px; }
+.navsec__t { font-size: 12px; color: var(--faint); padding: 0 12px 6px; font-weight: 500; }
+.navlink {
+  display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 12px; border-radius: var(--r-md); color: var(--ink-2); font-size: 14.5px; font-weight: 500;
+  position: relative; transition: background-color .1s, color .1s;
+}
+.navlink svg { width: 19px; height: 19px; stroke-width: 1.7; color: var(--muted); flex: none; }
+.navlink:hover { background: var(--sunken); color: var(--ink); }
+.navlink.active { background: var(--brand-soft); color: var(--brand-ink); }
+.navlink.active svg { color: var(--brand); }
+.navlink__n { margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: var(--r-pill); background: var(--sunken); color: var(--ink-2); font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.navlink.active .navlink__n { background: var(--surface); color: var(--brand-ink); }
+.navlink__lock { margin-left: auto; font-size: 11.5px; color: var(--faint); display: inline-flex; gap: 4px; align-items: center; font-weight: 400; }
+.navlink__lock svg { width: 13px; height: 13px; }
+.side__foot { margin-top: auto; padding-top: 16px; }
+.promo { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px; background: var(--surface-2); }
+.promo__t { font-size: 14px; font-weight: 500; color: var(--ink); }
+/* 노트북 높이(900px 미만)에서는 메뉴를 촘촘하게 해서 도입 카드까지 한 화면에 */
+@media (min-width: 901px) and (max-height: 960px) {
+  .side__in { padding: 12px 14px; gap: 4px; }
+  .navsec { margin-top: 8px; }
+  .navsec__t { padding-bottom: 4px; }
+  .navlink { height: 36px; font-size: 14px; }
+  .navlink svg { width: 18px; height: 18px; }
+  .side__foot { padding-top: 10px; }
+  .promo { padding: 12px 14px; }
+}
+@media (min-width: 901px) and (max-height: 800px) {
+  .promo__s { display: none; }
+  .promo .bar { margin-top: 10px; }
+}
+.promo__s { font-size: 12.5px; color: var(--muted); margin: 4px 0 12px; }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.top {
+  height: var(--top-h); background: var(--surface); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 14px;
+  padding: 0 28px; position: sticky; top: 0; z-index: 20;
+}
+.top__crumb { font-size: 15px; font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: 8px; min-width: 0; }
+.top__crumb span { color: var(--faint); font-weight: 400; }
+.ask {
+  margin: 0 auto; display: flex; align-items: center; gap: 10px; height: 42px; width: min(440px, 40vw); padding: 0 8px 0 14px; border-radius: var(--r-md);
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--muted); font-size: 14px; cursor: text; box-shadow: 0 0 0 4px var(--surface-2);
+}
+.ask svg { width: 18px; height: 18px; color: var(--brand); flex: none; }
+.ask > span:not(.ask__k) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ask__k { flex: none; white-space: nowrap; margin-left: auto; font-size: 12px; color: var(--faint); border: 1px solid var(--line-2); border-radius: 7px; padding: 2px 7px; }
+.top__right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.me { display: flex; align-items: center; gap: 10px; padding: 4px 8px 4px 4px; border-radius: var(--r-md); border: 0; background: none; cursor: pointer; text-align: left; }
+.me:hover { background: var(--sunken); }
+.me__n { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 18px; white-space: nowrap; }
+.me__r { font-size: 12px; color: var(--muted); line-height: 16px; white-space: nowrap; }
+.me > svg { width: 16px; height: 16px; color: var(--faint); }
+.demo { font-size: 12px; color: var(--muted); border: 1px solid var(--line-2); border-radius: var(--r-pill); padding: 4px 10px; white-space: nowrap; }
+.content { padding: 28px 32px 48px; width: 100%; max-width: 1480px; margin: 0 auto; }
+
+.burger { display: none; }
+.tabbar { display: none; }
+
+@media (max-width: 1100px) {
+  .ask { width: 260px; }
+  .ask__k { display: none; }
+  .me__txt, .demo { display: none; }
+}
+@media (max-width: 900px) {
+  .side { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--shadow-pop); }
+  .side.open { transform: none; }
+  .burger { display: inline-flex; }
+  .ask { display: none; }
+  .top { padding: 0 16px; }
+  .content { padding: 20px 16px 96px; }
+  .tabbar {
+    display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--surface);
+    border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  .tabbar a { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11.5px; color: var(--muted); padding: 6px 0; position: relative; min-height: 48px; justify-content: center; }
+  .tabbar a svg { width: 22px; height: 22px; stroke-width: 1.7; }
+  .tabbar a.active { color: var(--brand-ink); }
+  .tabbar__n { position: absolute; top: 2px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--c-orange); color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .tabbar__main svg { width: 26px; height: 26px; color: var(--brand); }
+}
+/* 확정 전 이동 수: 깜빡이는 조직도와 같은 신호 */
+.navlink__n--live { background: var(--warn-bg); color: var(--warn-ink); }
