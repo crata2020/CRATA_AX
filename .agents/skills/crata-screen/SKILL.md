@@ -15,7 +15,7 @@ description: CRATA 화면 만들기·다듬기(new screen, page, UI, dashboard, 
 2. **구성 정하기와 기준 화면 읽기**
    - 브리프의 '구성'(질문 → 요소 → 자리)을 확인해요. 비어 있으면 PLAYBOOK 5.0대로 채워요: 질문 3~5개를 중요한 순서로, 질문마다 요소, 1번 질문의 답과 행동은 첫 화면 왼쪽 위.
    - 구성안 2개를 텍스트 와이어프레임으로 쓰고 하나를 골라요. 사람이 대화 중이면 고르게 하고, 무인 실행이면 고른 이유를 '승인 전 가정'에 적어요.
-   - 그다음 출발 레시피(A~H)를 고르고, PLAYBOOK 4.0 표에서 쓸 부품의 기준 파일(CSS·마크업)을 열어 둬요. 기준 화면(업무사이트 `apps/worksite-next/src/pages/Home.tsx`, 인사 앱 `apps/hr/src/pages/Moves.tsx`)은 밀도·문법을 보려고 읽어요. 배치는 따라 하지 않아요.
+   - 그다음 가까운 출발 레시피(A~H)가 있으면 고르고(없으면 레시피 없이 짜요), PLAYBOOK 4.0 표에서 쓸 부품의 기준 파일(CSS·마크업)을 열어 둬요. 기준 화면(업무사이트 `apps/worksite-next/src/pages/Home.tsx`, 인사 앱 `apps/hr/src/pages/Moves.tsx`)은 밀도·문법을 보려고 읽어요. 배치는 따라 하지 않아요.
 3. **데이터·로직 먼저**
    - 화면이 쓸 데이터와 계산 함수가 이미 있으면 그대로 써요.
    - 오케스트레이터가 있는 작업이면 공통 파일(`src/ui`, `src/styles`, `src/shell`, `src/data`, `src/lib`, `App.tsx`)을 바꾸지 않아요. 필요한 것이 없으면 멈추고 보고해요.
@@ -30,7 +30,7 @@ description: CRATA 화면 만들기·다듬기(new screen, page, UI, dashboard, 
    - `node ../../scripts/ui-check.mjs --base http://localhost:4314/ --routes /<내 경로>,<관련 경로> --fold --a11y --out .ui-check/<Page>` (명령 끝에 다른 글자를 붙이지 않아요)
    - 클릭 뒤 상태: 흐름 파일을 `.ui-check/flows/<page>.json`에 쓰고 `--flow @.ui-check/flows/<page>.json --viewports d:1440x1000,m:390x844`로 찍어요(예: `scripts/flows/hr-position.example.json`).
 6. **비교 루프(2번 이상)**
-   - `.ui-check/<Page>/*.fold.png`, 브리프의 레퍼런스(사용자가 준 경로), `docs/design/screenshots/`의 비슷한 화면(같은 크기인 `<이름>.fold.png`)을 `view_image`로 나란히 봐요.
+   - `.ui-check/<Page>/*.fold.png`, 브리프의 레퍼런스(사용자가 준 경로), `docs/design/screenshots/`에서 같은 부품(표·띠·KPI·서랍)이 들어간 완성 화면(같은 크기인 `<이름>.fold.png`)을 `view_image`로 나란히 봐요. 그 부품의 모양만 맞추고, 배치가 비슷한 화면을 고르지 않아요.
    - 다른 점 목록을 PLAYBOOK 8.4 형식(kind 모양/구성)으로 쓰고, high부터 고쳐요. 모양 차이는 고치고, 용도 때문인 구성 차이는 keep 이유를 적어요. 다시 찍어서 전후를 비교해요.
    - PLAYBOOK 8.3의 '구성' 질문(가~라)도 확인해요. 답하지 않는 카드가 있으면 빼요.
 7. **마무리**

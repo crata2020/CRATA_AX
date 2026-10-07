@@ -161,7 +161,7 @@ Orbix Studio(인스타그램 @orbixdashboard)의 밝은 대시보드 문법을 �
 | post_3 (FinSight) | KPI 4장, 분할 막대, 반원 게이지, Getting started 체크 | 현장·품질, AI 연결 |
 | orbixcrm-team-members-grid, mediflex-doctors | 파스텔 머리 + 큰 아바타 카드, 페이지 넘김 | 구성원, 채용 공고 카드 |
 | orbixcrm-integrations-grid | 3열 카드: 모노 로고 네모, 이름, 설명, 토글 | 도구 연결 |
-| hope-hr-analytics | 도넛 + 분포 막대, 큰 %. **오른쪽 열**: 월 달력(날짜 원, 오늘만 brand 채움, 빗금 = 예정) + 날짜 머리 '10월 15일(목)' 아래 일정 카드(제목·장소 · AvatarStack · outline 칩 2~3). 버림: 짙은 초록 칩(→ neutral/outline), 사진 | 구성원 분포, AI 추천 분포. 오른쪽 열 → 교육 회차, 면접 일정 |
+| hope-hr-analytics | 도넛 + 분포 막대, 큰 %. 월 달력(날짜 원, 오늘만 brand 채움, 빗금 = 예정)과 날짜 머리 '10월 15일(목)' 아래 일정 카드(제목·장소 · AvatarStack · outline 칩 2~3) 부품. 버림: 짙은 초록 칩(→ neutral/outline), 사진 | 구성원 분포, AI 추천 분포. 일정 카드 부품은 교육 회차 목록에 썼어요(어디에 둘지는 화면마다 정해요) |
 | winx-add-product-form, fintech-accounts | 번호 매긴 폼 구역, 둥근 입력, 오른쪽 상태 열 | 설정, 지원서, 동의·보관 |
 | orbix-ai-chat-home | 가운데 큰 질문 + 입력 상자 + 제안 칩 + 카드 3장, 은은한 파스텔 바탕 | ARA, 지원자 검사 |
 | botrix-ai-command-center, ai-support-inbox-dark(밝게) | 대화 + 결과 카드, 목록 + 상세 받은편지함 | 인사이동 대화, 회의 |
