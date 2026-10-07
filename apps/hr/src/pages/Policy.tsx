@@ -129,7 +129,7 @@ export default function Policy() {
       <div className="pl-layout">
         <div className="pl-main">
           {/* 직원 CRATA */}
-          <Card className="pl-card" title="직원 CRATA 결과" icon={<Users />} sub="결과는 본인 것이에요. 회사는 정해진 범위만 봐요" flush line
+          <Card className="pl-card pl-o3" title="직원 CRATA 결과" icon={<Users />} sub="결과는 본인 것이에요. 회사는 정해진 범위만 봐요" flush line
             actions={<Chip tone="good" dot>본인만이 기본</Chip>}>
             <h3 className="pl-cap">누가 무엇을 보나요</h3>
             <div className="tablewrap pl-hide-m">
@@ -160,7 +160,7 @@ export default function Policy() {
           </Card>
 
           {/* 채용 */}
-          <Card className="pl-card" title="채용" icon={<FileUser />} sub="지원자에게 미리 알리고, 결정은 사람이 해요" flush line
+          <Card className="pl-card pl-o4" title="채용" icon={<FileUser />} sub="지원자에게 미리 알리고, 결정은 사람이 해요" flush line
             actions={<Chip tone="brand" dot>지원서에서 필수 동의</Chip>}>
             <Rules title="지키는 것" rules={HIRE} first />
 
@@ -221,7 +221,7 @@ export default function Policy() {
 
         <div className="pl-side">
           {/* 지금 동의 현황 */}
-          <Card title="지금 동의 현황" sub={<>구성원 <span className="num">{total}</span>명 · 확정된 조직 기준</>}
+          <Card className="pl-o1" title="지금 동의 현황" sub={<>구성원 <span className="num">{total}</span>명 · 확정된 조직 기준</>}
             foot={<span className="pl-foot"><Lock aria-hidden />동의 안 한 사람의 개인 결과는 어느 화면에도 보이지 않아요.</span>}>
             <div className="pl-donut">
               <Donut data={slices} size={150} thickness={20} center={<>{pct(counts.placement)}%</>} sub="배치 참고 동의" />
@@ -234,7 +234,7 @@ export default function Policy() {
           </Card>
 
           {/* 팀 분포 공개 */}
-          <Card title="팀 분포 공개" sub="검사한 사람 5명 이상 팀만 보여요" actions={<Chip tone="outline" sm><span className="num">{shownTeams}/{dist.length}팀</span></Chip>}>
+          <Card className="pl-o2" title="팀 분포 공개" sub="검사한 사람 5명 이상 팀만 보여요" actions={<Chip tone="outline" sm><span className="num">{shownTeams}/{dist.length}팀</span></Chip>}>
             <ul className="pl-teams">
               {dist.map((d) => (
                 <li key={d.team.id}>
@@ -252,7 +252,7 @@ export default function Policy() {
           </Card>
 
           {/* 파기 일정 */}
-          <Card title="파기 일정" sub={<>반환 청구 <span className="num">{days}</span>일 기준{changes ? " · 저장 전 미리보기" : ""}</>} icon={<Archive />}>
+          <Card className="pl-o5" title="파기 일정" sub={<>반환 청구 <span className="num">{days}</span>일 기준{changes ? " · 저장 전 미리보기" : ""}</>} icon={<Archive />}>
             <ul className="pl-destroy">
               {closed.map((c) => (
                 <li key={c.pos.id}>
@@ -262,7 +262,7 @@ export default function Policy() {
                   </div>
                   <div className="pl-destroy__r">
                     <span className="pl-destroy__d">{fullDate(c.at, today)}</span>
-                    <Chip sm tone={c.left <= 14 ? "warn" : "outline"}><span className="num">{ddayLabel(c.left)}</span></Chip>
+                    {c.left < 0 ? <Chip sm dot>파기했어요</Chip> : <Chip sm tone={c.left <= 14 ? "warn" : "outline"}><span className="num">{c.left === 0 ? "오늘 파기" : ddayLabel(c.left)}</span></Chip>}
                   </div>
                 </li>
               ))}

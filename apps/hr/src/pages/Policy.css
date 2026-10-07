@@ -109,15 +109,21 @@
 
 /* 반응형 */
 @media (max-width: 1279px) {
-  .pl-layout { grid-template-columns: minmax(0, 1fr); }
-  .pl-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
-  .pl-side > :first-child { grid-column: 1 / -1; }
+  /* 좁아지면 동의 현황·팀 분포를 먼저, 기준 카드, 파기 일정 순서 */
+  .pl-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pl-main, .pl-side { display: contents; }
+  .pl-o1 { order: 1; } .pl-o2 { order: 2; }
+  .pl-donut { flex-direction: column; align-items: stretch; gap: 16px; }
+  .pl-donut > :first-child { align-self: center; }
+  .pl-layout { align-items: stretch; }
+  .pl-o3 { order: 3; grid-column: 1 / -1; } .pl-o4 { order: 4; grid-column: 1 / -1; } .pl-o5 { order: 5; grid-column: 1 / -1; }
 }
 @media (max-width: 767px) {
   .pl-acts { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; width: 100%; }
   .pl-hide-m { display: none !important; }
   .pl-show-m { display: block; }
-  .pl-side { grid-template-columns: minmax(0, 1fr); }
+  .pl-layout { grid-template-columns: minmax(0, 1fr); }
+  .pl-layout > * > .card { grid-column: 1 / -1; }
   .pl-cap { padding: 14px 16px 6px; }
   .pl-sec { padding: 16px; }
   .pl-rules > li { gap: 12px; flex-wrap: wrap; }

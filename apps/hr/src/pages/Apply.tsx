@@ -116,7 +116,7 @@ function ApplyView({ pos }: { pos: Position }) {
       <PageHead
         eyebrow={<span className="ap-eyebrow"><Building2 aria-hidden />{COMPANY.name} · {t?.name}</span>}
         title={pos.title}
-        desc={done ? "지원서를 받았어요. 다음 단계를 안내해 드릴게요." : "3분이면 써요. 사진·나이·가족 사항은 묻지 않아요."}
+        desc={closed ? "마감된 공고예요. 지원서를 받지 않아요." : done ? "지원서를 받았어요. 다음 단계를 안내해 드릴게요." : "3분이면 써요. 사진·나이·가족 사항은 묻지 않아요."}
       />
   );
   const jobCard = (
@@ -131,7 +131,7 @@ function ApplyView({ pos }: { pos: Position }) {
           <div><dt>근무</dt><dd>{pos.shift ? "2교대" : "주간 · 교대 없음"}</dd></div>
           <div><dt>경력</dt><dd>{pos.minYears ? <><span className="num">{pos.minYears}</span>년 이상</> : "경력 없어도 돼요"}</dd></div>
         </dl>
-        <Steps at={done ? 2 : 1} sub={done ? { 1: "받았어요", 2: "서류 확인 뒤 링크가 가요" } : undefined} />
+        {!closed && <Steps at={done ? 2 : 1} sub={done ? { 1: "받았어요", 2: "서류 확인 뒤 링크가 가요" } : undefined} />}
       </section>
   );
   const head = <>{pageHead}{jobCard}</>;
